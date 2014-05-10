@@ -12,6 +12,7 @@ var Packet = Model.extend(
 		{
 			this.buffer    = buf;
 			this.byteOrder = qtmrt.BYTE_ORDER;
+			this.eventName = null;
 
 			if (!arguments.length)
 				throw TypeError('No buffer specified');
@@ -27,15 +28,31 @@ var Packet = Model.extend(
 			{
 				this.size = buf.readUInt32LE(0);
 				this.type = buf.readUInt32LE(qtmrt.HEADER_SIZE_SIZE);
+
+				if (this.type === qtmrt.EVENT)
+					this.data = buf.readUInt8(qtmrt.HEADER_SIZE);
 			}
 			else
 			{
 				this.size = buf.readUInt32BE(0);
 				this.type = buf.readUInt32BE(qtmrt.HEADER_SIZE_SIZE);
+
+				if (this.type === qtmrt.EVENT)
+					this.data = buf.readUInt32BE(qtmrt.HEADER_SIZE);
 			}
 
-			this.data     = buf.slice(qtmrt.HEADER_SIZE).toString('utf8');
+			if (this.type === qtmrt.EVENT)
+			{
+				this.eventName = Packet.eventToString(this.data);
+			}
+			else
+			{
+				this.data = buf.slice(qtmrt.HEADER_SIZE).toString('utf8');
+			}
+			
 			this.typeName = Packet.typeToString(this.type);
+
+
 		},
 
 		toString: function()
@@ -54,23 +71,17 @@ var Packet = Model.extend(
 			typeColors[qtmrt.COMMAND_RESPONSE] = 'green';
 
 			var typeColor = typeColors[this.type];
+			var value     = this.data;
+
+			if (this.type === qtmrt.EVENT)
+				value = this.eventName;
 
 			return '[' + moment().format('HH:mm:ss') + '] '
-				+ (sprintf("%-20s", '<' + Packet.typeToString(this.type) + '>')
-				+ this.data)[typeColor];
+				+ (sprintf("%-20s", '<' + this.typeName + '>')
+				+ value)[typeColor];
 		}
 	}
 );
-
-//Packet.parseMessage = function(buf)
-//{
-	//return new Packet(buf);
-	//return {
-		//size: buf.readInt32LE(0),
-		//type: buf.readInt32LE(4),
-		//data: buf.slice(8, -1),
-	//}
-//};
 
 Packet.typeToString = function(typeId)
 {
@@ -88,6 +99,27 @@ Packet.typeToString = function(typeId)
 	typeNames[qtmrt.COMMAND_RESPONSE] = 'Command Response';
 
 	return typeNames[typeId];
+};
+
+Packet.eventToString = function(eventId)
+{
+	var eventNames = {};
+
+	eventNames[qtmrt.CONNECTED]               = 'Connected';
+	eventNames[qtmrt.CONNECTION_CLOSED]       = 'Connection Closed';
+	eventNames[qtmrt.CAPTURE_STARTED]         = 'Capture Started';
+	eventNames[qtmrt.CAPTURE_STOPPED]         = 'Capture Stopped';
+	eventNames[qtmrt.FETCHING_FINISHED]       = 'Fetching Finished';
+	eventNames[qtmrt.CALIBRATION_STARTED]     = 'Calibration Started';
+	eventNames[qtmrt.CALIBRATION_STOPPED]     = 'Calibration Stopped';
+	eventNames[qtmrt.RT_FROM_FILE_STARTED]    = 'RT From File Started';
+	eventNames[qtmrt.RT_FRON_FILE_STOPPED]    = 'RT From File Stopped';
+	eventNames[qtmrt.WAITING_FOR_TRIGGER]     = 'Waiting For Trigger';
+	eventNames[qtmrt.CAMERA_SETTINGS_CHANGED] = 'Camera Settings Changed';
+	eventNames[qtmrt.QTM_SHUTTING_DOWN]       = 'QTM Shutting Down';
+	eventNames[qtmrt.CAPTURE_SAVED]           = 'Capture Saved';
+
+	return eventNames[eventId];
 };
 
 

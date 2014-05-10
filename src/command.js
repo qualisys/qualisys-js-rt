@@ -44,6 +44,12 @@ var Command = {
 	{
 		var cmdStr = 'ByteOrder';
 		return this.build(cmdStr);
+	},
+
+	getState: function()
+	{
+		var cmdStr = 'GetState';
+		return this.build(cmdStr);
 	}
 };
 

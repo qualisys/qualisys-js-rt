@@ -10,19 +10,13 @@ var Q       = require('q')
 
 _.str = require('underscore.string')
 
-//var buf = new Buffer(20);
-//buf.writeInt32LE(20, 0);
-//buf.writeInt32LE(1, 4);
-//buf.write('Version 1.12\0', 8, 12, 'utf8');
-
-//console.log('Version 1.12\0'.length + 8);
-
 var Api = function(options) {
 	this.net              = require('net');
 	this.client           = null;
 	this.response         = null;
 	this.deferredResponse = null;
 	this.promiseQueue     = [];
+	this.issuedCommands   = [];
 
 	this.options = _.defaults(options, {
 		debug: false,
@@ -39,13 +33,21 @@ Api.prototype = function()
 		this.client.on('data', function(data) {
 			var packet = new Packet(data);
 
+			var command = this.issuedCommands.pop();
+
 			if (qtmrt.COMMAND === packet.type)
 				packet.type = qtmrt.COMMAND_RESPONSE;
 
 			if (this.options.debug)
 				console.log(packet.toString());
-
-			this.promiseQueue.pop().resolve(packet);
+			
+			if (packet.type == qtmrt.EVENT)
+			{
+				if ('GetState' === command.data)
+					this.promiseQueue.pop().resolve(packet);
+			}
+			else
+				this.promiseQueue.pop().resolve(packet);
 		}.bind(this));
 
 		this.client.on('end', function() {
@@ -109,9 +111,16 @@ Api.prototype = function()
 		return send.call(this, new Packet(Command.byteOrder()))
 	},
 
+	getState = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.getState()))
+	},
+
 	send = function(command)
 	{
 		var promise = promiseResponse.call(this);
+		this.issuedCommands.unshift(command);
 
 		this.client.write(command.buffer, 'utf8', function(data) {
 			if (this.options.debug)
@@ -132,6 +141,7 @@ Api.prototype = function()
 		'connect': connect,
 		'qtmVersion': qtmVersion,
 		'byteOrder': byteOrder,
+		'getState': getState,
 	}
 }();
 
@@ -141,7 +151,10 @@ api.connect()
 		return api.qtmVersion();
 	})
 	.then(function() {
-		api.byteOrder();
+		return api.byteOrder();
+	})
+	.then(function() {
+		return api.getState();
 	})
 	.catch(function(err) {
 		console.log(err);
