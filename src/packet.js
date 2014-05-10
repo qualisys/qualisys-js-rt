@@ -43,7 +43,7 @@ var Packet = Model.extend(
 			var typeColors = { };
 
 			typeColors[qtmrt.ERROR]            = 'red';
-			typeColors[qtmrt.COMMAND]          = 'blue';
+			typeColors[qtmrt.COMMAND]          = 'cyan';
 			typeColors[qtmrt.XML_DATA]         = 'cyan';
 			typeColors[qtmrt.DATA]             = 'white';
 			typeColors[qtmrt.NO_MORE_DATA]     = 'grey';
@@ -51,13 +51,13 @@ var Packet = Model.extend(
 			typeColors[qtmrt.EVENT]            = 'yellow';
 			typeColors[qtmrt.DISCOVER]         = 'yellow';
 			typeColors[qtmrt.QTM_FILE]         = 'cyan';
-			typeColors[qtmrt.COMMAND_RESPONSE] = 'magenta';
+			typeColors[qtmrt.COMMAND_RESPONSE] = 'green';
 
 			var typeColor = typeColors[this.type];
 
 			return '[' + moment().format('HH:mm:ss') + '] '
-				+ sprintf("%-20s", '<' + Packet.typeToString(this.type) + '>')[typeColor]
-				+ this.data;
+				+ (sprintf("%-20s", '<' + Packet.typeToString(this.type) + '>')
+				+ this.data)[typeColor];
 		}
 	}
 );

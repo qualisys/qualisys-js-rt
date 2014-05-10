@@ -32,6 +32,18 @@ var Command = {
 	{
 		var cmdStr = 'Version ' + major + '.' + minor;
 		return this.build(cmdStr);
+	},
+
+	qtmVersion: function()
+	{
+		var cmdStr = 'QTMVersion';
+		return this.build(cmdStr);
+	},
+
+	byteOrder: function()
+	{
+		var cmdStr = 'ByteOrder';
+		return this.build(cmdStr);
 	}
 };
 

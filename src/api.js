@@ -1,11 +1,11 @@
 'use strict';
 
-var Q              = require('q')
-  , _              = require('underscore')
-  , colors         = require('colors')
-  , qtmrt          = require('./qtmrt')
-  , Packet         = require('./packet').Packet
-  , Command        = require('./command').Command
+var Q       = require('q')
+  , _       = require('underscore')
+  , colors  = require('colors')
+  , qtmrt   = require('./qtmrt')
+  , Packet  = require('./packet').Packet
+  , Command = require('./command').Command
 ;
 
 _.str = require('underscore.string')
@@ -22,6 +22,7 @@ var Api = function(options) {
 	this.client           = null;
 	this.response         = null;
 	this.deferredResponse = null;
+	this.promiseQueue     = [];
 
 	this.options = _.defaults(options, {
 		debug: false,
@@ -34,8 +35,8 @@ Api.prototype = function()
 	{
 		// Disable Nagle's algorithm.
 		this.client.setNoDelay(true);
+
 		this.client.on('data', function(data) {
-			
 			var packet = new Packet(data);
 
 			if (qtmrt.COMMAND === packet.type)
@@ -44,13 +45,18 @@ Api.prototype = function()
 			if (this.options.debug)
 				console.log(packet.toString());
 
-			this.deferredResponse.resolve(packet);
-			//client.end();
+			this.promiseQueue.pop().resolve(packet);
 		}.bind(this));
 
 		this.client.on('end', function() {
 			console.log('client disconnected');
 		});
+	},
+
+	checkConnection = function()
+	{
+		if (_.isNull(this.client))
+			return Q.reject(new Error('Not connected to QTM. Connect and try again.'));
 	},
 
 	connect = function()
@@ -62,12 +68,12 @@ Api.prototype = function()
 		  , deferredCommand  = Q.defer()
 		;
 
-		promiseResponse.call(this);
+		var responsePromise = promiseResponse.call(this);
 
 		this.client = this.net.connect({ port: 22223 }, function() { });
 		bootstrap.call(this);
 
-		this.response
+		responsePromise
 			.then(function(packet) {
 				if ('QTM RT Interface connected\0' === packet.data.toString())
 				{
@@ -85,39 +91,61 @@ Api.prototype = function()
 				}
 			})
 			.catch(function(err) {
-				console.log('wtf');
 				console.log(err);
 			});
 
 		return deferredCommand.promise;
 	},
+
+	qtmVersion = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.qtmVersion()))
+	},
+
+	byteOrder = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.byteOrder()))
+	},
+
 	send = function(command)
 	{
-		promiseResponse.call(this);
+		var promise = promiseResponse.call(this);
 
-		// Set proper type.
-		//if (qtmrt.COMMAND_RESPONSE === command.type)
-			//command.type = qtmrt.COMMAND;
-		
 		this.client.write(command.buffer, 'utf8', function(data) {
 			if (this.options.debug)
 				console.log(command.toString());
 		}.bind(this));
-		return this.response;
+
+		return promise;
 	},
 	promiseResponse = function()
 	{
-		var deferredResponse  = Q.defer();
-		this.deferredResponse = deferredResponse;
-		this.response         = deferredResponse.promise;
+
+		var deferredResponse = Q.defer();
+		this.promiseQueue.unshift(deferredResponse);
+		return deferredResponse.promise;
 	};
 
 	return {
 		'connect': connect,
+		'qtmVersion': qtmVersion,
+		'byteOrder': byteOrder,
 	}
 }();
 
 var api = new Api({ debug: true });
-api.connect();
+api.connect()
+	.then(function() {
+		return api.qtmVersion();
+	})
+	.then(function() {
+		api.byteOrder();
+	})
+	.catch(function(err) {
+		console.log(err);
+	});
+
 
 module.exports = Api;
