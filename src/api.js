@@ -6,6 +6,7 @@ var Q       = require('q')
   , qtmrt   = require('./qtmrt')
   , Packet  = require('./packet').Packet
   , Command = require('./command').Command
+  , log     = require('./helpers').log
 ;
 
 _.str = require('underscore.string')
@@ -39,7 +40,7 @@ Api.prototype = function()
 				packet.type = qtmrt.COMMAND_RESPONSE;
 
 			if (this.options.debug)
-				console.log(packet.toString());
+				console.log(log(packet));
 			
 			if (packet.type == qtmrt.EVENT)
 			{
@@ -74,6 +75,7 @@ Api.prototype = function()
 
 		this.client = this.net.connect({ port: 22223 }, function() { });
 		bootstrap.call(this);
+
 
 		responsePromise
 			.then(function(packet) {
@@ -124,7 +126,7 @@ Api.prototype = function()
 
 		this.client.write(command.buffer, 'utf8', function(data) {
 			if (this.options.debug)
-				console.log(command.toString());
+				console.log(log(command));
 		}.bind(this));
 
 		return promise;
