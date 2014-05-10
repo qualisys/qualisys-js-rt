@@ -6,7 +6,7 @@ var Q       = require('q')
   , qtmrt   = require('./qtmrt')
   , Packet  = require('./packet').Packet
   , Command = require('./command').Command
-  , log     = require('./helpers').log
+  , Logger  = require('./helpers').Logger
 ;
 
 _.str = require('underscore.string')
@@ -18,6 +18,7 @@ var Api = function(options) {
 	this.deferredResponse = null;
 	this.promiseQueue     = [];
 	this.issuedCommands   = [];
+	this.logger           = new Logger();
 
 	this.options = _.defaults(options, {
 		debug: false,
@@ -40,7 +41,7 @@ Api.prototype = function()
 				packet.type = qtmrt.COMMAND_RESPONSE;
 
 			if (this.options.debug)
-				console.log(log(packet));
+				this.logger.logPacket(packet);
 			
 			if (packet.type == qtmrt.EVENT)
 			{
@@ -62,10 +63,16 @@ Api.prototype = function()
 			return Q.reject(new Error('Not connected to QTM. Connect and try again.'));
 	},
 
-	connect = function()
+	connect = function(port, host)
 	{
 		if (!_.isNull(this.client))
 			return Q.reject();
+
+		if (1 > arguments.length)
+			port = 22223;
+
+		if (2 > arguments.length)
+			host = 'localhost';
 		
 		var self = this
 		  , deferredCommand  = Q.defer()
@@ -73,7 +80,10 @@ Api.prototype = function()
 
 		var responsePromise = promiseResponse.call(this);
 
-		this.client = this.net.connect({ port: 22223 }, function() { });
+		if (this.options.debug)
+			this.logger.log('Connecting to ' + host + ':' + port, 'white', 'bold');
+
+		this.client = this.net.connect(port, host, function() { });
 		bootstrap.call(this);
 
 
@@ -126,7 +136,7 @@ Api.prototype = function()
 
 		this.client.write(command.buffer, 'utf8', function(data) {
 			if (this.options.debug)
-				console.log(log(command));
+				this.logger.logPacket(command);
 		}.bind(this));
 
 		return promise;

@@ -1,12 +1,36 @@
-var moment = require('moment')
+var _       = require('underscore')
+  , moment  = require('moment')
   , sprintf = require('sprintf')
-  , qtmrt  = require('./qtmrt')
-  , Packet = require('./packet').Packet
+  , qtmrt   = require('./qtmrt')
+  , Packet  = require('./packet').Packet
 ;
 
-module.exports = {
-	
-	log: function(packet) {
+
+var Logger = function() {
+}
+
+Logger.prototype = function()
+{
+	var timestamp = function()
+	{
+		return '[' + moment().format('HH:mm:ss') + ']';
+	},
+
+	log = function(message, color, style)
+	{
+		if (2 > arguments.length)
+			color = 'white';
+
+		message = message[color];
+
+		if (!_.isUndefined(style))
+			message = message[style];
+
+		console.log(timestamp.call(this) + ' ' + message);
+	},
+
+	logPacket = function(packet)
+	{
 		var typeColors = { };
 
 		typeColors[qtmrt.ERROR]            = 'red';
@@ -26,8 +50,19 @@ module.exports = {
 		if (packet.type === qtmrt.EVENT)
 			value = packet.eventName;
 
-		return '[' + moment().format('HH:mm:ss') + '] '
-			+ (sprintf("%-20s", '<' + Packet.typeToString(packet.type) + '>')
-			+ value)[typeColor];
-	},
+		this.log(
+			(sprintf("%-20s", '<' + Packet.typeToString(packet.type) + '>')
+			+ value)[typeColor]
+		);
+	}
+	;
+
+	return {
+		'logPacket': logPacket,
+		'log': log,
+	}
+}();
+
+module.exports = {
+	Logger: Logger,
 }
