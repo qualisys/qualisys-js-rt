@@ -138,6 +138,11 @@ var Command = {
 		return this.build(cmdStr);
 	},
 
+	trig: function()
+	{
+		var cmdStr = 'Trig';
+		return this.build(cmdStr);
+	},
 
 };
 

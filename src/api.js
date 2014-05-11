@@ -245,6 +245,24 @@ Api.prototype = function()
 		return send.call(this, new Packet(Command.save(filename, overwrite)));
 	},
 
+	loadProject = function(projectPath)
+	{
+		if (1 > arguments.length)
+			throw TypeError('No project path specified');
+
+ 		if (!_.isString(projectPath))
+			throw TypeError('Project path must be a string');
+
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.loadProject(projectPath)));
+	},
+
+	trig = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.trig()));
+	},
+
 	send = function(command)
 	{
 		var promise = promiseResponse.call(this);
@@ -267,70 +285,49 @@ Api.prototype = function()
 	};
 
 	return {
-		'connect': connect,
-		'qtmVersion': qtmVersion,
-		'byteOrder': byteOrder,
-		'getState': getState,
-		'getParameters': getParameters,
-		'getCurrentFrame': getCurrentFrame,
-		'takeControl': takeControl,
-		'releaseControl': releaseControl,
-		'newMeasurement': newMeasurement,
-		'close': close,
-		'start': start,
-		'stop': stop,
-		'load': load,
-		'save': save,
+		'connect':          connect,
+		'qtmVersion':       qtmVersion,
+		'byteOrder':        byteOrder,
+		'getState':         getState,
+		'getParameters':    getParameters,
+		'getCurrentFrame':  getCurrentFrame,
+		'takeControl':      takeControl,
+		'releaseControl':   releaseControl,
+		'newMeasurement':   newMeasurement,
+		'close':            close,
+		'start':            start,
+		'stop':             stop,
+		'load':             load,
+		'save':             save,
+		'loadProject':      loadProject,
+		//'getCaptureC3D':  getCaptureC3D,
+		//'getCaptureQtm':  getCaptureQtm,
+		'trig':             trig,
+		//'setQtmEvent':    setQtmEvent,
+		//'disconnect':     disconnect,
 	}
 }();
 
 var api = new Api({ debug: true });
 api.connect()
-	.then(function() {
-		return api.qtmVersion();
-	})
-	.then(function() {
-		return api.byteOrder();
-	})
-	.then(function() {
-		return api.getState();
-	})
-	.then(function() {
-		return api.getParameters('All');
-	})
-	.then(function() {
-		return api.getCurrentFrame('3D');
-	})
-	.then(function() {
-		return api.takeControl('gait1');
-	})
-	.then(function() {
-		return api.releaseControl();
-	})
-	.then(function() {
-		return api.newMeasurement();
-	})
-	.then(function() {
-		return api.takeControl('gait1');
-	})
-	//.then(function() {
-		//return api.newMeasurement();
-	//})
-	//.then(function() {
-		//return api.close();
-	//})
-	//.then(function() {
-		//return api.start();
-	//})
-	//.then(function() {
-		//return api.stop();
-	//})
-	//.then(function() {
-		//return api.load('dadida');
-	//})
-	//.then(function() {
-		//return api.save('dadida');
-	//})
+	.then(function() { return api.qtmVersion(); })
+	.then(function() { return api.byteOrder(); })
+	.then(function() { return api.getState(); })
+	.then(function() { return api.getParameters('All'); })
+	.then(function() { return api.getCurrentFrame('3D'); })
+	.then(function() { return api.takeControl('gait1'); })
+	.then(function() { return api.releaseControl(); })
+	.then(function() { return api.newMeasurement(); })
+	.then(function() { return api.takeControl('gait1'); })
+	//.then(function() { return api.newMeasurement(); })
+	//.then(function() { return api.close(); })
+	//.then(function() { return api.start(); })
+	//.then(function() { return api.stop(); })
+	//.then(function() { return api.load('dadida'); })
+	//.then(function() { return api.save('dadida'); })
+	//.then(function() { return api.loadProject('dadida'); })
+	.then(function() { return api.trig(); })
+
 	.catch(function(err) {
 		console.log(err);
 	});
