@@ -82,11 +82,64 @@ var Command = {
 
 		var cmdStr = 'GetCurrentFrame ' + components.join(' ');
 		return this.build(cmdStr);
-	}
-};
+	},
 
-//var cmdBuf = Command.version('1', '20');
-//var v = new Packet(Command.version('1', '20'));
+	takeControl: function(pass)
+	{
+		var cmdStr = 'TakeControl ' + (_.isUndefined(pass) ? '' : pass);
+		return this.build(cmdStr);
+	},
+
+	releaseControl: function()
+	{
+		var cmdStr = 'ReleaseControl';
+		return this.build(cmdStr);
+	},
+
+	newMeasurement: function()
+	{
+		var cmdStr = 'New';
+		return this.build(cmdStr);
+	},
+
+	close: function()
+	{
+		var cmdStr = 'Close';
+		return this.build(cmdStr);
+	},
+
+	start: function()
+	{
+		var cmdStr = 'Start';
+		return this.build(cmdStr);
+	},
+
+	stop: function()
+	{
+		var cmdStr = 'Stop';
+		return this.build(cmdStr);
+	},
+
+	load: function(filename)
+	{
+		var cmdStr = 'Load ' + filename;
+		return this.build(cmdStr);
+	},
+
+	save: function(filename, overwrite)
+	{
+		var cmdStr = 'Save ' + filename + (_.isUndefined(overwrite) ? '' : (' ' + overwrite));
+		return this.build(cmdStr);
+	},
+
+	loadProject: function(projectPath)
+	{
+		var cmdStr = 'LoadProject ' + projectPath;
+		return this.build(cmdStr);
+	},
+
+
+};
 
 module.exports = {
 	Command: Command,

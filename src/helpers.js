@@ -44,11 +44,14 @@ Logger.prototype = function()
 		typeColors[qtmrt.QTM_FILE]         = 'cyan';
 		typeColors[qtmrt.COMMAND_RESPONSE] = 'green';
 
-		var typeColor = typeColors[packet.type];
-		var value     = packet.data;
+		var typeColor = typeColors[packet.type]
+		  , value     = packet.data
+		;
 
 		if (packet.type === qtmrt.EVENT)
+		{
 			value = packet.eventName;
+		}
 		else if (packet.type === qtmrt.XML)
 		{
 			value = packet.data.substr(0, 50).replace(/\r?\n|\r|\s+/g, '') + ' ...';

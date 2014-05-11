@@ -179,6 +179,72 @@ Api.prototype = function()
 		return send.call(this, new Packet(Command.getCurrentFrame.apply(Command, arguments)));
 	},
 
+	takeControl = function(pass)
+	{
+		if (!_.isUndefined(pass) && !_.isString(pass))
+			throw TypeError('Password must be a string');
+
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.takeControl(pass)));
+	},
+
+	releaseControl = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.releaseControl()));
+	},
+
+	newMeasurement = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.newMeasurement()));
+	},
+
+	close = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.close()));
+	},
+
+	start = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.start()));
+	},
+
+	stop = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.stop()));
+	},
+
+	load = function(filename)
+	{
+		if (1 > arguments.length)
+			throw TypeError('No filename specified');
+
+ 		if (!_.isString(filename))
+			throw TypeError('Filename must be a string');
+
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.load(filename)));
+	},
+
+	save = function(filename, overwrite)
+	{
+		if (1 > arguments.length)
+			throw TypeError('No filename specified');
+
+ 		if (!_.isString(filename))
+			throw TypeError('Filename must be a string');
+
+ 		if (1 < arguments.length)
+			overwrite = 'overwrite'
+
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.save(filename, overwrite)));
+	},
+
 	send = function(command)
 	{
 		var promise = promiseResponse.call(this);
@@ -191,6 +257,7 @@ Api.prototype = function()
 
 		return promise;
 	},
+
 	promiseResponse = function()
 	{
 
@@ -206,6 +273,14 @@ Api.prototype = function()
 		'getState': getState,
 		'getParameters': getParameters,
 		'getCurrentFrame': getCurrentFrame,
+		'takeControl': takeControl,
+		'releaseControl': releaseControl,
+		'newMeasurement': newMeasurement,
+		'close': close,
+		'start': start,
+		'stop': stop,
+		'load': load,
+		'save': save,
 	}
 }();
 
@@ -226,6 +301,36 @@ api.connect()
 	.then(function() {
 		return api.getCurrentFrame('3D');
 	})
+	.then(function() {
+		return api.takeControl('gait1');
+	})
+	.then(function() {
+		return api.releaseControl();
+	})
+	.then(function() {
+		return api.newMeasurement();
+	})
+	.then(function() {
+		return api.takeControl('gait1');
+	})
+	//.then(function() {
+		//return api.newMeasurement();
+	//})
+	//.then(function() {
+		//return api.close();
+	//})
+	//.then(function() {
+		//return api.start();
+	//})
+	//.then(function() {
+		//return api.stop();
+	//})
+	//.then(function() {
+		//return api.load('dadida');
+	//})
+	//.then(function() {
+		//return api.save('dadida');
+	//})
 	.catch(function(err) {
 		console.log(err);
 	});
