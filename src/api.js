@@ -87,7 +87,7 @@ Api.prototype = function()
 			return Q.reject(new Error('Not connected to QTM. Connect and try again.'));
 	},
 
-	connect = function(port, host)
+	connect = function(port, host, major, minor)
 	{
 		if (!_.isNull(this.client))
 			return Q.reject();
@@ -97,6 +97,20 @@ Api.prototype = function()
 
 		if (2 > arguments.length)
 			host = 'localhost';
+
+		if (3 > arguments.length)
+		{
+			major = 1;
+			minor = 12;
+		}
+		else
+		{
+			if (!_.isNumber(major))
+				throw TypeError('Major version must be a number');
+
+			if (!_.isNumber(major))
+				throw TypeError('Minor version must be a number');
+		}
 		
 		var self = this
 		  , deferredCommand  = Q.defer()
@@ -115,7 +129,7 @@ Api.prototype = function()
 			.then(function(packet) {
 				if ('QTM RT Interface connected\0' === packet.data.toString())
 				{
-					send.call(self, new Packet(Command.version('1', '12')))
+					send.call(self, new Packet(Command.version(major, minor)))
 						.then(function(data) {
 							deferredCommand.resolve();
 						})
