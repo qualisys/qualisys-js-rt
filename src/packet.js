@@ -43,6 +43,10 @@ var Packet = Model.extend(
 			{
 				this.eventName = Packet.eventToString(this.data);
 			}
+			else if (this.type === qtmrt.DATA)
+			{
+
+			}
 			else
 			{
 				this.data = buf.slice(qtmrt.HEADER_SIZE).toString('utf8');
@@ -56,10 +60,14 @@ var Packet = Model.extend(
 
 Packet.getSize = function(buf)
 {
+	var size = null;
+
 	if (qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN)
-		return buf.readUInt32LE(0);
+		size = buf.readUInt32LE(0);
 	else
-		return buf.readUInt32BE(0);
+		size = buf.readUInt32BE(0);
+
+	return size;
 };
 
 Packet.typeToString = function(typeId)

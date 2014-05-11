@@ -19,7 +19,8 @@ var Api = function(options) {
 	this.promiseQueue     = [];
 	this.issuedCommands   = [];
 	this.logger           = new Logger();
-	this.chunks           = null;
+	this.chunks           = new Buffer(0);
+	this.isStreaming      = false;
 
 	this.options = _.defaults(options, {
 		debug: false,
@@ -34,30 +35,30 @@ Api.prototype = function()
 		this.client.setNoDelay(true);
 
 		this.client.on('data', function(chunk) {
+			var packetSize = Packet.getSize(chunk)
+			  , bytesRead  = 0;
 
-			if (_.isNull(this.chunks) && chunk.length === Packet.getSize(chunk))
-			{
-				receivePacket.call(this, chunk);
-			}
-			else
-			{
-				if (_.isNull(this.chunks))
-					this.chunks = chunk;
-				else
-					this.chunks = Buffer.concat([this.chunks, chunk], this.chunks.length + chunk.length);
+			while (this.chunks.length < packetSize && bytesRead < chunk.length) {
+				var copySize = Math.min(packetSize, chunk.length - bytesRead);
+				this.chunks  = Buffer.concat([this.chunks, chunk.slice(bytesRead, bytesRead + copySize)])
+				bytesRead   += copySize;
 
-				if (Packet.getSize(this.chunks) === this.chunks.length)
+				if (this.chunks.length === packetSize)
 				{
-					receivePacket.call(this, this.chunks);
-					this.chunks = null;
+					receivePacket.call(this, this.chunks)
+					
+					if (bytesRead !== chunk.length)
+						packetSize = Packet.getSize(chunk.slice(bytesRead, bytesRead + qtmrt.HEADER_SIZE_SIZE))
+
+					this.chunks = new Buffer(0);
 				}
 			}
 				
 		}.bind(this));
 
 		this.client.on('end', function() {
-			console.log('client disconnected');
-		});
+			this.logger.log('Disconnected', 'white', 'bold');
+		}.bind(this));
 	},
 	
 	receivePacket = function(data)
@@ -77,7 +78,7 @@ Api.prototype = function()
 			if ('GetState' === command.data)
 				this.promiseQueue.pop().resolve(packet);
 		}
-		else
+		else if (packet.type != qtmrt.DATA)
 			this.promiseQueue.pop().resolve(packet);
 	},
 
@@ -179,6 +180,34 @@ Api.prototype = function()
 		return send.call(this, new Packet(Command.getCurrentFrame.apply(Command, arguments)));
 	},
 
+	streamFrames = function(frequency, components, updPort)
+	{
+		if (1 > arguments.length)
+			throw TypeError('No frequency specified');
+
+		if (2 > arguments.length)
+			throw TypeError('No components specified');
+
+		if (1 < arguments.length && !_.isArray(components))
+			throw TypeError('Expected components to be an array');
+		
+		checkConnection.call(this);
+		this.isStreaming = true;
+		return send.call(this, new Packet(Command.streamFrames.apply(Command, arguments)));
+	},
+
+	stopStreaming = function()
+	{
+		if (!this.isStreaming)
+		{
+			this.logger.log('Cannot stop streaming, not currently streaming', 'red');
+			return;
+		}
+		checkConnection.call(this);
+		this.isStreaming = false;
+		return send.call(this, new Packet(Command.stopStreaming()));
+	},
+
 	takeControl = function(pass)
 	{
 		if (!_.isUndefined(pass) && !_.isString(pass))
@@ -245,6 +274,20 @@ Api.prototype = function()
 		return send.call(this, new Packet(Command.save(filename, overwrite)));
 	},
 
+	// XXX: Not tested with C3D file reply.
+	getCaptureC3D = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.getCaptureC3D()));
+	},
+
+	// XXX: Not tested with QTM file reply.
+	getCaptureQtm = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.getCaptureQtm()));
+	},
+
 	loadProject = function(projectPath)
 	{
 		if (1 > arguments.length)
@@ -263,9 +306,31 @@ Api.prototype = function()
 		return send.call(this, new Packet(Command.trig()));
 	},
 
+	setQtmEvent = function(label)
+	{
+		if (1 > arguments.length)
+			throw TypeError('No label specified');
+
+ 		if (!_.isString(label))
+			throw TypeError('Label must be a string');
+
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.setQtmEvent(label)));
+	},
+
+	disconnect = function()
+	{
+		checkConnection.call(this);
+		this.client.end();
+	},
+
 	send = function(command)
 	{
-		var promise = promiseResponse.call(this);
+		var promise = Q.resolve();
+
+		if (!_.str.startsWith(command, 'StreamFrames'))
+			promise = promiseResponse.call(this);
+
 		this.issuedCommands.unshift(command);
 
 		this.client.write(command.buffer, 'utf8', function(data) {
@@ -291,6 +356,8 @@ Api.prototype = function()
 		'getState':         getState,
 		'getParameters':    getParameters,
 		'getCurrentFrame':  getCurrentFrame,
+		'stopStreaming':    stopStreaming,
+		'streamFrames':     streamFrames,
 		'takeControl':      takeControl,
 		'releaseControl':   releaseControl,
 		'newMeasurement':   newMeasurement,
@@ -300,11 +367,11 @@ Api.prototype = function()
 		'load':             load,
 		'save':             save,
 		'loadProject':      loadProject,
-		//'getCaptureC3D':  getCaptureC3D,
-		//'getCaptureQtm':  getCaptureQtm,
+		'getCaptureC3D':    getCaptureC3D,
+		'getCaptureQtm':    getCaptureQtm,
 		'trig':             trig,
-		//'setQtmEvent':    setQtmEvent,
-		//'disconnect':     disconnect,
+		'setQtmEvent':      setQtmEvent,
+		'disconnect':       disconnect,
 	}
 }();
 
@@ -313,12 +380,13 @@ api.connect()
 	.then(function() { return api.qtmVersion(); })
 	.then(function() { return api.byteOrder(); })
 	.then(function() { return api.getState(); })
-	.then(function() { return api.getParameters('All'); })
-	.then(function() { return api.getCurrentFrame('3D'); })
-	.then(function() { return api.takeControl('gait1'); })
-	.then(function() { return api.releaseControl(); })
-	.then(function() { return api.newMeasurement(); })
-	.then(function() { return api.takeControl('gait1'); })
+	//.then(function() { return api.getParameters('All'); })
+	//.then(function() { return api.getCurrentFrame('3D'); })
+	//.then(function() { return api.takeControl('gait1'); })
+	//.then(function() { return api.releaseControl(); })
+	//.then(function() { return api.newMeasurement(); })
+	//.then(function() { return api.takeControl('gait1'); })
+	//.then(function() { return api.setQtmEvent('foo_event'); })
 	//.then(function() { return api.newMeasurement(); })
 	//.then(function() { return api.close(); })
 	//.then(function() { return api.start(); })
@@ -326,7 +394,12 @@ api.connect()
 	//.then(function() { return api.load('dadida'); })
 	//.then(function() { return api.save('dadida'); })
 	//.then(function() { return api.loadProject('dadida'); })
-	.then(function() { return api.trig(); })
+	//.then(function() { return api.trig(); })
+	//.then(function() { return api.getCaptureC3D(); })
+	//.then(function() { return api.getCaptureQtm(); })
+	//.then(function() { return api.stopStreaming(); })
+	.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3DNoLabels']); })
+	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {
 		console.log(err);

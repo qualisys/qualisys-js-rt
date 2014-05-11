@@ -23,7 +23,6 @@ var Command = {
 		}
 
 		buf.write(cmdStr, qtmrt.HEADER_SIZE, cmdStr.length, 'utf8');
-		buf.isCommand = true;
 
 		return buf;
 	},
@@ -84,6 +83,35 @@ var Command = {
 		return this.build(cmdStr);
 	},
 
+	stopStreaming: function()
+	{
+		var cmdStr = 'StreamFrames Stop';
+		return this.build(cmdStr);
+	},
+
+	streamFrames: function(frequency, components, updPort, udpAddress)
+	{
+		var udp = _.isUndefined(updPort)
+				? ''
+				: ' UDP:' + (_.isUndefined(udpAddress) ? '' : udpAddress + ':') + udpPort
+		  , predicate = function(component) {
+				return _.contains(['All', '2D', '2DLin', '3D', '3DRes', '3DNoLabels',
+				'3DNoLabelsRes', 'Analog', 'AnalogSingle', 'Force', '6D', '6DRes',
+				'6DEuler', '6DEulerRes', 'Image'], component);
+			}
+		  , components = _.filter(components, predicate)
+		;
+
+		if (_.isEmpty(components))
+			throw TypeError('No valid components specified');
+
+		if (_.contains(components, 'All'))
+			components = ['All'];
+
+		var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.join(' ');
+		return this.build(cmdStr);
+	},
+
 	takeControl: function(pass)
 	{
 		var cmdStr = 'TakeControl ' + (_.isUndefined(pass) ? '' : pass);
@@ -132,6 +160,18 @@ var Command = {
 		return this.build(cmdStr);
 	},
 
+	getCaptureC3D: function()
+	{
+		var cmdStr = 'GetCaptureC3D';
+		return this.build(cmdStr);
+	},
+
+	getCaptureQtm: function()
+	{
+		var cmdStr = 'GetCaptureQtm';
+		return this.build(cmdStr);
+	},
+
 	loadProject: function(projectPath)
 	{
 		var cmdStr = 'LoadProject ' + projectPath;
@@ -141,6 +181,12 @@ var Command = {
 	trig: function()
 	{
 		var cmdStr = 'Trig';
+		return this.build(cmdStr);
+	},
+
+	setQtmEvent: function(label)
+	{
+		var cmdStr = 'SetQTMEvent ' + label;
 		return this.build(cmdStr);
 	},
 
