@@ -60,6 +60,14 @@ Logger.prototype = function()
 		{
 			value = 'Data frame not yet implemented';
 		}
+		else if (packet.type === qtmrt.C3D)
+		{
+			value = '<C3D file> (' + (packet.size - qtmrt.HEADER_SIZE) + ' bytes)'
+		}
+		else if (packet.type === qtmrt.QTM)
+		{
+			value = '<QTM file> (' + (packet.size - qtmrt.HEADER_SIZE) + ' bytes)'
+		}
 
 		this.log(
 			(sprintf("%-20s", '<' + Packet.typeToString(packet.type) + '>')
