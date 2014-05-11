@@ -9,7 +9,7 @@ var Packet = Model.extend(
 		init: function(buf, byteOrder)
 		{
 			this.buffer    = buf;
-			this.byteOrder = qtmrt.BYTE_ORDER;
+			this.byteOrder = qtmrt.byteOrder;
 			this.eventName = null;
 
 			if (!arguments.length)
@@ -54,13 +54,21 @@ var Packet = Model.extend(
 	}
 );
 
+Packet.getSize = function(buf)
+{
+	if (qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN)
+		return buf.readUInt32LE(0);
+	else
+		return buf.readUInt32BE(0);
+};
+
 Packet.typeToString = function(typeId)
 {
 	var typeNames = {};
 
 	typeNames[qtmrt.ERROR]            = 'Error';
 	typeNames[qtmrt.COMMAND]          = 'Command';
-	typeNames[qtmrt.XML_DATA]         = 'XML Data';
+	typeNames[qtmrt.XML]              = 'XML';
 	typeNames[qtmrt.DATA]             = 'Data';
 	typeNames[qtmrt.NO_MORE_DATA]     = 'No More Data';
 	typeNames[qtmrt.C3D_FILE]         = 'C3D file';

@@ -50,6 +50,38 @@ var Command = {
 	{
 		var cmdStr = 'GetState';
 		return this.build(cmdStr);
+	},
+
+	getParameters: function()
+	{
+		var predicate = function(component) {
+				return _.contains(['All', 'General', '3D', '6D', 'Analog', 'Force', 'Image'], component);
+			}
+		   , components = _.filter(arguments, predicate)
+		;
+
+		if (_.contains(components, 'All'))
+			components = ['All'];
+
+		var cmdStr = 'GetParameters ' + components.join(' ');
+		return this.build(cmdStr);
+	},
+
+	getCurrentFrame: function()
+	{
+		var predicate = function(component) {
+				return _.contains(['All', '2D', '2DLin', '3D', '3DRes', '3DNoLabels',
+				'3DNoLabelsRes', 'Analog', 'AnalogSingle', 'Force', '6D', '6DRes',
+				'6DEuler', '6DEulerRes', 'Image'], component);
+			}
+		   , components = _.filter(arguments, predicate)
+		;
+
+		if (_.contains(components, 'All'))
+			components = ['All'];
+
+		var cmdStr = 'GetCurrentFrame ' + components.join(' ');
+		return this.build(cmdStr);
 	}
 };
 

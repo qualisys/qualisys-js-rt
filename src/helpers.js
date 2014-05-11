@@ -35,7 +35,7 @@ Logger.prototype = function()
 
 		typeColors[qtmrt.ERROR]            = 'red';
 		typeColors[qtmrt.COMMAND]          = 'cyan';
-		typeColors[qtmrt.XML_DATA]         = 'cyan';
+		typeColors[qtmrt.XML]              = 'green';
 		typeColors[qtmrt.DATA]             = 'white';
 		typeColors[qtmrt.NO_MORE_DATA]     = 'grey';
 		typeColors[qtmrt.C3D_FILE]         = 'cyan';
@@ -49,6 +49,14 @@ Logger.prototype = function()
 
 		if (packet.type === qtmrt.EVENT)
 			value = packet.eventName;
+		else if (packet.type === qtmrt.XML)
+		{
+			value = packet.data.substr(0, 50).replace(/\r?\n|\r|\s+/g, '') + ' ...';
+		}
+		else if (packet.type === qtmrt.DATA)
+		{
+			value = 'Data frame not yet implemented';
+		}
 
 		this.log(
 			(sprintf("%-20s", '<' + Packet.typeToString(packet.type) + '>')

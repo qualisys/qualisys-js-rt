@@ -19,6 +19,7 @@ var Api = function(options) {
 	this.promiseQueue     = [];
 	this.issuedCommands   = [];
 	this.logger           = new Logger();
+	this.chunks           = null;
 
 	this.options = _.defaults(options, {
 		debug: false,
@@ -32,29 +33,52 @@ Api.prototype = function()
 		// Disable Nagle's algorithm.
 		this.client.setNoDelay(true);
 
-		this.client.on('data', function(data) {
-			var packet = new Packet(data);
+		this.client.on('data', function(chunk) {
 
-			var command = this.issuedCommands.pop();
-
-			if (qtmrt.COMMAND === packet.type)
-				packet.type = qtmrt.COMMAND_RESPONSE;
-
-			if (this.options.debug)
-				this.logger.logPacket(packet);
-			
-			if (packet.type == qtmrt.EVENT)
+			if (_.isNull(this.chunks) && chunk.length === Packet.getSize(chunk))
 			{
-				if ('GetState' === command.data)
-					this.promiseQueue.pop().resolve(packet);
+				receivePacket.call(this, chunk);
 			}
 			else
-				this.promiseQueue.pop().resolve(packet);
+			{
+				if (_.isNull(this.chunks))
+					this.chunks = chunk;
+				else
+					this.chunks = Buffer.concat([this.chunks, chunk], this.chunks.length + chunk.length);
+
+				if (Packet.getSize(this.chunks) === this.chunks.length)
+				{
+					receivePacket.call(this, this.chunks);
+					this.chunks = null;
+				}
+			}
+				
 		}.bind(this));
 
 		this.client.on('end', function() {
 			console.log('client disconnected');
 		});
+	},
+	
+	receivePacket = function(data)
+	{
+		var packet = new Packet(data)
+		  , command = this.issuedCommands.pop()
+		;
+
+		if (qtmrt.COMMAND === packet.type)
+			packet.type = qtmrt.COMMAND_RESPONSE;
+
+		if (this.options.debug)
+			this.logger.logPacket(packet);
+		
+		if (packet.type == qtmrt.EVENT)
+		{
+			if ('GetState' === command.data)
+				this.promiseQueue.pop().resolve(packet);
+		}
+		else
+			this.promiseQueue.pop().resolve(packet);
 	},
 
 	checkConnection = function()
@@ -129,6 +153,18 @@ Api.prototype = function()
 		return send.call(this, new Packet(Command.getState()))
 	},
 
+	getParameters = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.getParameters.apply(Command, arguments)));
+	},
+
+	getCurrentFrame = function()
+	{
+		checkConnection.call(this);
+		return send.call(this, new Packet(Command.getCurrentFrame.apply(Command, arguments)));
+	},
+
 	send = function(command)
 	{
 		var promise = promiseResponse.call(this);
@@ -154,6 +190,8 @@ Api.prototype = function()
 		'qtmVersion': qtmVersion,
 		'byteOrder': byteOrder,
 		'getState': getState,
+		'getParameters': getParameters,
+		'getCurrentFrame': getCurrentFrame,
 	}
 }();
 
@@ -167,6 +205,12 @@ api.connect()
 	})
 	.then(function() {
 		return api.getState();
+	})
+	.then(function() {
+		return api.getParameters('All');
+	})
+	.then(function() {
+		return api.getCurrentFrame('3D');
 	})
 	.catch(function(err) {
 		console.log(err);
