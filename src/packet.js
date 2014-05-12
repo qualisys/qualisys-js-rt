@@ -105,42 +105,15 @@ Packet.create = function(buf)
 	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
 
 	switch (type) {
-
-		case qtmrt.ERROR:
-			return new ErrorPacket(buf);
-		break;
-		
-		case qtmrt.COMMAND:
-			return new CommandPacket(buf);
-		break;
-		
-		case qtmrt.XML:
-			return new XmlPacket(buf);
-		break;
-		
-		case qtmrt.DATA:
-			return new DataPacket(buf);
-		break;
-		
-		case qtmrt.NO_MORE_DATA:
-			return new NoMoreDataPacket(buf);
-		break;
-		
-		case qtmrt.C3D_FILE:
-			return new C3dFilePacket(buf);
-		break;
-		
-		case qtmrt.EVENT:
-			return new EventPacket(buf);
-		break;
-		
-		case qtmrt.DISCOVER:
-			return new DiscoverPacket(buf);
-		break;
-		
-		case qtmrt.QTM_FILE:
-			return new QtmFilePacket(buf);
-		break;
+		case qtmrt.ERROR:         return new ErrorPacket(buf); break;
+		case qtmrt.COMMAND:       return new CommandPacket(buf); break;
+		case qtmrt.XML:           return new XmlPacket(buf); break;
+		case qtmrt.DATA:          return new DataPacket(buf); break;
+		case qtmrt.NO_MORE_DATA:  return new NoMoreDataPacket(buf); break;
+		case qtmrt.C3D_FILE:      return new C3dFilePacket(buf); break;
+		case qtmrt.EVENT:         return new EventPacket(buf); break;
+		case qtmrt.DISCOVER:      return new DiscoverPacket(buf); break;
+		case qtmrt.QTM_FILE:      return new QtmFilePacket(buf); break;
 	}
 };
 
