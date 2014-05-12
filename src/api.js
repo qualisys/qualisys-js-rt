@@ -151,35 +151,22 @@ Api.prototype = function()
 		return deferredCommand.promise;
 	},
 
-	qtmVersion = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.qtmVersion()))
-	},
+	qtmVersion      = function() { return send.call(this, new Packet(Command.qtmVersion())) },
+	byteOrder       = function() { return send.call(this, new Packet(Command.byteOrder())) },
+	getState        = function() { return send.call(this, new Packet(Command.getState())) },
+	getParameters   = function() { return send.call(this, new Packet(Command.getParameters.apply(Command, arguments))); },
+	getCurrentFrame = function() { return send.call(this, new Packet(Command.getCurrentFrame.apply(Command, arguments))); },
+	releaseControl  = function() { return send.call(this, new Packet(Command.releaseControl())); },
+	newMeasurement  = function() { return send.call(this, new Packet(Command.newMeasurement())); },
+	close           = function() { return send.call(this, new Packet(Command.close())); },
+	start           = function() { return send.call(this, new Packet(Command.start())); },
+	stop            = function() { return send.call(this, new Packet(Command.stop())); },
+	trig            = function() { return send.call(this, new Packet(Command.trig())); },
 
-	byteOrder = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.byteOrder()))
-	},
-
-	getState = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.getState()))
-	},
-
-	getParameters = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.getParameters.apply(Command, arguments)));
-	},
-
-	getCurrentFrame = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.getCurrentFrame.apply(Command, arguments)));
-	},
+	// XXX: Not tested with C3D file reply.
+	getCaptureC3D = function() { return send.call(this, new Packet(Command.getCaptureC3D())); },
+	// XXX: Not tested with QTM file reply.
+	getCaptureQtm = function() { return send.call(this, new Packet(Command.getCaptureQtm())); },
 
 	streamFrames = function(frequency, components, updPort)
 	{
@@ -192,7 +179,6 @@ Api.prototype = function()
 		if (1 < arguments.length && !_.isArray(components))
 			throw TypeError('Expected components to be an array');
 		
-		checkConnection.call(this);
 		this.isStreaming = true;
 		return send.call(this, new Packet(Command.streamFrames.apply(Command, arguments)));
 	},
@@ -204,7 +190,7 @@ Api.prototype = function()
 			this.logger.log('Cannot stop streaming, not currently streaming', 'red');
 			return;
 		}
-		checkConnection.call(this);
+
 		this.isStreaming = false;
 		return send.call(this, new Packet(Command.stopStreaming()));
 	},
@@ -214,38 +200,7 @@ Api.prototype = function()
 		if (!_.isUndefined(pass) && !_.isString(pass))
 			throw TypeError('Password must be a string');
 
-		checkConnection.call(this);
 		return send.call(this, new Packet(Command.takeControl(pass)));
-	},
-
-	releaseControl = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.releaseControl()));
-	},
-
-	newMeasurement = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.newMeasurement()));
-	},
-
-	close = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.close()));
-	},
-
-	start = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.start()));
-	},
-
-	stop = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.stop()));
 	},
 
 	load = function(filename)
@@ -253,10 +208,9 @@ Api.prototype = function()
 		if (1 > arguments.length)
 			throw TypeError('No filename specified');
 
- 		if (!_.isString(filename))
+		if (!_.isString(filename))
 			throw TypeError('Filename must be a string');
 
-		checkConnection.call(this);
 		return send.call(this, new Packet(Command.load(filename)));
 	},
 
@@ -265,28 +219,13 @@ Api.prototype = function()
 		if (1 > arguments.length)
 			throw TypeError('No filename specified');
 
- 		if (!_.isString(filename))
+		if (!_.isString(filename))
 			throw TypeError('Filename must be a string');
 
- 		if (1 < arguments.length)
+		if (1 < arguments.length)
 			overwrite = 'overwrite'
 
-		checkConnection.call(this);
 		return send.call(this, new Packet(Command.save(filename, overwrite)));
-	},
-
-	// XXX: Not tested with C3D file reply.
-	getCaptureC3D = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.getCaptureC3D()));
-	},
-
-	// XXX: Not tested with QTM file reply.
-	getCaptureQtm = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.getCaptureQtm()));
 	},
 
 	loadProject = function(projectPath)
@@ -294,17 +233,10 @@ Api.prototype = function()
 		if (1 > arguments.length)
 			throw TypeError('No project path specified');
 
- 		if (!_.isString(projectPath))
+		if (!_.isString(projectPath))
 			throw TypeError('Project path must be a string');
 
-		checkConnection.call(this);
 		return send.call(this, new Packet(Command.loadProject(projectPath)));
-	},
-
-	trig = function()
-	{
-		checkConnection.call(this);
-		return send.call(this, new Packet(Command.trig()));
 	},
 
 	setQtmEvent = function(label)
@@ -312,21 +244,15 @@ Api.prototype = function()
 		if (1 > arguments.length)
 			throw TypeError('No label specified');
 
- 		if (!_.isString(label))
+		if (!_.isString(label))
 			throw TypeError('Label must be a string');
 
-		checkConnection.call(this);
 		return send.call(this, new Packet(Command.setQtmEvent(label)));
-	},
-
-	disconnect = function()
-	{
-		checkConnection.call(this);
-		this.client.end();
 	},
 
 	send = function(command)
 	{
+		checkConnection.call(this);
 		var promise = Q.resolve();
 
 		if (!_.str.startsWith(command, 'StreamFrames'))
@@ -349,6 +275,12 @@ Api.prototype = function()
 		this.promiseQueue.unshift(deferredResponse);
 		return deferredResponse.promise;
 	};
+
+	disconnect = function()
+	{
+		checkConnection.call(this);
+		this.client.end();
+	},
 
 	return {
 		'connect':          connect,
