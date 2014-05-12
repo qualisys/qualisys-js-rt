@@ -27,29 +27,23 @@ var Command = {
 		return buf;
 	},
 
-	version: function(major, minor)
-	{
-		var cmdStr = 'Version ' + major + '.' + minor;
-		return this.build(cmdStr);
-	},
-
-	qtmVersion: function()
-	{
-		var cmdStr = 'QTMVersion';
-		return this.build(cmdStr);
-	},
-
-	byteOrder: function()
-	{
-		var cmdStr = 'ByteOrder';
-		return this.build(cmdStr);
-	},
-
-	getState: function()
-	{
-		var cmdStr = 'GetState';
-		return this.build(cmdStr);
-	},
+	qtmVersion:      function()             { return this.build('QTMVersion'); },
+	byteOrder:       function()             { return this.build('ByteOrder'); },
+	getState:        function()             { return this.build('GetState'); },
+	releaseControl:  function()             { return this.build('ReleaseControl'); },
+	newMeasurement:  function()             { return this.build('New'); },
+	close:           function()             { return this.build('Close'); },
+	start:           function()             { return this.build('Start'); },
+	stop:            function()             { return this.build('Stop'); },
+	getCaptureC3D:   function()             { return this.build('GetCaptureC3D'); },
+	getCaptureQtm:   function()             { return this.build('GetCaptureQtm'); },
+	trig:            function()             { return this.build('Trig'); },
+	stopStreaming:   function()             { return this.build('StreamFrames Stop'); },
+	setQtmEvent:     function(label)        { return this.build('SetQTMEvent ' + label); },
+	takeControl:     function(pass)         { return this.build('TakeControl ' + (_.isUndefined(pass) ? '' : pass)); },
+	load:            function(filename)     { return this.build('Load ' + filename); },
+	loadProject:     function(projectPath)  { return this.build('LoadProject ' + projectPath); },
+	version:         function(major, minor) { return this.build('Version ' + major + '.' + minor); },
 
 	getParameters: function()
 	{
@@ -62,8 +56,7 @@ var Command = {
 		if (_.contains(components, 'All'))
 			components = ['All'];
 
-		var cmdStr = 'GetParameters ' + components.join(' ');
-		return this.build(cmdStr);
+		return this.build('GetParameters ' + components.join(' '));
 	},
 
 	getCurrentFrame: function()
@@ -79,15 +72,9 @@ var Command = {
 		if (_.contains(components, 'All'))
 			components = ['All'];
 
-		var cmdStr = 'GetCurrentFrame ' + components.join(' ');
-		return this.build(cmdStr);
+		return this.build('GetCurrentFrame ' + components.join(' '));
 	},
 
-	stopStreaming: function()
-	{
-		var cmdStr = 'StreamFrames Stop';
-		return this.build(cmdStr);
-	},
 
 	streamFrames: function(frequency, components, updPort, udpAddress)
 	{
@@ -112,47 +99,6 @@ var Command = {
 		return this.build(cmdStr);
 	},
 
-	takeControl: function(pass)
-	{
-		var cmdStr = 'TakeControl ' + (_.isUndefined(pass) ? '' : pass);
-		return this.build(cmdStr);
-	},
-
-	releaseControl: function()
-	{
-		var cmdStr = 'ReleaseControl';
-		return this.build(cmdStr);
-	},
-
-	newMeasurement: function()
-	{
-		var cmdStr = 'New';
-		return this.build(cmdStr);
-	},
-
-	close: function()
-	{
-		var cmdStr = 'Close';
-		return this.build(cmdStr);
-	},
-
-	start: function()
-	{
-		var cmdStr = 'Start';
-		return this.build(cmdStr);
-	},
-
-	stop: function()
-	{
-		var cmdStr = 'Stop';
-		return this.build(cmdStr);
-	},
-
-	load: function(filename)
-	{
-		var cmdStr = 'Load ' + filename;
-		return this.build(cmdStr);
-	},
 
 	save: function(filename, overwrite)
 	{
@@ -160,35 +106,6 @@ var Command = {
 		return this.build(cmdStr);
 	},
 
-	getCaptureC3D: function()
-	{
-		var cmdStr = 'GetCaptureC3D';
-		return this.build(cmdStr);
-	},
-
-	getCaptureQtm: function()
-	{
-		var cmdStr = 'GetCaptureQtm';
-		return this.build(cmdStr);
-	},
-
-	loadProject: function(projectPath)
-	{
-		var cmdStr = 'LoadProject ' + projectPath;
-		return this.build(cmdStr);
-	},
-
-	trig: function()
-	{
-		var cmdStr = 'Trig';
-		return this.build(cmdStr);
-	},
-
-	setQtmEvent: function(label)
-	{
-		var cmdStr = 'SetQTMEvent ' + label;
-		return this.build(cmdStr);
-	},
 
 };
 
