@@ -126,12 +126,11 @@ Api.prototype = function()
 		this.client = this.net.connect(port, host, function() { });
 		bootstrap.call(this);
 
-
 		responsePromise
 			.then(function(packet) {
 				if ('QTM RT Interface connected\0' === packet.data.toString())
 				{
-					send.call(self, new Packet(Command.version(major, minor)))
+					send.call(self, Command.version(major, minor))
 						.then(function(data) {
 							deferredCommand.resolve();
 						})
@@ -151,22 +150,22 @@ Api.prototype = function()
 		return deferredCommand.promise;
 	},
 
-	qtmVersion      = function() { return send.call(this, new Packet(Command.qtmVersion())) },
-	byteOrder       = function() { return send.call(this, new Packet(Command.byteOrder())) },
-	getState        = function() { return send.call(this, new Packet(Command.getState())) },
-	getParameters   = function() { return send.call(this, new Packet(Command.getParameters.apply(Command, arguments))); },
-	getCurrentFrame = function() { return send.call(this, new Packet(Command.getCurrentFrame.apply(Command, arguments))); },
-	releaseControl  = function() { return send.call(this, new Packet(Command.releaseControl())); },
-	newMeasurement  = function() { return send.call(this, new Packet(Command.newMeasurement())); },
-	close           = function() { return send.call(this, new Packet(Command.close())); },
-	start           = function() { return send.call(this, new Packet(Command.start())); },
-	stop            = function() { return send.call(this, new Packet(Command.stop())); },
-	trig            = function() { return send.call(this, new Packet(Command.trig())); },
+	qtmVersion      = function() { return send.call(this, Command.qtmVersion()) },
+	byteOrder       = function() { return send.call(this, Command.byteOrder()) },
+	getState        = function() { return send.call(this, Command.getState()) },
+	getParameters   = function() { return send.call(this, Command.getParameters.apply(Command, arguments)); },
+	getCurrentFrame = function() { return send.call(this, Command.getCurrentFrame.apply(Command, arguments)); },
+	releaseControl  = function() { return send.call(this, Command.releaseControl()); },
+	newMeasurement  = function() { return send.call(this, Command.newMeasurement()); },
+	close           = function() { return send.call(this, Command.close()); },
+	start           = function() { return send.call(this, Command.start()); },
+	stop            = function() { return send.call(this, Command.stop()); },
+	trig            = function() { return send.call(this, Command.trig()); },
 
 	// XXX: Not tested with C3D file reply.
-	getCaptureC3D = function() { return send.call(this, new Packet(Command.getCaptureC3D())); },
+	getCaptureC3D = function() { return send.call(this, Command.getCaptureC3D()); },
 	// XXX: Not tested with QTM file reply.
-	getCaptureQtm = function() { return send.call(this, new Packet(Command.getCaptureQtm())); },
+	getCaptureQtm = function() { return send.call(this, Command.getCaptureQtm()); },
 
 	streamFrames = function(frequency, components, updPort)
 	{
@@ -180,7 +179,7 @@ Api.prototype = function()
 			throw TypeError('Expected components to be an array');
 		
 		this.isStreaming = true;
-		return send.call(this, new Packet(Command.streamFrames.apply(Command, arguments)));
+		return send.call(this, Command.streamFrames.apply(Command, arguments));
 	},
 
 	stopStreaming = function()
@@ -192,7 +191,7 @@ Api.prototype = function()
 		}
 
 		this.isStreaming = false;
-		return send.call(this, new Packet(Command.stopStreaming()));
+		return send.call(this, Command.stopStreaming());
 	},
 
 	takeControl = function(pass)
@@ -200,7 +199,7 @@ Api.prototype = function()
 		if (!_.isUndefined(pass) && !_.isString(pass))
 			throw TypeError('Password must be a string');
 
-		return send.call(this, new Packet(Command.takeControl(pass)));
+		return send.call(this, Command.takeControl(pass));
 	},
 
 	load = function(filename)
@@ -211,7 +210,7 @@ Api.prototype = function()
 		if (!_.isString(filename))
 			throw TypeError('Filename must be a string');
 
-		return send.call(this, new Packet(Command.load(filename)));
+		return send.call(this, Command.load(filename));
 	},
 
 	save = function(filename, overwrite)
@@ -225,7 +224,7 @@ Api.prototype = function()
 		if (1 < arguments.length)
 			overwrite = 'overwrite'
 
-		return send.call(this, new Packet(Command.save(filename, overwrite)));
+		return send.call(this, Command.save(filename, overwrite));
 	},
 
 	loadProject = function(projectPath)
@@ -236,7 +235,7 @@ Api.prototype = function()
 		if (!_.isString(projectPath))
 			throw TypeError('Project path must be a string');
 
-		return send.call(this, new Packet(Command.loadProject(projectPath)));
+		return send.call(this, Command.loadProject(projectPath));
 	},
 
 	setQtmEvent = function(label)
@@ -247,7 +246,7 @@ Api.prototype = function()
 		if (!_.isString(label))
 			throw TypeError('Label must be a string');
 
-		return send.call(this, new Packet(Command.setQtmEvent(label)));
+		return send.call(this, Command.setQtmEvent(label));
 	},
 
 	send = function(command)
@@ -274,13 +273,13 @@ Api.prototype = function()
 		var deferredResponse = Q.defer();
 		this.promiseQueue.unshift(deferredResponse);
 		return deferredResponse.promise;
-	};
+	},
 
 	disconnect = function()
 	{
 		checkConnection.call(this);
 		this.client.end();
-	},
+	};
 
 	return {
 		'connect':          connect,

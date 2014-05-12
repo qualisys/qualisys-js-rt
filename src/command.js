@@ -24,7 +24,7 @@ var Command = {
 
 		buf.write(cmdStr, qtmrt.HEADER_SIZE, cmdStr.length, 'utf8');
 
-		return buf;
+		return new Packet(buf);
 	},
 
 	qtmVersion:      function()             { return this.build('QTMVersion'); },
