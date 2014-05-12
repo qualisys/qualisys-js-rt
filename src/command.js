@@ -19,7 +19,7 @@ var Command = {
 		else
 		{
 			buf.writeUInt32BE(buf.length);
-			buf.writeUInt32BE(qtmrt.COMMAND, qtmrt.HEADER_SIZE_SIZE);
+			buf.writeUInt32BE(qtmrt.COMMAND, qtmrt.UINT32_SIZE);
 		}
 
 		buf.write(cmdStr, qtmrt.HEADER_SIZE, cmdStr.length, 'utf8');

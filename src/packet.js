@@ -1,114 +1,153 @@
 'use strict';
 
-var Model   = require('./model')
-  , qtmrt   = require('./qtmrt')
+var Model      = require('./model')
+  , qtmrt      = require('./qtmrt')
+  , readUInt32 = require('./helpers').readUInt32
+  , readUInt64 = require('./helpers').readUInt64
+  , Component  = require('./component')
 ;
 
 var Packet = Model.extend(
 	{
-		init: function(buf, byteOrder)
+		init: function(buf)
 		{
-			this.buffer    = buf;
-			this.byteOrder = qtmrt.byteOrder;
-			this.eventName = null;
-
 			if (!arguments.length)
 				throw TypeError('No buffer specified');
 
-			if (1 < arguments.length)
-				if (byteOrder !== qtmrt.LITTLE_ENDIAN || byteOrder !== qtmrt.BIG_ENDIAN)
-					throw TypeError('Unexpected byte order.');
-				else
-					this.byteOrder = byteOrder;
-
-
-			if (qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN)
-			{
-				this.size = buf.readUInt32LE(0);
-				this.type = buf.readUInt32LE(qtmrt.HEADER_SIZE_SIZE);
-
-				if (this.type === qtmrt.EVENT)
-					this.data = buf.readUInt8(qtmrt.HEADER_SIZE);
-			}
-			else
-			{
-				this.size = buf.readUInt32BE(0);
-				this.type = buf.readUInt32BE(qtmrt.HEADER_SIZE_SIZE);
-
-				if (this.type === qtmrt.EVENT)
-					this.data = buf.readUInt32BE(qtmrt.HEADER_SIZE);
-			}
-
-			if (this.type === qtmrt.EVENT)
-			{
-				this.eventName = Packet.eventToString(this.data);
-			}
-			else if (this.type === qtmrt.DATA)
-			{
-
-			}
-			else
-			{
-				this.data = buf.slice(qtmrt.HEADER_SIZE).toString('utf8');
-			}
-			
-			this.typeName = Packet.typeToString(this.type);
-
+			this.buffer   = buf;
+			this.size     = readUInt32(buf, 0);
+			this.type     = readUInt32(buf, qtmrt.UINT32_SIZE);
+			this.typeName = qtmrt.packetTypeToString(this.type);
+			this.data     = buf.slice(qtmrt.HEADER_SIZE).toString('utf8');
 		},
 	}
 );
 
+var ErrorPacket = Model.extend(
+	{
+	},
+	Packet
+);
+
+var CommandPacket = Model.extend(
+	{
+	},
+	Packet
+);
+
+var XmlPacket = Model.extend(
+	{
+	},
+	Packet
+);
+
+var DataPacket = Model.extend(
+	{
+		init: function(buf)
+		{
+			this._super.init.call(this, buf);
+			
+			this.timestamp      = readUInt64(buf, qtmrt.HEADER_SIZE);
+			this.frameNumber    = readUInt32(buf, qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE);
+			this.componentCount = readUInt32(buf, qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE + qtmrt.UINT32_SIZE);
+			this.components     = [];
+
+			var offset = qtmrt.DATA_FRAME_HEADER_SIZE;
+
+			for (var i = 0; i < this.componentCount; i++) {
+				var size = readUInt32(buf, offset);
+				this.components.push(Component.create(buf.slice(offset, offset + size)));
+			}
+		}
+	},
+	Packet
+);
+
+var NoMoreDataPacket = Model.extend(
+	{
+	},
+	Packet
+);
+
+var C3dFilePacket = Model.extend(
+	{
+	},
+	Packet
+);
+
+var EventPacket = Model.extend(
+	{
+		init: function(buf)
+		{
+			this._super.init.call(this, buf);
+			this.data      = buf.readUInt8(qtmrt.HEADER_SIZE);
+			this.eventId   = this.data
+			this.eventName = qtmrt.eventToString(this.eventId);
+		}
+	},
+	Packet
+);
+
+var DiscoverPacket = Model.extend(
+	{
+	},
+	Packet
+);
+
+var QtmFilePacket = Model.extend(
+	{
+	},
+	Packet
+);
+
+Packet.create = function(buf)
+{
+	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
+
+	switch (type) {
+
+		case qtmrt.ERROR:
+			return new ErrorPacket(buf);
+		break;
+		
+		case qtmrt.COMMAND:
+			return new CommandPacket(buf);
+		break;
+		
+		case qtmrt.XML:
+			return new XmlPacket(buf);
+		break;
+		
+		case qtmrt.DATA:
+			return new DataPacket(buf);
+		break;
+		
+		case qtmrt.NO_MORE_DATA:
+			return new NoMoreDataPacket(buf);
+		break;
+		
+		case qtmrt.C3D_FILE:
+			return new C3dFilePacket(buf);
+		break;
+		
+		case qtmrt.EVENT:
+			return new EventPacket(buf);
+		break;
+		
+		case qtmrt.DISCOVER:
+			return new DiscoverPacket(buf);
+		break;
+		
+		case qtmrt.QTM_FILE:
+			return new QtmFilePacket(buf);
+		break;
+	}
+};
+
 Packet.getSize = function(buf)
 {
-	var size = null;
-
-	if (qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN)
-		size = buf.readUInt32LE(0);
-	else
-		size = buf.readUInt32BE(0);
-
-	return size;
+	return readUInt32(buf, 0);
 };
-
-Packet.typeToString = function(typeId)
-{
-	var typeNames = {};
-
-	typeNames[qtmrt.ERROR]            = 'Error';
-	typeNames[qtmrt.COMMAND]          = 'Command';
-	typeNames[qtmrt.XML]              = 'XML';
-	typeNames[qtmrt.DATA]             = 'Data';
-	typeNames[qtmrt.NO_MORE_DATA]     = 'No More Data';
-	typeNames[qtmrt.C3D_FILE]         = 'C3D file';
-	typeNames[qtmrt.EVENT]            = 'Event';
-	typeNames[qtmrt.DISCOVER]         = 'Discover';
-	typeNames[qtmrt.QTM_FILE]         = 'QTM file';
-	typeNames[qtmrt.COMMAND_RESPONSE] = 'Command Response';
-
-	return typeNames[typeId];
-};
-
-Packet.eventToString = function(eventId)
-{
-	var eventNames = {};
-
-	eventNames[qtmrt.CONNECTED]               = 'Connected';
-	eventNames[qtmrt.CONNECTION_CLOSED]       = 'Connection Closed';
-	eventNames[qtmrt.CAPTURE_STARTED]         = 'Capture Started';
-	eventNames[qtmrt.CAPTURE_STOPPED]         = 'Capture Stopped';
-	eventNames[qtmrt.FETCHING_FINISHED]       = 'Fetching Finished';
-	eventNames[qtmrt.CALIBRATION_STARTED]     = 'Calibration Started';
-	eventNames[qtmrt.CALIBRATION_STOPPED]     = 'Calibration Stopped';
-	eventNames[qtmrt.RT_FROM_FILE_STARTED]    = 'RT From File Started';
-	eventNames[qtmrt.RT_FRON_FILE_STOPPED]    = 'RT From File Stopped';
-	eventNames[qtmrt.WAITING_FOR_TRIGGER]     = 'Waiting For Trigger';
-	eventNames[qtmrt.CAMERA_SETTINGS_CHANGED] = 'Camera Settings Changed';
-	eventNames[qtmrt.QTM_SHUTTING_DOWN]       = 'QTM Shutting Down';
-	eventNames[qtmrt.CAPTURE_SAVED]           = 'Capture Saved';
-
-	return eventNames[eventId];
-};
-
 
 module.exports = {
 	Packet: Packet,

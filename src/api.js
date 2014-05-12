@@ -48,7 +48,7 @@ Api.prototype = function()
 					receivePacket.call(this, this.chunks)
 					
 					if (bytesRead !== chunk.length)
-						packetSize = Packet.getSize(chunk.slice(bytesRead, bytesRead + qtmrt.HEADER_SIZE_SIZE))
+						packetSize = Packet.getSize(chunk.slice(bytesRead, bytesRead + qtmrt.UINT32_SIZE))
 
 					this.chunks = new Buffer(0);
 				}
@@ -63,7 +63,8 @@ Api.prototype = function()
 	
 	receivePacket = function(data)
 	{
-		var packet = new Packet(data)
+		//var packet = new Packet(data)
+		var packet = Packet.create(data)
 		  , command = this.issuedCommands.pop()
 		;
 
@@ -398,7 +399,9 @@ api.connect()
 	//.then(function() { return api.getCaptureC3D(); })
 	//.then(function() { return api.getCaptureQtm(); })
 	//.then(function() { return api.stopStreaming(); })
-	.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3DNoLabels']); })
+	.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3D']); })
+	//.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3DNoLabels']); })
+	//.then(function() { return api.streamFrames('Frequency:100', ['3DNoLabels']); })
 	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {

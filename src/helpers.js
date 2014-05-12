@@ -1,13 +1,38 @@
-var _       = require('underscore')
-  , moment  = require('moment')
-  , sprintf = require('sprintf')
-  , qtmrt   = require('./qtmrt')
-  , Packet  = require('./packet').Packet
+'use strict';
+
+var _        = require('underscore')
+  , moment   = require('moment')
+  , sprintf  = require('sprintf')
+  , Big      = require('big.js')
+  , qtmrt    = require('./qtmrt')
 ;
 
-
-var Logger = function() {
+var readUInt16 = function(buffer, pos)
+{
+	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
+		? buffer.readUInt16LE(pos) : buffer.readUInt16BE(pos);
 }
+
+var readUInt32 = function(buffer, pos)
+{
+	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
+		? buffer.readUInt32LE(pos) : buffer.readUInt32BE(pos);
+}
+
+var readUInt64 = function(buffer, pos)
+{
+	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
+		? new Big(buffer.readUInt32LE(pos) << 8).plus(buffer.readUInt32LE(pos + 4))
+		: new Big(buffer.readUInt32BE(pos) << 8).plus(buffer.readUInt32BE(pos + 4))
+}
+
+var readFloat = function(buffer, pos)
+{
+	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
+		? buffer.readFloatLE(pos) : buffer.readFloatBE(pos);
+}
+
+var Logger = function() { }
 
 Logger.prototype = function()
 {
@@ -58,7 +83,9 @@ Logger.prototype = function()
 		}
 		else if (packet.type === qtmrt.DATA)
 		{
-			value = 'Data frame not yet implemented';
+			value = 'Frame: ' + packet.frameNumber
+				+ ', Components: ' + packet.componentCount
+				+ ', Size: ' + packet.size;
 		}
 		else if (packet.type === qtmrt.C3D)
 		{
@@ -70,7 +97,7 @@ Logger.prototype = function()
 		}
 
 		this.log(
-			(sprintf("%-20s", '<' + Packet.typeToString(packet.type) + '>')
+			(sprintf("%-20s", '<' + qtmrt.packetTypeToString(packet.type) + '>')
 			+ value)[typeColor]
 		);
 	}
@@ -84,4 +111,8 @@ Logger.prototype = function()
 
 module.exports = {
 	Logger: Logger,
+	readUInt16: readUInt16,
+	readUInt32: readUInt32,
+	readUInt64: readUInt64,
+	readFloat: readFloat,
 }
