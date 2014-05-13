@@ -122,6 +122,4 @@ Packet.getSize = function(buf)
 	return readUInt32(buf, 0);
 };
 
-module.exports = {
-	Packet: Packet,
-}
+module.exports = Packet;

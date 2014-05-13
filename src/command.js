@@ -3,7 +3,7 @@
 var _      = require('underscore')
   , qtmrt  = require('./qtmrt')
   , Model  = require('./model')
-  , Packet = require('./packet').Packet
+  , Packet = require('./packet')
 ;
 
 var Command = {
@@ -109,6 +109,4 @@ var Command = {
 
 };
 
-module.exports = {
-	Command: Command,
-}
+module.exports = Command;

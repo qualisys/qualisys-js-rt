@@ -4,23 +4,26 @@ var Q       = require('q')
   , _       = require('underscore')
   , colors  = require('colors')
   , qtmrt   = require('./qtmrt')
-  , Packet  = require('./packet').Packet
-  , Command = require('./command').Command
+  , Mangler = require('./mangler')
+  , Packet  = require('./packet')
+  , Command = require('./command')
   , Logger  = require('./helpers').Logger
 ;
 
 _.str = require('underscore.string')
 
 var Api = function(options) {
-	this.net              = require('net');
-	this.client           = null;
-	this.response         = null;
-	this.deferredResponse = null;
-	this.promiseQueue     = [];
-	this.issuedCommands   = [];
-	this.logger           = new Logger();
-	this.chunks           = new Buffer(0);
-	this.isStreaming      = false;
+	this.net               = require('net');
+	this.client            = null;
+	this.response          = null;
+	this.deferredResponse  = null;
+	this.promiseQueue      = [];
+	this.issuedCommands    = [];
+	this.logger            = new Logger();
+	this.mangler           = new Mangler();
+	//this.chunks            = new Buffer(0);
+	this.isStreaming       = false;
+	this.currentPacketSize = false;
 
 	this.options = _.defaults(options, {
 		debug: false,
@@ -35,25 +38,7 @@ Api.prototype = function()
 		this.client.setNoDelay(true);
 
 		this.client.on('data', function(chunk) {
-			var packetSize = Packet.getSize(chunk)
-			  , bytesRead  = 0;
-
-			while (this.chunks.length < packetSize && bytesRead < chunk.length) {
-				var copySize = Math.min(packetSize, chunk.length - bytesRead);
-				this.chunks  = Buffer.concat([this.chunks, chunk.slice(bytesRead, bytesRead + copySize)])
-				bytesRead   += copySize;
-
-				if (this.chunks.length === packetSize)
-				{
-					receivePacket.call(this, this.chunks)
-					
-					if (bytesRead !== chunk.length)
-						packetSize = Packet.getSize(chunk.slice(bytesRead, bytesRead + qtmrt.UINT32_SIZE))
-
-					this.chunks = new Buffer(0);
-				}
-			}
-				
+			this.mangler.read(chunk, { fun: receivePacket, thisArg: this });
 		}.bind(this));
 
 		this.client.on('end', function() {
@@ -63,7 +48,6 @@ Api.prototype = function()
 	
 	receivePacket = function(data)
 	{
-		//var packet = new Packet(data)
 		var packet = Packet.create(data)
 		  , command = this.issuedCommands.pop()
 		;
@@ -330,7 +314,8 @@ api.connect()
 	//.then(function() { return api.getCaptureC3D(); })
 	//.then(function() { return api.getCaptureQtm(); })
 	//.then(function() { return api.stopStreaming(); })
-	.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3D']); })
+	.then(function() { return api.streamFrames('FrequencyDivisor:100', ['2D']); })
+	//.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3D']); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3DNoLabels']); })
 	//.then(function() { return api.streamFrames('Frequency:100', ['3DNoLabels']); })
 	//.then(function() { return api.disconnect(); })
