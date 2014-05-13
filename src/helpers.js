@@ -7,14 +7,28 @@ var _        = require('underscore')
   , qtmrt    = require('./qtmrt')
 ;
 
-var readUInt16 = function(buffer, pos)
+var readUInt8 = function(buffer, pos, bytesRead)
 {
+	if (!_.isUndefined(bytesRead))
+		bytesRead.count += qtmrt.UINT8_SIZE;
+
+	return buffer.readUInt8(pos);
+}
+
+var readUInt16 = function(buffer, pos, bytesRead)
+{
+	if (!_.isUndefined(bytesRead))
+		bytesRead.count += qtmrt.UINT16_SIZE;
+
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
 		? buffer.readUInt16LE(pos) : buffer.readUInt16BE(pos);
 }
 
-var readUInt32 = function(buffer, pos)
+var readUInt32 = function(buffer, pos, bytesRead)
 {
+	if (!_.isUndefined(bytesRead))
+		bytesRead.count += qtmrt.UINT32_SIZE;
+
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
 		? buffer.readUInt32LE(pos) : buffer.readUInt32BE(pos);
 }
@@ -73,6 +87,7 @@ Logger.prototype = function()
 		  , value     = packet.data
 		;
 
+		// XXX: Move value stuff to toString on packets.
 		if (packet.type === qtmrt.EVENT)
 		{
 			value = packet.eventName;
@@ -111,6 +126,7 @@ Logger.prototype = function()
 
 module.exports = {
 	Logger: Logger,
+	readUInt8: readUInt8,
 	readUInt16: readUInt16,
 	readUInt32: readUInt32,
 	readUInt64: readUInt64,

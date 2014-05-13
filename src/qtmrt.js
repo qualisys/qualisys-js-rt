@@ -55,7 +55,9 @@ var qtmrt = {
 
 qtmrt.HEADER_SIZE                = 2 * qtmrt.UINT32_SIZE;
 qtmrt.COMPONENT_HEADER_SIZE      = 2 * qtmrt.UINT32_SIZE;
+qtmrt.COMPONENT_MARKER_2D_SIZE   = 2 * (qtmrt.UINT32_SIZE + qtmrt.UINT16_SIZE);
 qtmrt.COMPONENT_MARKER_3D_OFFSET = qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE + 2 * qtmrt.UINT16_SIZE;
+qtmrt.COMPONENT_MARKER_2D_OFFSET = qtmrt.COMPONENT_MARKER_3D_OFFSET;
 qtmrt.DATA_FRAME_HEADER_SIZE     = qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE + 2 * qtmrt.UINT32_SIZE;
 qtmrt.byteOrder                  = qtmrt.LITTLE_ENDIAN;
  

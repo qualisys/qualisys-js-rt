@@ -45,7 +45,7 @@ var DataPacket = Model.extend(
 	{
 		init: function(buf)
 		{
-			this._super.init.call(this, buf);
+			Packet.init.call(this, buf);
 			
 			this.timestamp      = readUInt64(buf, qtmrt.HEADER_SIZE);
 			this.frameNumber    = readUInt32(buf, qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE);
@@ -79,7 +79,7 @@ var EventPacket = Model.extend(
 	{
 		init: function(buf)
 		{
-			this._super.init.call(this, buf);
+			Packet.init.call(this, buf);
 			this.data      = buf.readUInt8(qtmrt.HEADER_SIZE);
 			this.eventId   = this.data
 			this.eventName = qtmrt.eventToString(this.eventId);
