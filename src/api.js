@@ -21,7 +21,6 @@ var Api = function(options) {
 	this.issuedCommands    = [];
 	this.logger            = new Logger();
 	this.mangler           = new Mangler();
-	//this.chunks            = new Buffer(0);
 	this.isStreaming       = false;
 	this.currentPacketSize = false;
 
@@ -314,10 +313,12 @@ api.connect()
 	//.then(function() { return api.getCaptureC3D(); })
 	//.then(function() { return api.getCaptureQtm(); })
 	//.then(function() { return api.stopStreaming(); })
-	.then(function() { return api.streamFrames('FrequencyDivisor:100', ['2D']); })
+	//.then(function() { return api.streamFrames('FrequencyDivisor:100', ['2D']); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3D']); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3DNoLabels']); })
 	//.then(function() { return api.streamFrames('Frequency:100', ['3DNoLabels']); })
+	//.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3DRes']); })
+	.then(function() { return api.streamFrames('FrequencyDivisor:100', ['6D']); })
 	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {

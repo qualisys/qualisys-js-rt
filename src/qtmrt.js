@@ -53,14 +53,15 @@ var qtmrt = {
 
 };
 
-qtmrt.HEADER_SIZE                = 2 * qtmrt.UINT32_SIZE;
-qtmrt.COMPONENT_HEADER_SIZE      = 2 * qtmrt.UINT32_SIZE;
-qtmrt.COMPONENT_MARKER_2D_SIZE   = 2 * (qtmrt.UINT32_SIZE + qtmrt.UINT16_SIZE);
-qtmrt.COMPONENT_MARKER_3D_OFFSET = qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE + 2 * qtmrt.UINT16_SIZE;
-qtmrt.COMPONENT_MARKER_2D_OFFSET = qtmrt.COMPONENT_MARKER_3D_OFFSET;
-qtmrt.DATA_FRAME_HEADER_SIZE     = qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE + 2 * qtmrt.UINT32_SIZE;
-qtmrt.byteOrder                  = qtmrt.LITTLE_ENDIAN;
- 
+qtmrt.HEADER_SIZE            = 2 * qtmrt.UINT32_SIZE;
+qtmrt.COMPONENT_HEADER_SIZE  = 2 * qtmrt.UINT32_SIZE;
+qtmrt.COMPONENT_2D_SIZE      = 2 * (qtmrt.UINT32_SIZE + qtmrt.UINT16_SIZE);
+qtmrt.COMPONENT_3D_OFFSET    = qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE + 2 * qtmrt.UINT16_SIZE;
+qtmrt.COMPONENT_2D_OFFSET    = qtmrt.COMPONENT_3D_OFFSET;
+qtmrt.COMPONENT_6D_OFFSET    = qtmrt.COMPONENT_3D_OFFSET;
+qtmrt.DATA_FRAME_HEADER_SIZE = qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE + 2 * qtmrt.UINT32_SIZE;
+qtmrt.byteOrder              = qtmrt.LITTLE_ENDIAN;
+
 qtmrt.packetTypeToString = function(typeId)
 {
 	var typeNames = {};
@@ -88,7 +89,7 @@ qtmrt.eventToString = function(eventId)
 	eventNames[qtmrt.CAPTURE_STARTED]         = 'Capture Started';
 	eventNames[qtmrt.CAPTURE_STOPPED]         = 'Capture Stopped';
 	eventNames[qtmrt.FETCHING_FINISHED]       = 'Fetching Finished';
-	eventNames[qtmrt.CALIBRATION_STARTED]     = 'Calibration Started';
+	eventNames[qtmrt.CALIBRATI3ON_STARTED]    = 'Calibration Started';
 	eventNames[qtmrt.CALIBRATION_STOPPED]     = 'Calibration Stopped';
 	eventNames[qtmrt.RT_FROM_FILE_STARTED]    = 'RT From File Started';
 	eventNames[qtmrt.RT_FROM_FILE_STOPPED]    = 'RT From File Stopped';
@@ -98,6 +99,29 @@ qtmrt.eventToString = function(eventId)
 	eventNames[qtmrt.CAPTURE_SAVED]           = 'Capture Saved';
 
 	return eventNames[eventId];
+};
+
+qtmrt.componentTypeToString = function(typeId)
+{
+	var typeNames = {};
+
+	typeNames[qtmrt.COMPONENT_2D]                     = '2D';
+	typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2D (linearized)';
+	typeNames[qtmrt.COMPONENT_3D]                     = '3D';
+	typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3D (no labels)';
+	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3D (with residuals)';
+	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3D (no labels, with residuals)';
+	typeNames[qtmrt.COMPONENT_6D]                     = '6DOF';
+	typeNames[qtmrt.COMPONENT_6D_Euler]               = '6DOF (with euler angles)';
+	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DOF (with residuals)';
+	typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DOF (with eauler angles and residuals)';
+	typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
+	typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
+	typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'Analog (single sample)';
+	typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
+	typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'Force (single sample)';
+
+	return typeNames[typeId];
 };
 
 module.exports = qtmrt;

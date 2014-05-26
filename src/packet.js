@@ -51,12 +51,18 @@ var DataPacket = Model.extend(
 			this.frameNumber    = readUInt32(buf, qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE);
 			this.componentCount = readUInt32(buf, qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE + qtmrt.UINT32_SIZE);
 			this.components     = [];
+			this.componentTypes = [];
 
 			var offset = qtmrt.DATA_FRAME_HEADER_SIZE;
 
 			for (var i = 0; i < this.componentCount; i++) {
-				var size = readUInt32(buf, offset);
-				this.components.push(Component.create(buf.slice(offset, offset + size)));
+				var size      = readUInt32(buf, offset)
+				  , component = Component.create(buf.slice(offset, offset + size))
+				;
+				offset += size;
+
+				this.componentTypes.push(component.type);
+				this.components.push(component);
 			}
 		}
 	},

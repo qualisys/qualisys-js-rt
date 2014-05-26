@@ -40,8 +40,11 @@ var readUInt64 = function(buffer, pos)
 		: new Big(buffer.readUInt32BE(pos) << 8).plus(buffer.readUInt32BE(pos + 4))
 }
 
-var readFloat = function(buffer, pos)
+var readFloat = function(buffer, pos, bytesRead)
 {
+	if (!_.isUndefined(bytesRead))
+		bytesRead.count += qtmrt.FLOAT_SIZE;
+
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
 		? buffer.readFloatLE(pos) : buffer.readFloatBE(pos);
 }
@@ -98,9 +101,11 @@ Logger.prototype = function()
 		}
 		else if (packet.type === qtmrt.DATA)
 		{
-			value = 'Frame: ' + packet.frameNumber
-				+ ', Components: ' + packet.componentCount
-				+ ', Size: ' + packet.size;
+			var componentTypes = '[' + packet.componentTypes.map(qtmrt.componentTypeToString).join(', ') + ']';
+
+			value = 'Frame: '      + packet.frameNumber
+				+ ', Components: ' + componentTypes
+				+ ', Size: '       + packet.size;
 		}
 		else if (packet.type === qtmrt.C3D)
 		{

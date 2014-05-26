@@ -11,8 +11,8 @@ var qtmrt      = require('./qtmrt')
 var Camera = function() { };
 Camera.create = function(buf)
 {
-	var camera         = {}
-	  , bytesRead      = { count: 0 }
+	var camera    = {}
+	  , bytesRead = { count: 0 }
 	;
 
 	camera.markerCount = readUInt32(buf, 0, bytesRead);
@@ -30,6 +30,20 @@ Camera.create = function(buf)
 	}
 
 	return camera;
+};
+
+var RotationMatrix = function() { };
+RotationMatrix.create = function(buf)
+{
+	var matrix       = []
+	  , bytesRead    = { count: 0 }
+	  , matrixLength = 9;
+	;
+
+	for (var i = 0; i < matrixLength; i++)
+		matrix.push(readFloat(buf, bytesRead.count, bytesRead));
+
+	return matrix;
 };
 
 var Component = Model.extend(
@@ -62,11 +76,11 @@ var Component2d = Model.extend(
 
 			for (var i = 0; i < this.cameraCount; i++)
 			{
-				var cameraStart = qtmrt.COMPONENT_MARKER_2D_OFFSET + (i * (qtmrt.UINT32_SIZE + qtmrt.UINT8_SIZE)) + markerOffset;
+				var cameraStart = qtmrt.COMPONENT_2D_OFFSET + (i * (qtmrt.UINT32_SIZE + qtmrt.UINT8_SIZE)) + markerOffset;
 				var markerCount = readUInt32(this.buffer, cameraStart);
-				var cameraSize  = qtmrt.UINT32_SIZE + qtmrt.UINT8_SIZE + markerCount * qtmrt.COMPONENT_MARKER_2D_SIZE;
+				var cameraSize  = qtmrt.UINT32_SIZE + qtmrt.UINT8_SIZE + markerCount * qtmrt.COMPONENT_2D_SIZE;
 
-				markerOffset += markerCount * qtmrt.COMPONENT_MARKER_2D_SIZE;
+				markerOffset += markerCount * qtmrt.COMPONENT_2D_SIZE;
 				this.cameras.push(Camera.create(this.buffer.slice(cameraStart, cameraStart + cameraSize)));
 			}
 		}
@@ -92,9 +106,9 @@ var Component3d = Model.extend(
 			for (var i = 0; i < this.markerCount; i++)
 			{
 				this.markers.push({
-					x: readFloat(this.buffer, qtmrt.COMPONENT_MARKER_3D_OFFSET + (3 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
-					y: readFloat(this.buffer, qtmrt.COMPONENT_MARKER_3D_OFFSET + (3 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
-					z: readFloat(this.buffer, qtmrt.COMPONENT_MARKER_3D_OFFSET + (3 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
+					x: readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (3 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
+					y: readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (3 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
+					z: readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (3 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
 				});
 			}
 		}
@@ -109,15 +123,85 @@ var Component3dNoLabels = Model.extend(
 			for (var i = 0; i < this.markerCount; i++)
 			{
 				this.markers.push({
-					x:  readFloat(this.buffer,  qtmrt.COMPONENT_MARKER_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
-					y:  readFloat(this.buffer,  qtmrt.COMPONENT_MARKER_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
-					z:  readFloat(this.buffer,  qtmrt.COMPONENT_MARKER_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
-					id: readUInt32(this.buffer, qtmrt.COMPONENT_MARKER_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
+					x:  readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
+					y:  readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
+					z:  readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
+					id: readUInt32(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
 				});
 			}
 		}
 	},
 	Component3d
+);
+
+var Component3dResiduals = Model.extend(
+	{
+		parseMarkers: function()
+		{
+			for (var i = 0; i < this.markerCount; i++)
+			{
+				this.markers.push({
+					x:        readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
+					y:        readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
+					z:        readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
+					residual: readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
+				});
+			}
+		}
+	},
+	Component3d
+);
+
+var Component3dNoLabelsResiduals = Model.extend(
+	{
+		parseMarkers: function()
+		{
+			for (var i = 0; i < this.markerCount; i++)
+			{
+				this.markers.push({
+					x:        readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (5 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
+					y:        readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (5 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
+					z:        readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (5 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
+					id:       readUInt32(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (5 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
+					residual: readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (5 * qtmrt.FLOAT_SIZE * i) + 4 * qtmrt.UINT32_SIZE),
+				});
+			}
+		}
+	},
+	Component3d
+);
+
+var Component6d = Model.extend(
+	{
+		init: function(buf) {
+			Component.init.call(this, buf);
+			this.rigidBodyCount  = readUInt32(buf, qtmrt.COMPONENT_HEADER_SIZE);
+			this.dropRate2d      = readUInt16(buf, qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE);
+			this.outOfSyncRate2d = readUInt16(buf, qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE + qtmrt.UINT16_SIZE);
+			this.rigidBodies     = [];
+
+			this.parseRigidBodies();
+		},
+
+		parseRigidBodies: function()
+		{
+			for (var i = 0; i < this.rigidBodyCount; i++)
+			{
+				var rotationStart = qtmrt.COMPONENT_6D_OFFSET + (12 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE
+				  , rotationEnd   = rotationStart + 9 * qtmrt.FLOAT_SIZE
+				;
+
+				this.rigidBodies.push({
+					x:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (12 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
+					y:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (12 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
+					z:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (12 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
+					rotation: RotationMatrix.create(this.buffer.slice(rotationStart, rotationEnd)),
+				});
+			}
+		}
+
+	},
+	Component
 );
 
 Component.create = function(buf)
@@ -141,6 +225,7 @@ Component.create = function(buf)
 		break;
 		
 		case qtmrt.COMPONENT_6D:
+			return new Component6d(buf);
 		break;
 		
 		case qtmrt.COMPONENT_6D_Euler:
@@ -148,13 +233,15 @@ Component.create = function(buf)
 		
 		case qtmrt.COMPONENT_2D:
 		case qtmrt.COMPONENT_2D_LINEARIZED:
-			new Component2d(buf);
+			return new Component2d(buf);
 		break;
 		
 		case qtmrt.COMPONENT_3D_RESIDUALS:
+			return new Component3dResiduals(buf);
 		break;
 		
 		case qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS:
+			return new Component3dNoLabelsResiduals(buf);
 		break;
 		
 		case qtmrt.COMPONENT_6D_RESIDUALS:
