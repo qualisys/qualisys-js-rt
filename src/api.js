@@ -4,7 +4,7 @@ var Q       = require('q')
   , _       = require('underscore')
   , colors  = require('colors')
   , qtmrt   = require('./qtmrt')
-  , Mangler = require('./mangler')
+  , Mangler = require('./mangler').Mangler
   , Packet  = require('./packet')
   , Command = require('./command')
   , Logger  = require('./helpers').Logger
@@ -318,7 +318,8 @@ api.connect()
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3DNoLabels']); })
 	//.then(function() { return api.streamFrames('Frequency:100', ['3DNoLabels']); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', ['3DRes']); })
-	.then(function() { return api.streamFrames('FrequencyDivisor:100', ['6D']); })
+	//.then(function() { return api.streamFrames('FrequencyDivisor:100', ['6D']); })
+	.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_6D]); })
 	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {

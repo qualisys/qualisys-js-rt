@@ -1,9 +1,10 @@
 'use strict';
 
-var _      = require('underscore')
-  , qtmrt  = require('./qtmrt')
-  , Model  = require('./model')
-  , Packet = require('./packet')
+var _         = require('underscore')
+  , qtmrt     = require('./qtmrt')
+  , Model     = require('./model')
+  , Packet    = require('./packet')
+  , Component = require('./component')
 ;
 
 var Command = {
@@ -62,15 +63,13 @@ var Command = {
 	getCurrentFrame: function()
 	{
 		var predicate = function(component) {
-				return _.contains(['All', '2D', '2DLin', '3D', '3DRes', '3DNoLabels',
-				'3DNoLabelsRes', 'Analog', 'AnalogSingle', 'Force', '6D', '6DRes',
-				'6DEuler', '6DEulerRes', 'Image'], component);
+				return _.contains(qtmrt.COMPONENTS, component);
 			}
 		   , components = _.filter(arguments, predicate)
 		;
 
-		if (_.contains(components, 'All'))
-			components = ['All'];
+		if (_.contains(components, qtmrt.COMPONENT_ALL))
+			components = [qtmrt.COMPONENT_ALL];
 
 		return this.build('GetCurrentFrame ' + components.join(' '));
 	},
@@ -82,9 +81,7 @@ var Command = {
 				? ''
 				: ' UDP:' + (_.isUndefined(udpAddress) ? '' : udpAddress + ':') + udpPort
 		  , predicate = function(component) {
-				return _.contains(['All', '2D', '2DLin', '3D', '3DRes', '3DNoLabels',
-				'3DNoLabelsRes', 'Analog', 'AnalogSingle', 'Force', '6D', '6DRes',
-				'6DEuler', '6DEulerRes', 'Image'], component);
+				return _.contains(qtmrt.COMPONENTS, component);
 			}
 		  , components = _.filter(components, predicate)
 		;
@@ -92,10 +89,11 @@ var Command = {
 		if (_.isEmpty(components))
 			throw TypeError('No valid components specified');
 
-		if (_.contains(components, 'All'))
-			components = ['All'];
+		if (_.contains(components, qtmrt.COMPONENT_ALL))
+			components = [qtmrt.COMPONENT_ALL];
 
-		var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.join(' ');
+		var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.map(Component.typeToCommandString).join(' ');
+
 		return this.build(cmdStr);
 	},
 

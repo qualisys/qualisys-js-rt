@@ -1,10 +1,10 @@
 'use strict';
 
 var qtmrt      = require('./qtmrt')
-  , readUInt32 = require('./helpers').readUInt32
-  , readUInt16 = require('./helpers').readUInt16
-  , readUInt8  = require('./helpers').readUInt8
-  , readFloat  = require('./helpers').readFloat
+  , readUInt32 = require('./mangler').readUInt32
+  , readUInt16 = require('./mangler').readUInt16
+  , readUInt8  = require('./mangler').readUInt8
+  , readFloat  = require('./mangler').readFloat
   , Model      = require('./model')
 ;
 
@@ -44,6 +44,48 @@ RotationMatrix.create = function(buf)
 		matrix.push(readFloat(buf, bytesRead.count, bytesRead));
 
 	return matrix;
+};
+
+var componentTypeToString = function(typeId)
+{
+	var typeNames = {};
+	typeNames[qtmrt.COMPONENT_2D]                     = '2D';
+	typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2D (linearized)';
+	typeNames[qtmrt.COMPONENT_3D]                     = '3D';
+	typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3D (no labels)';
+	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3D (with residuals)';
+	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3D (no labels, with residuals)';
+	typeNames[qtmrt.COMPONENT_6D]                     = '6DOF';
+	typeNames[qtmrt.COMPONENT_6D_Euler]               = '6DOF (with euler angles)';
+	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DOF (with residuals)';
+	typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DOF (with eauler angles and residuals)';
+	typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
+	typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
+	typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'Analog (single sample)';
+	typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
+	typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'Force (single sample)';
+	return typeNames[typeId];
+};
+
+var componentTypeToCommandString = function(typeId)
+{
+	var typeNames = {};
+	typeNames[qtmrt.COMPONENT_2D]                     = '2D';
+	typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2DLin';
+	typeNames[qtmrt.COMPONENT_3D]                     = '3D';
+	typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3DNoLabels';
+	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3DRes)';
+	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3DNoLabelsRes)';
+	typeNames[qtmrt.COMPONENT_6D]                     = '6D';
+	typeNames[qtmrt.COMPONENT_6D_Euler]               = '6DEuler';
+	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DRes';
+	typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DEulerRes';
+	typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
+	typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
+	typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'AnalogSingle';
+	typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
+	typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'ForceSingle';
+	return typeNames[typeId];
 };
 
 var Component = Model.extend(
@@ -261,4 +303,8 @@ Component.create = function(buf)
 	}
 };
 
+Component.typeToString = componentTypeToString;
+Component.typeToCommandString = componentTypeToCommandString;
+
 module.exports = Component;
+

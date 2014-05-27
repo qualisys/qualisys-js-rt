@@ -32,12 +32,13 @@ var qtmrt = {
 	QTM_SHUTTING_DOWN:        12,
 	CAPTURE_SAVED:            13,
 
+	COMPONENT_ALL:                     0,
 	COMPONENT_3D:                      1,
 	COMPONENT_3D_NO_LABELS:            2,
 	COMPONENT_ANALOG:                  3,
 	COMPONENT_FORCE:                   4,
 	COMPONENT_6D:                      5,
-	COMPONENT_6D_Euler:                6,
+	COMPONENT_6D_EULER:                6,
 	COMPONENT_2D:                      7,
 	COMPONENT_2D_LINEARIZED:           8,
 	COMPONENT_3D_RESIDUALS:            9,
@@ -62,23 +63,21 @@ qtmrt.COMPONENT_6D_OFFSET    = qtmrt.COMPONENT_3D_OFFSET;
 qtmrt.DATA_FRAME_HEADER_SIZE = qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE + 2 * qtmrt.UINT32_SIZE;
 qtmrt.byteOrder              = qtmrt.LITTLE_ENDIAN;
 
-qtmrt.packetTypeToString = function(typeId)
-{
-	var typeNames = {};
-
-	typeNames[qtmrt.ERROR]            = 'Error';
-	typeNames[qtmrt.COMMAND]          = 'Command';
-	typeNames[qtmrt.XML]              = 'XML';
-	typeNames[qtmrt.DATA]             = 'Data';
-	typeNames[qtmrt.NO_MORE_DATA]     = 'No More Data';
-	typeNames[qtmrt.C3D_FILE]         = 'C3D file';
-	typeNames[qtmrt.EVENT]            = 'Event';
-	typeNames[qtmrt.DISCOVER]         = 'Discover';
-	typeNames[qtmrt.QTM_FILE]         = 'QTM file';
-	typeNames[qtmrt.COMMAND_RESPONSE] = 'Command Response';
-
-	return typeNames[typeId];
-};
+qtmrt.COMPONENTS = [qtmrt.COMPONENT_ALL,
+					qtmrt.COMPONENT_2D, 
+					qtmrt.COMPONENT_2D_LINEARIZED,
+					qtmrt.COMPONENT_3D,
+					qtmrt.COMPONENT_3D_RESIDUALS,
+					qtmrt.COMPONENT_3D_NO_LABELS,
+					qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS,
+					qtmrt.COMPONENT_ANALOG,
+					qtmrt.COMPONENT_ANALOG_SINGLE,
+					qtmrt.COMPONENT_FORCE,
+					qtmrt.COMPONENT_6D,
+					qtmrt.COMPONENT_6D_RESIDUALS,
+					qtmrt.COMPONENT_6D_EULER,
+					qtmrt.COMPONENT_6D_EULER_RESIDUALS,
+					qtmrt.COMPONENT_IMAGE];
 
 qtmrt.eventToString = function(eventId)
 {
@@ -99,29 +98,6 @@ qtmrt.eventToString = function(eventId)
 	eventNames[qtmrt.CAPTURE_SAVED]           = 'Capture Saved';
 
 	return eventNames[eventId];
-};
-
-qtmrt.componentTypeToString = function(typeId)
-{
-	var typeNames = {};
-
-	typeNames[qtmrt.COMPONENT_2D]                     = '2D';
-	typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2D (linearized)';
-	typeNames[qtmrt.COMPONENT_3D]                     = '3D';
-	typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3D (no labels)';
-	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3D (with residuals)';
-	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3D (no labels, with residuals)';
-	typeNames[qtmrt.COMPONENT_6D]                     = '6DOF';
-	typeNames[qtmrt.COMPONENT_6D_Euler]               = '6DOF (with euler angles)';
-	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DOF (with residuals)';
-	typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DOF (with eauler angles and residuals)';
-	typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
-	typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
-	typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'Analog (single sample)';
-	typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
-	typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'Force (single sample)';
-
-	return typeNames[typeId];
 };
 
 module.exports = qtmrt;

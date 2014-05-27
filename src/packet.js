@@ -2,10 +2,28 @@
 
 var Model      = require('./model')
   , qtmrt      = require('./qtmrt')
-  , readUInt32 = require('./helpers').readUInt32
-  , readUInt64 = require('./helpers').readUInt64
+  , readUInt32 = require('./mangler').readUInt32
+  , readUInt64 = require('./mangler').readUInt64
   , Component  = require('./component')
 ;
+
+var packetTypeToString = function(typeId)
+{
+	var typeNames = {};
+
+	typeNames[qtmrt.ERROR]            = 'Error';
+	typeNames[qtmrt.COMMAND]          = 'Command';
+	typeNames[qtmrt.XML]              = 'XML';
+	typeNames[qtmrt.DATA]             = 'Data';
+	typeNames[qtmrt.NO_MORE_DATA]     = 'No More Data';
+	typeNames[qtmrt.C3D_FILE]         = 'C3D file';
+	typeNames[qtmrt.EVENT]            = 'Event';
+	typeNames[qtmrt.DISCOVER]         = 'Discover';
+	typeNames[qtmrt.QTM_FILE]         = 'QTM file';
+	typeNames[qtmrt.COMMAND_RESPONSE] = 'Command Response';
+
+	return typeNames[typeId];
+};
 
 var Packet = Model.extend(
 	{
@@ -17,7 +35,7 @@ var Packet = Model.extend(
 			this.buffer   = buf;
 			this.size     = readUInt32(buf, 0);
 			this.type     = readUInt32(buf, qtmrt.UINT32_SIZE);
-			this.typeName = qtmrt.packetTypeToString(this.type);
+			this.typeName = packetTypeToString(this.type);
 			this.data     = buf.slice(qtmrt.HEADER_SIZE).toString('utf8');
 		},
 	}
@@ -123,9 +141,6 @@ Packet.create = function(buf)
 	}
 };
 
-Packet.getSize = function(buf)
-{
-	return readUInt32(buf, 0);
-};
+Packet.typeToString = packetTypeToString;
 
 module.exports = Packet;
