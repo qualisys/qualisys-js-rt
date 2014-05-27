@@ -246,6 +246,30 @@ var Component6d = Model.extend(
 	Component
 );
 
+var Component6dResiduals = Model.extend(
+	{
+		parseRigidBodies: function()
+		{
+			for (var i = 0; i < this.rigidBodyCount; i++)
+			{
+				var rotationStart = qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE
+				  , rotationEnd   = rotationStart + 9 * qtmrt.FLOAT_SIZE
+				;
+
+				this.rigidBodies.push({
+					x:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 0  * qtmrt.FLOAT_SIZE),
+					y:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 1  * qtmrt.FLOAT_SIZE),
+					z:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 2  * qtmrt.FLOAT_SIZE),
+					rotation: RotationMatrix.create(this.buffer.slice(rotationStart, rotationEnd)),
+					residual: readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 12 * qtmrt.FLOAT_SIZE),
+				});
+			}
+		}
+
+	},
+	Component6d
+);
+
 Component.create = function(buf)
 {
 	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
@@ -287,6 +311,7 @@ Component.create = function(buf)
 		break;
 		
 		case qtmrt.COMPONENT_6D_RESIDUALS:
+			return new Component6dResiduals(buf);
 		break;
 		
 		case qtmrt.COMPONENT_6D_EULER_RESIDUALS:
