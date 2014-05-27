@@ -289,7 +289,32 @@ var Component6dEuler = Model.extend(
 					euler3:   readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 5 * qtmrt.FLOAT_SIZE),
 				});
 			}
-			console.log(this.rigidBodies);
+		}
+
+	},
+	Component6d
+);
+
+var Component6dEulerResiduals = Model.extend(
+	{
+		parseRigidBodies: function()
+		{
+			for (var i = 0; i < this.rigidBodyCount; i++)
+			{
+				var rotationStart = qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE
+				  , rotationEnd   = rotationStart + 9 * qtmrt.FLOAT_SIZE
+				;
+
+				this.rigidBodies.push({
+					x:         readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
+					y:         readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
+					z:         readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
+					euler1:    readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
+					euler2:    readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 4 * qtmrt.FLOAT_SIZE),
+					euler3:    readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 5 * qtmrt.FLOAT_SIZE),
+					residuals: readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 6 * qtmrt.FLOAT_SIZE),
+				});
+			}
 		}
 
 	},
