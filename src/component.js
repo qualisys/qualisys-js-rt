@@ -56,7 +56,7 @@ var componentTypeToString = function(typeId)
 	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3D (with residuals)';
 	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3D (no labels, with residuals)';
 	typeNames[qtmrt.COMPONENT_6D]                     = '6DOF';
-	typeNames[qtmrt.COMPONENT_6D_Euler]               = '6DOF (with euler angles)';
+	typeNames[qtmrt.COMPONENT_6D_EULER]               = '6DOF (with euler angles)';
 	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DOF (with residuals)';
 	typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DOF (with eauler angles and residuals)';
 	typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
@@ -77,7 +77,7 @@ var componentTypeToCommandString = function(typeId)
 	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3DRes)';
 	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3DNoLabelsRes)';
 	typeNames[qtmrt.COMPONENT_6D]                     = '6D';
-	typeNames[qtmrt.COMPONENT_6D_Euler]               = '6DEuler';
+	typeNames[qtmrt.COMPONENT_6D_EULER]               = '6DEuler';
 	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DRes';
 	typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DEulerRes';
 	typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
@@ -270,11 +270,41 @@ var Component6dResiduals = Model.extend(
 	Component6d
 );
 
+var Component6dEuler = Model.extend(
+	{
+		parseRigidBodies: function()
+		{
+			for (var i = 0; i < this.rigidBodyCount; i++)
+			{
+				var rotationStart = qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE
+				  , rotationEnd   = rotationStart + 9 * qtmrt.FLOAT_SIZE
+				;
+
+				this.rigidBodies.push({
+					x:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
+					y:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
+					z:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
+					euler1:   readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
+					euler2:   readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 4 * qtmrt.FLOAT_SIZE),
+					euler3:   readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 5 * qtmrt.FLOAT_SIZE),
+				});
+			}
+			console.log(this.rigidBodies);
+		}
+
+	},
+	Component6d
+);
+
 Component.create = function(buf)
 {
 	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
 
 	switch (type) {
+		case qtmrt.COMPONENT_2D:
+		case qtmrt.COMPONENT_2D_LINEARIZED:
+			return new Component2d(buf);
+		break;
 		
 		case qtmrt.COMPONENT_3D:
 			return new Component3d(buf);
@@ -282,24 +312,6 @@ Component.create = function(buf)
 		
 		case qtmrt.COMPONENT_3D_NO_LABELS:
 			return new Component3dNoLabels(buf);
-		break;
-		
-		case qtmrt.COMPONENT_ANALOG:
-		break;
-		
-		case qtmrt.COMPONENT_FORCE:
-		break;
-		
-		case qtmrt.COMPONENT_6D:
-			return new Component6d(buf);
-		break;
-		
-		case qtmrt.COMPONENT_6D_Euler:
-		break;
-		
-		case qtmrt.COMPONENT_2D:
-		case qtmrt.COMPONENT_2D_LINEARIZED:
-			return new Component2d(buf);
 		break;
 		
 		case qtmrt.COMPONENT_3D_RESIDUALS:
@@ -310,20 +322,35 @@ Component.create = function(buf)
 			return new Component3dNoLabelsResiduals(buf);
 		break;
 		
+		case qtmrt.COMPONENT_6D:
+			return new Component6d(buf);
+		break;
+		
+		case qtmrt.COMPONENT_6D_EULER:
+			return new Component6dEuler(buf);
+		break;
+		
 		case qtmrt.COMPONENT_6D_RESIDUALS:
 			return new Component6dResiduals(buf);
 		break;
 		
 		case qtmrt.COMPONENT_6D_EULER_RESIDUALS:
+			return new Component6dEulerResiduals(buf);
+		break;
+
+		case qtmrt.COMPONENT_ANALOG:
 		break;
 		
 		case qtmrt.COMPONENT_ANALOG_SINGLE:
 		break;
 		
-		case qtmrt.COMPONENT_IMAGE:
+		case qtmrt.COMPONENT_FORCE:
+		break;
+		
+		case qtmrt.COMPONENT_FORCE_SINGLE:
 		break;
 
-		case qtmrt.COMPONENT_FORCE_SINGLE:
+		case qtmrt.COMPONENT_IMAGE:
 		break;
 	}
 };

@@ -318,7 +318,8 @@ api.connect()
 	//.then(function() { return api.streamFrames('Frequency:100',        [qtmrt.COMPONENT_3D_NO_LABELS3D']); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_3D_RESIDUALS]); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_6D]); })
-	.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_6D_RESIDUALS]); })
+	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_6D_RESIDUALS]); })
+	.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_6D_EULER]); })
 	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {
