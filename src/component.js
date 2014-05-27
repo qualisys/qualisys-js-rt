@@ -15,8 +15,8 @@ Camera.create = function(buf)
 	  , bytesRead = { count: 0 }
 	;
 
-	camera.markerCount = readUInt32(buf, 0, bytesRead);
-	camera.statusFlags = readUInt8(buf, bytesRead.count, bytesRead);
+	camera.markerCount = readUInt32(buf, bytesRead.count, bytesRead);
+	camera.statusFlags = readUInt8(buf,  bytesRead.count, bytesRead);
 	camera.markers     = [];
 
 	for (var i = 0; i < camera.markerCount; i++)
@@ -44,6 +44,32 @@ RotationMatrix.create = function(buf)
 		matrix.push(readFloat(buf, bytesRead.count, bytesRead));
 
 	return matrix;
+};
+
+var AnalogDevice = function() { };
+AnalogDevice.create = function(buf)
+{
+	var device    = {}
+	  , bytesRead = { count: 0 }
+	;
+
+	device.deviceId     = readUInt32(buf, bytesRead.count, bytesRead);
+	device.channelCount = readUInt32(buf, bytesRead.count, bytesRead);
+	device.sampleCount  = readUInt32(buf, bytesRead.count, bytesRead);
+	device.sampleNumber = readUInt32(buf, bytesRead.count, bytesRead);
+	device.data         = [];
+
+	for (var i = 0; i < device.channelCount; i++)
+	{
+		var channel = [];
+
+		for (var j = 0; j < device.sampleCount; j++)
+			channel.push(readFloat(buf, bytesRead.count, bytesRead));
+
+		device.data.push(channel);
+	}
+
+	return device;
 };
 
 var componentTypeToString = function(typeId)
@@ -321,6 +347,39 @@ var Component6dEulerResiduals = Model.extend(
 	Component6d
 );
 
+var ComponentAnalog = Model.extend(
+	{
+		init: function(buf) {
+			Component.init.call(this, buf);
+			this.deviceCount = readUInt32(buf, qtmrt.COMPONENT_HEADER_SIZE);
+			this.devices     = [];
+
+			this.parseDevices();
+		},
+
+		parseDevices: function()
+		{
+			var deviceOffset = 0;
+
+			for (var i = 0; i < this.deviceCount; i++)
+			{
+
+				var deviceStart    = qtmrt.COMPONENT_ANALOG_OFFSET + (i * 4 * qtmrt.UINT32_SIZE) + deviceOffset
+				  , channelCount   = readUInt32(this.buffer, deviceStart + (1 * qtmrt.UINT32_SIZE))
+				  , sampleCount    = readUInt32(this.buffer, deviceStart + (2 * qtmrt.UINT32_SIZE))
+				  , deviceDataSize = qtmrt.UINT32_SIZE * channelCount * sampleCount
+				  , deviceSize     = 4 * qtmrt.UINT32_SIZE + deviceDataSize
+				;
+
+				deviceOffset += deviceDataSize;
+				this.devices.push(AnalogDevice.create(this.buffer.slice(deviceStart, deviceStart + deviceSize)));
+			}
+		}
+
+	},
+	Component
+);
+
 Component.create = function(buf)
 {
 	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
@@ -364,18 +423,23 @@ Component.create = function(buf)
 		break;
 
 		case qtmrt.COMPONENT_ANALOG:
+			return new ComponentAnalog(buf);
 		break;
 		
 		case qtmrt.COMPONENT_ANALOG_SINGLE:
+			return new ComponentAnalogSingle(buf);
 		break;
 		
 		case qtmrt.COMPONENT_FORCE:
+			return new ComponentForce(buf);
 		break;
 		
 		case qtmrt.COMPONENT_FORCE_SINGLE:
+			return new ComponentForceSingle(buf);
 		break;
 
 		case qtmrt.COMPONENT_IMAGE:
+			return new ComponentForceImage(buf);
 		break;
 	}
 };
