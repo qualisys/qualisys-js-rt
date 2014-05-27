@@ -76,6 +76,27 @@ var componentTypeToString = function(typeId)
 {
 	var typeNames = {};
 	typeNames[qtmrt.COMPONENT_2D]                     = '2D';
+	typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2DLin';
+	typeNames[qtmrt.COMPONENT_3D]                     = '3D';
+	typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3DNoLabels';
+	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3DRes)';
+	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3DNoLabelsRes)';
+	typeNames[qtmrt.COMPONENT_6D]                     = '6D';
+	typeNames[qtmrt.COMPONENT_6D_EULER]               = '6DEuler';
+	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DRes';
+	typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DEulerRes';
+	typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
+	typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
+	typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'AnalogSingle';
+	typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
+	typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'ForceSingle';
+	return typeNames[typeId];
+};
+
+var componentTypeToPrettyString = function(typeId)
+{
+	var typeNames = {};
+	typeNames[qtmrt.COMPONENT_2D]                     = '2D';
 	typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2D (linearized)';
 	typeNames[qtmrt.COMPONENT_3D]                     = '3D';
 	typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3D (no labels)';
@@ -93,25 +114,25 @@ var componentTypeToString = function(typeId)
 	return typeNames[typeId];
 };
 
-var componentTypeToCommandString = function(typeId)
+var componentStringToType = function(compStr)
 {
-	var typeNames = {};
-	typeNames[qtmrt.COMPONENT_2D]                     = '2D';
-	typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2DLin';
-	typeNames[qtmrt.COMPONENT_3D]                     = '3D';
-	typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3DNoLabels';
-	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3DRes)';
-	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3DNoLabelsRes)';
-	typeNames[qtmrt.COMPONENT_6D]                     = '6D';
-	typeNames[qtmrt.COMPONENT_6D_EULER]               = '6DEuler';
-	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DRes';
-	typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DEulerRes';
-	typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
-	typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
-	typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'AnalogSingle';
-	typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
-	typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'ForceSingle';
-	return typeNames[typeId];
+	var typeIds = {};
+	typeIds['2D']            = qtmrt.COMPONENT_2D;
+	typeIds['2DLin']         = qtmrt.COMPONENT_2D_LINEARIZED;
+	typeIds['3D']            = qtmrt.COMPONENT_3D;
+	typeIds['3DNoLabels']    = qtmrt.COMPONENT_3D_NO_LABELS;
+	typeIds['3DRes']         = qtmrt.COMPONENT_3D_RESIDUALS;
+	typeIds['3DNoLabelsRes'] = qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS;
+	typeIds['6D']            = qtmrt.COMPONENT_6D;
+	typeIds['6DEuler']       = qtmrt.COMPONENT_6D_EULER;
+	typeIds['6DRes']         = qtmrt.COMPONENT_6D_RESIDUALS;
+	typeIds['6DEulerRes']    = qtmrt.COMPONENT_6D_EULER_RESIDUALS;
+	typeIds['Image']         = qtmrt.COMPONENT_IMAGE;
+	typeIds['Analog']        = qtmrt.COMPONENT_ANALOG;
+	typeIds['AnalogSingle']  = qtmrt.COMPONENT_ANALOG_SINGLE;
+	typeIds['Force']         = qtmrt.COMPONENT_FORCE;
+	typeIds['ForceSingle']   = qtmrt.COMPONENT_FORCE_SINGLE;
+	return typeIds[compStr];
 };
 
 var Component = Model.extend(
@@ -444,8 +465,9 @@ Component.create = function(buf)
 	}
 };
 
-Component.typeToString = componentTypeToString;
-Component.typeToCommandString = componentTypeToCommandString;
+Component.typeToString       = componentTypeToString;
+Component.typeToPrettyString = componentTypeToPrettyString;
+Component.stringToType       = componentStringToType;
 
 module.exports = Component;
 

@@ -1,6 +1,7 @@
 'use strict';
 
-var Model      = require('./model')
+var _          = require('underscore')
+  , Model      = require('./model')
   , qtmrt      = require('./qtmrt')
   , readUInt32 = require('./mangler').readUInt32
   , readUInt64 = require('./mangler').readUInt64
@@ -68,8 +69,7 @@ var DataPacket = Model.extend(
 			this.timestamp      = readUInt64(buf, qtmrt.HEADER_SIZE);
 			this.frameNumber    = readUInt32(buf, qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE);
 			this.componentCount = readUInt32(buf, qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE + qtmrt.UINT32_SIZE);
-			this.components     = [];
-			this.componentTypes = [];
+			this.components     = {};
 
 			var offset = qtmrt.DATA_FRAME_HEADER_SIZE;
 
@@ -79,9 +79,15 @@ var DataPacket = Model.extend(
 				;
 				offset += size;
 
-				this.componentTypes.push(component.type);
-				this.components.push(component);
+				this.components[component.type] = component;
 			}
+		},
+		component: function(componentString)
+		{
+			if (!_.contains(qtmrt.COMPONENT_STRINGS, componentString))
+				throw new TypeError('Unexpected component');
+
+			return this.components[Component.stringToType(componentString)];
 		}
 	},
 	Packet

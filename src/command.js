@@ -92,7 +92,7 @@ var Command = {
 		if (_.contains(components, qtmrt.COMPONENT_ALL))
 			components = [qtmrt.COMPONENT_ALL];
 
-		var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.map(Component.typeToCommandString).join(' ');
+		var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.map(Component.typeToString).join(' ');
 
 		return this.build(cmdStr);
 	},

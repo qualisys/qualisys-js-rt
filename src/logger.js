@@ -60,7 +60,7 @@ Logger.prototype = function()
 		}
 		else if (packet.type === qtmrt.DATA)
 		{
-			var componentTypes = '[' + packet.componentTypes.map(Component.typeToString).join(', ') + ']';
+			var componentTypes = '[' + _.keys(packet.components).map(Component.typeToPrettyString).join(', ') + ']';
 
 			value = 'Frame: '      + packet.frameNumber
 				+ ', Components: ' + componentTypes

@@ -64,21 +64,41 @@ qtmrt.COMPONENT_ANALOG_OFFSET = qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE;
 qtmrt.DATA_FRAME_HEADER_SIZE  = qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE + 2 * qtmrt.UINT32_SIZE;
 qtmrt.byteOrder               = qtmrt.LITTLE_ENDIAN;
 
-qtmrt.COMPONENTS = [qtmrt.COMPONENT_ALL,
-					qtmrt.COMPONENT_2D, 
-					qtmrt.COMPONENT_2D_LINEARIZED,
-					qtmrt.COMPONENT_3D,
-					qtmrt.COMPONENT_3D_RESIDUALS,
-					qtmrt.COMPONENT_3D_NO_LABELS,
-					qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS,
-					qtmrt.COMPONENT_ANALOG,
-					qtmrt.COMPONENT_ANALOG_SINGLE,
-					qtmrt.COMPONENT_FORCE,
-					qtmrt.COMPONENT_6D,
-					qtmrt.COMPONENT_6D_RESIDUALS,
-					qtmrt.COMPONENT_6D_EULER,
-					qtmrt.COMPONENT_6D_EULER_RESIDUALS,
-					qtmrt.COMPONENT_IMAGE];
+qtmrt.COMPONENTS = [
+	qtmrt.COMPONENT_ALL,
+	qtmrt.COMPONENT_2D, 
+	qtmrt.COMPONENT_2D_LINEARIZED,
+	qtmrt.COMPONENT_3D,
+	qtmrt.COMPONENT_3D_RESIDUALS,
+	qtmrt.COMPONENT_3D_NO_LABELS,
+	qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS,
+	qtmrt.COMPONENT_ANALOG,
+	qtmrt.COMPONENT_ANALOG_SINGLE,
+	qtmrt.COMPONENT_FORCE,
+	qtmrt.COMPONENT_6D,
+	qtmrt.COMPONENT_6D_RESIDUALS,
+	qtmrt.COMPONENT_6D_EULER,
+	qtmrt.COMPONENT_6D_EULER_RESIDUALS,
+	qtmrt.COMPONENT_IMAGE
+];
+
+qtmrt.COMPONENT_STRINGS = [
+	'2D',
+	'2DLin',
+	'3D',
+	'3DNoLabels',
+	'3DRes',
+	'3DNoLabelsRes',
+	'6D',
+	'6DEuler',
+	'6DRes',
+	'6DEulerRes',
+	'Image',
+	'Analog',
+	'AnalogSingle',
+	'Force',
+	'ForceSingle'
+];
 
 qtmrt.eventToString = function(eventId)
 {
