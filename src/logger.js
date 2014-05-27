@@ -88,6 +88,4 @@ Logger.prototype = function()
 	}
 }();
 
-module.exports = {
-	Logger: Logger,
-}
+module.exports = Logger;

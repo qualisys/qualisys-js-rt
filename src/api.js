@@ -7,7 +7,7 @@ var Q       = require('q')
   , Mangler = require('./mangler').Mangler
   , Packet  = require('./packet')
   , Command = require('./command')
-  , Logger  = require('./helpers').Logger
+  , Logger  = require('./logger')
 ;
 
 _.str = require('underscore.string')
