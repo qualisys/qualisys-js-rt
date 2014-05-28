@@ -1,10 +1,10 @@
 'use strict';
 
 var _          = require('underscore')
-  , Model      = require('./model')
   , qtmrt      = require('./qtmrt')
   , readUInt32 = require('./mangler').readUInt32
-  , readUInt64 = require('./mangler').readUInt64
+  , Model      = require('./model')
+  , Muncher    = require('./muncher')
   , Component  = require('./component')
 ;
 
@@ -33,13 +33,14 @@ var Packet = Model.extend(
 			if (!arguments.length)
 				throw TypeError('No buffer specified');
 
-			this.buffer   = buf;
-			this.size     = readUInt32(buf, 0);
-			this.type     = readUInt32(buf, qtmrt.UINT32_SIZE);
+			Muncher.init.call(this, buf);
+
+			this.size     = this.munchUInt32();
+			this.type     = this.munchUInt32();
 			this.typeName = packetTypeToString(this.type);
-			this.data     = buf.slice(qtmrt.HEADER_SIZE).toString('utf8');
+			this.data     = buf.slice(this.munched).toString('utf8');
 		},
-	}
+	}, Muncher
 );
 
 var ErrorPacket = Model.extend(
@@ -66,12 +67,12 @@ var DataPacket = Model.extend(
 		{
 			Packet.init.call(this, buf);
 			
-			this.timestamp      = readUInt64(buf, qtmrt.HEADER_SIZE);
-			this.frameNumber    = readUInt32(buf, qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE);
-			this.componentCount = readUInt32(buf, qtmrt.HEADER_SIZE + qtmrt.UINT64_SIZE + qtmrt.UINT32_SIZE);
+			this.timestamp      = this.munchUInt64();
+			this.frameNumber    = this.munchUInt32();
+			this.componentCount = this.munchUInt32();
 			this.components     = {};
 
-			var offset = qtmrt.DATA_FRAME_HEADER_SIZE;
+			var offset = this.munched;
 
 			for (var i = 0; i < this.componentCount; i++) {
 				var size      = readUInt32(buf, offset)
@@ -110,7 +111,7 @@ var EventPacket = Model.extend(
 		init: function(buf)
 		{
 			Packet.init.call(this, buf);
-			this.data      = buf.readUInt8(qtmrt.HEADER_SIZE);
+			this.data      = this.munchUInt8();
 			this.eventId   = this.data
 			this.eventName = qtmrt.eventToString(this.eventId);
 		}

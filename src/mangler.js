@@ -73,7 +73,7 @@ Mangler.prototype = function()
 				callback.fun.call(callback.thisArg, this.chunks)
 				
 				if (bytesRead !== chunk.length)
-					this.currentPacketSize = readUInt32(chunk.slice(bytesRead, bytesRead + qtmrt.UINT32_SIZE));
+					this.currentPacketSize = readUInt32(chunk.slice(bytesRead, bytesRead + qtmrt.UINT32_SIZE), 0);
 
 				this.chunks = new Buffer(0);
 			}

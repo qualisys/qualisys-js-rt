@@ -2,75 +2,9 @@
 
 var qtmrt      = require('./qtmrt')
   , readUInt32 = require('./mangler').readUInt32
-  , readUInt16 = require('./mangler').readUInt16
-  , readUInt8  = require('./mangler').readUInt8
-  , readFloat  = require('./mangler').readFloat
   , Model      = require('./model')
+  , Muncher    = require('./muncher')
 ;
-
-var Camera = function() { };
-Camera.create = function(buf)
-{
-	var camera    = {}
-	  , bytesRead = { count: 0 }
-	;
-
-	camera.markerCount = readUInt32(buf, bytesRead.count, bytesRead);
-	camera.statusFlags = readUInt8(buf,  bytesRead.count, bytesRead);
-	camera.markers     = [];
-
-	for (var i = 0; i < camera.markerCount; i++)
-	{
-		camera.markers.push({
-			x:          readUInt32(buf, bytesRead.count, bytesRead),
-			y:          readUInt32(buf, bytesRead.count, bytesRead),
-			diameterX:  readUInt16(buf, bytesRead.count, bytesRead),
-			diameterY:  readUInt16(buf, bytesRead.count, bytesRead),
-		});
-	}
-
-	return camera;
-};
-
-var RotationMatrix = function() { };
-RotationMatrix.create = function(buf)
-{
-	var matrix       = []
-	  , bytesRead    = { count: 0 }
-	  , matrixLength = 9;
-	;
-
-	for (var i = 0; i < matrixLength; i++)
-		matrix.push(readFloat(buf, bytesRead.count, bytesRead));
-
-	return matrix;
-};
-
-var AnalogDevice = function() { };
-AnalogDevice.create = function(buf)
-{
-	var device    = {}
-	  , bytesRead = { count: 0 }
-	;
-
-	device.deviceId     = readUInt32(buf, bytesRead.count, bytesRead);
-	device.channelCount = readUInt32(buf, bytesRead.count, bytesRead);
-	device.sampleCount  = readUInt32(buf, bytesRead.count, bytesRead);
-	device.sampleNumber = readUInt32(buf, bytesRead.count, bytesRead);
-	device.data         = [];
-
-	for (var i = 0; i < device.channelCount; i++)
-	{
-		var channel = [];
-
-		for (var j = 0; j < device.sampleCount; j++)
-			channel.push(readFloat(buf, bytesRead.count, bytesRead));
-
-		device.data.push(channel);
-	}
-
-	return device;
-};
 
 var componentTypeToString = function(typeId)
 {
@@ -79,8 +13,8 @@ var componentTypeToString = function(typeId)
 	typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2DLin';
 	typeNames[qtmrt.COMPONENT_3D]                     = '3D';
 	typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3DNoLabels';
-	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3DRes)';
-	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3DNoLabelsRes)';
+	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3DRes';
+	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3DNoLabelsRes';
 	typeNames[qtmrt.COMPONENT_6D]                     = '6D';
 	typeNames[qtmrt.COMPONENT_6D_EULER]               = '6DEuler';
 	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DRes';
@@ -139,11 +73,14 @@ var Component = Model.extend(
 	{
 		init: function(buf)
 		{
-			this.size   = readUInt32(buf, 0);
-			this.type   = readUInt32(buf, qtmrt.UINT32_SIZE);
-			this.buffer = buf;
+			if (!arguments.length)
+				throw TypeError('No buffer specified');
+
+			Muncher.init.call(this, buf);
+			this.size = this.munchUInt32();
+			this.type = this.munchUInt32();
 		},
-	}
+	}, Muncher
 );
 
 var Component2d = Model.extend(
@@ -151,9 +88,9 @@ var Component2d = Model.extend(
 		init: function(buf)
 		{
 			Component.init.call(this, buf);
-			this.cameraCount     = readUInt32(buf, qtmrt.COMPONENT_HEADER_SIZE);
-			this.dropRate2d      = readUInt16(buf, qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE);
-			this.outOfSyncRate2d = readUInt16(buf, qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE + qtmrt.UINT16_SIZE);
+			this.cameraCount     = this.munchUInt32();
+			this.dropRate2d      = this.munchUInt16();
+			this.outOfSyncRate2d = this.munchUInt16();
 			this.cameras         = [];
 
 			this.parseCameras();
@@ -165,12 +102,22 @@ var Component2d = Model.extend(
 
 			for (var i = 0; i < this.cameraCount; i++)
 			{
-				var cameraStart = qtmrt.COMPONENT_2D_OFFSET + (i * (qtmrt.UINT32_SIZE + qtmrt.UINT8_SIZE)) + markerOffset;
-				var markerCount = readUInt32(this.buffer, cameraStart);
-				var cameraSize  = qtmrt.UINT32_SIZE + qtmrt.UINT8_SIZE + markerCount * qtmrt.COMPONENT_2D_SIZE;
+				var camera = {
+					markerCount: this.munchUInt32(),
+					statusFlags: this.munchUInt8(),
+					markers: [],
+				};
 
-				markerOffset += markerCount * qtmrt.COMPONENT_2D_SIZE;
-				this.cameras.push(Camera.create(this.buffer.slice(cameraStart, cameraStart + cameraSize)));
+				for (var j = 0; j < camera.markerCount; j++)
+				{
+					camera.markers.push({
+						x:          this.munchUInt32(),
+						y:          this.munchUInt32(),
+						diameterX:  this.munchUInt16(),
+						diameterY:  this.munchUInt16(),
+					});
+				}
+				this.cameras.push(camera);
 			}
 		}
 	},
@@ -182,9 +129,9 @@ var Component3d = Model.extend(
 		init: function(buf)
 		{
 			Component.init.call(this, buf);
-			this.markerCount     = readUInt32(buf, qtmrt.COMPONENT_HEADER_SIZE);
-			this.dropRate2d      = readUInt16(buf, qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE);
-			this.outOfSyncRate2d = readUInt16(buf, qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE + qtmrt.UINT16_SIZE);
+			this.markerCount     = this.munchUInt32();
+			this.dropRate2d      = this.munchUInt16();
+			this.outOfSyncRate2d = this.munchUInt16();
 			this.markers         = [];
 
 			this.parseMarkers();
@@ -195,9 +142,9 @@ var Component3d = Model.extend(
 			for (var i = 0; i < this.markerCount; i++)
 			{
 				this.markers.push({
-					x: readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (3 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
-					y: readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (3 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
-					z: readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (3 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
+					x: this.munchFloat(),
+					y: this.munchFloat(),
+					z: this.munchFloat(),
 				});
 			}
 		}
@@ -212,10 +159,10 @@ var Component3dNoLabels = Model.extend(
 			for (var i = 0; i < this.markerCount; i++)
 			{
 				this.markers.push({
-					x:  readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
-					y:  readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
-					z:  readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
-					id: readUInt32(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
+					x:  this.munchFloat(),
+					y:  this.munchFloat(),
+					z:  this.munchFloat(),
+					id:  this.munchUInt32(),
 				});
 			}
 		}
@@ -230,10 +177,10 @@ var Component3dResiduals = Model.extend(
 			for (var i = 0; i < this.markerCount; i++)
 			{
 				this.markers.push({
-					x:        readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
-					y:        readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
-					z:        readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
-					residual: readFloat(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (4 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
+					x:  this.munchFloat(),
+					y:  this.munchFloat(),
+					z:  this.munchFloat(),
+					residual: this.munchFloat(),
 				});
 			}
 		}
@@ -248,11 +195,11 @@ var Component3dNoLabelsResiduals = Model.extend(
 			for (var i = 0; i < this.markerCount; i++)
 			{
 				this.markers.push({
-					x:        readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (5 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
-					y:        readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (5 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
-					z:        readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (5 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
-					id:       readUInt32(this.buffer, qtmrt.COMPONENT_3D_OFFSET + (5 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
-					residual: readFloat(this.buffer,  qtmrt.COMPONENT_3D_OFFSET + (5 * qtmrt.FLOAT_SIZE * i) + 4 * qtmrt.UINT32_SIZE),
+					x:  this.munchFloat(),
+					y:  this.munchFloat(),
+					z:  this.munchFloat(),
+					id: this.munchUInt32(),
+					residual: this.munchFloat(),
 				});
 			}
 		}
@@ -264,9 +211,9 @@ var Component6d = Model.extend(
 	{
 		init: function(buf) {
 			Component.init.call(this, buf);
-			this.rigidBodyCount  = readUInt32(buf, qtmrt.COMPONENT_HEADER_SIZE);
-			this.dropRate2d      = readUInt16(buf, qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE);
-			this.outOfSyncRate2d = readUInt16(buf, qtmrt.COMPONENT_HEADER_SIZE + qtmrt.UINT32_SIZE + qtmrt.UINT16_SIZE);
+			this.rigidBodyCount  = this.munchUInt32();
+			this.dropRate2d      = this.munchUInt16();
+			this.outOfSyncRate2d = this.munchUInt16();
 			this.rigidBodies     = [];
 
 			this.parseRigidBodies();
@@ -276,16 +223,17 @@ var Component6d = Model.extend(
 		{
 			for (var i = 0; i < this.rigidBodyCount; i++)
 			{
-				var rotationStart = qtmrt.COMPONENT_6D_OFFSET + (12 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE
-				  , rotationEnd   = rotationStart + 9 * qtmrt.FLOAT_SIZE
-				;
+				var rigidBody = {
+					x:        this.munchFloat(),
+					y:        this.munchFloat(),
+					z:        this.munchFloat(),
+					rotation: [],
+				};
 
-				this.rigidBodies.push({
-					x:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (12 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
-					y:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (12 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
-					z:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (12 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
-					rotation: RotationMatrix.create(this.buffer.slice(rotationStart, rotationEnd)),
-				});
+				for (var j = 0; j < 9; j++)
+					rigidBody.rotation.push(this.munchFloat());
+
+				this.rigidBodies.push(rigidBody);
 			}
 		}
 
@@ -299,17 +247,20 @@ var Component6dResiduals = Model.extend(
 		{
 			for (var i = 0; i < this.rigidBodyCount; i++)
 			{
-				var rotationStart = qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE
-				  , rotationEnd   = rotationStart + 9 * qtmrt.FLOAT_SIZE
-				;
+				var rigidBody = {
+					x:        this.munchFloat(),
+					y:        this.munchFloat(),
+					z:        this.munchFloat(),
+					rotation: [],
+					residual: null,
+				};
 
-				this.rigidBodies.push({
-					x:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 0  * qtmrt.FLOAT_SIZE),
-					y:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 1  * qtmrt.FLOAT_SIZE),
-					z:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 2  * qtmrt.FLOAT_SIZE),
-					rotation: RotationMatrix.create(this.buffer.slice(rotationStart, rotationEnd)),
-					residual: readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 12 * qtmrt.FLOAT_SIZE),
-				});
+				for (var j = 0; j < 9; j++)
+					rigidBody.rotation.push(this.munchFloat());
+
+				rigidBody.residual = this.munchFloat();
+
+				this.rigidBodies.push(rigidBody);
 			}
 		}
 
@@ -323,17 +274,13 @@ var Component6dEuler = Model.extend(
 		{
 			for (var i = 0; i < this.rigidBodyCount; i++)
 			{
-				var rotationStart = qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE
-				  , rotationEnd   = rotationStart + 9 * qtmrt.FLOAT_SIZE
-				;
-
 				this.rigidBodies.push({
-					x:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
-					y:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
-					z:        readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
-					euler1:   readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
-					euler2:   readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 4 * qtmrt.FLOAT_SIZE),
-					euler3:   readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (6 * qtmrt.FLOAT_SIZE * i) + 5 * qtmrt.FLOAT_SIZE),
+					x:        this.munchFloat(),
+					y:        this.munchFloat(),
+					z:        this.munchFloat(),
+					euler1:   this.munchFloat(),
+					euler2:   this.munchFloat(),
+					euler3:   this.munchFloat(),
 				});
 			}
 		}
@@ -348,18 +295,14 @@ var Component6dEulerResiduals = Model.extend(
 		{
 			for (var i = 0; i < this.rigidBodyCount; i++)
 			{
-				var rotationStart = qtmrt.COMPONENT_6D_OFFSET + (13 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE
-				  , rotationEnd   = rotationStart + 9 * qtmrt.FLOAT_SIZE
-				;
-
 				this.rigidBodies.push({
-					x:         readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 0 * qtmrt.FLOAT_SIZE),
-					y:         readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 1 * qtmrt.FLOAT_SIZE),
-					z:         readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 2 * qtmrt.FLOAT_SIZE),
-					euler1:    readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 3 * qtmrt.FLOAT_SIZE),
-					euler2:    readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 4 * qtmrt.FLOAT_SIZE),
-					euler3:    readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 5 * qtmrt.FLOAT_SIZE),
-					residuals: readFloat(this.buffer, qtmrt.COMPONENT_6D_OFFSET + (7 * qtmrt.FLOAT_SIZE * i) + 6 * qtmrt.FLOAT_SIZE),
+					x:          this.munchFloat(),
+					y:          this.munchFloat(),
+					z:          this.munchFloat(),
+					euler1:     this.munchFloat(),
+					euler2:     this.munchFloat(),
+					euler3:     this.munchFloat(),
+					residuals:  this.munchFloat(),
 				});
 			}
 		}
@@ -372,7 +315,7 @@ var ComponentAnalog = Model.extend(
 	{
 		init: function(buf) {
 			Component.init.call(this, buf);
-			this.deviceCount = readUInt32(buf, qtmrt.COMPONENT_HEADER_SIZE);
+			this.deviceCount = this.munchUInt32();
 			this.devices     = [];
 
 			this.parseDevices();
@@ -380,20 +323,24 @@ var ComponentAnalog = Model.extend(
 
 		parseDevices: function()
 		{
-			var deviceOffset = 0;
-
 			for (var i = 0; i < this.deviceCount; i++)
 			{
+				var device = {
+					id:            this.munchUInt32(),
+					channelCount:  this.munchUInt32(),
+					sampleCount:   this.munchUInt32(),
+					sampleNumber:  this.munchUInt32(),
+					data:          [],
+				}
 
-				var deviceStart    = qtmrt.COMPONENT_ANALOG_OFFSET + (i * 4 * qtmrt.UINT32_SIZE) + deviceOffset
-				  , channelCount   = readUInt32(this.buffer, deviceStart + (1 * qtmrt.UINT32_SIZE))
-				  , sampleCount    = readUInt32(this.buffer, deviceStart + (2 * qtmrt.UINT32_SIZE))
-				  , deviceDataSize = qtmrt.UINT32_SIZE * channelCount * sampleCount
-				  , deviceSize     = 4 * qtmrt.UINT32_SIZE + deviceDataSize
-				;
-
-				deviceOffset += deviceDataSize;
-				this.devices.push(AnalogDevice.create(this.buffer.slice(deviceStart, deviceStart + deviceSize)));
+				for (var j = 0; j < device.channelCount; j++)
+				{
+					var channel = [];
+					for (var k = 0; k < device.sampleCount; k++)
+						channel.push(this.munchFloat());
+					device.data.push(channel);
+				}
+				this.devices.push(device);
 			}
 		}
 

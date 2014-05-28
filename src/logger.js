@@ -8,7 +8,7 @@ var _         = require('underscore')
   , Component = require('./component')
 ;
 
-var Logger = function() { }
+var Logger = function() { };
 
 Logger.prototype = function()
 {
