@@ -348,6 +348,29 @@ var ComponentAnalog = Model.extend(
 	Component
 );
 
+var ComponentAnalogSingle = Model.extend(
+	{
+		parseDevices: function()
+		{
+			for (var i = 0; i < this.deviceCount; i++)
+			{
+				var device = {
+					id:            this.munchUInt32(),
+					channelCount:  this.munchUInt32(),
+					data:          [],
+				}
+
+				for (var j = 0; j < device.channelCount; j++)
+					device.data.push([this.munchFloat()]);
+
+				this.devices.push(device);
+			}
+		}
+
+	},
+	ComponentAnalog
+);
+
 Component.create = function(buf)
 {
 	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
