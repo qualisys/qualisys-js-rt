@@ -371,6 +371,48 @@ var ComponentAnalogSingle = Model.extend(
 	ComponentAnalog
 );
 
+var ComponentForce = Model.extend(
+	{
+		init: function(buf) {
+			Component.init.call(this, buf);
+			this.plateCount = this.munchUInt32();
+			this.plates     = [];
+
+			this.parsePlates();
+		},
+
+		parsePlates: function()
+		{
+			for (var i = 0; i < this.plateCount; i++)
+			{
+				var plate = {
+					id:           this.munchUInt32(),
+					forceCount:   this.munchUInt32(),
+					forceNumber:  this.munchUInt32(),
+					data:         [],
+				}
+
+				for (var j = 0; j < plate.forceCount; j++)
+					plate.data.push({
+						forceX: this.munchFloat(),
+						forceY: this.munchFloat(),
+						forceZ: this.munchFloat(),
+						momentX: this.munchFloat(),
+						momentY: this.munchFloat(),
+						momentZ: this.munchFloat(),
+						posX: this.munchFloat(),
+						posY: this.munchFloat(),
+						posZ: this.munchFloat(),
+					});
+
+				this.plates.push(plate);
+			}
+		}
+
+	},
+	Component
+);
+
 Component.create = function(buf)
 {
 	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
