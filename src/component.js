@@ -413,6 +413,35 @@ var ComponentForce = Model.extend(
 	Component
 );
 
+var ComponentForceSingle = Model.extend(
+	{
+		parsePlates: function()
+		{
+			for (var i = 0; i < this.plateCount; i++)
+			{
+				var plate = {
+					id:    this.munchUInt32(),
+					data:  [{
+						forceX: this.munchFloat(),
+						forceY: this.munchFloat(),
+						forceZ: this.munchFloat(),
+						momentX: this.munchFloat(),
+						momentY: this.munchFloat(),
+						momentZ: this.munchFloat(),
+						posX: this.munchFloat(),
+						posY: this.munchFloat(),
+						posZ: this.munchFloat(),
+					}],
+				};
+
+				this.plates.push(plate);
+			}
+		}
+
+	},
+	ComponentForce
+);
+
 Component.create = function(buf)
 {
 	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
