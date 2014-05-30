@@ -15,6 +15,16 @@ var Muncher = Model.extend(
 			this.buffer  = buf;
 			this.munched = 0;
 		},
+		
+		munch: function(length)
+		{
+			if (!arguments.length)
+				length = this.buffer.length - this.munched;
+
+			var result = this.buffer.slice(this.munched, this.munched + length);
+			this.munched += length;
+			return result;
+		},
 
 		munchUInt8: function()
 		{

@@ -325,7 +325,8 @@ api.connect()
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_ANALOG]); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_ANALOG_SINGLE]); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_FORCE]); })
-	.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_FORCE_SINGLE]); })
+	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_FORCE_SINGLE]); })
+	.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_IMAGE]); })
 	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {

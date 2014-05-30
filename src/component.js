@@ -442,6 +442,44 @@ var ComponentForceSingle = Model.extend(
 	ComponentForce
 );
 
+var ComponentImage = Model.extend(
+	{
+		init: function(buf) {
+			Component.init.call(this, buf);
+			this.cameraCount = this.munchUInt32();
+			this.devices     = [];
+
+			this.parseCameras();
+		},
+
+		parseCameras: function()
+		{
+			for (var i = 0; i < this.cameraCount; i++)
+			{
+				var camera = {
+					id:           this.munchUInt32(),
+					imageFormat:  this.munchUInt32(),
+					width:        this.munchUInt32(),
+					height:       this.munchUInt32(),
+					leftCrop:     this.munchFloat(),
+					topCrop:      this.munchFloat(),
+					rightCrop:    this.munchFloat(),
+					bottomCrop:   this.munchFloat(),
+					imageSize:    this.munchUInt(),
+					data:         null,
+				}
+				
+				camera.data = this.munch(camera.imageSize);
+
+				this.cameras.push(camera);
+
+			}
+		}
+
+	},
+	Component
+);
+
 Component.create = function(buf)
 {
 	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
@@ -501,7 +539,7 @@ Component.create = function(buf)
 		break;
 
 		case qtmrt.COMPONENT_IMAGE:
-			return new ComponentForceImage(buf);
+			return new ComponentImage(buf);
 		break;
 	}
 };
