@@ -56,14 +56,33 @@ Api.prototype = function()
 
 		if (this.options.debug)
 			this.logger.logPacket(packet);
-		
+
 		if (packet.type == qtmrt.EVENT)
 		{
 			if ('GetState' === command.data)
+				this.promiseQueue.pop().resolve({ id: packet.eventId, name: packet.eventName });
+		}
+		else if (packet.type == qtmrt.COMMAND_RESPONSE)
+		{
+			if (_.str.startsWith(command.data, 'ByteOrder'))
+				this.promiseQueue.pop().resolve(/little endian/.test(packet.data) ? 'little endian' : 'big endian');
+
+			else if (_.str.startsWith(command.data, 'QTMVersion'))
+			{
+				var human   = 'QTM ' + packet.data.replace('QTM Version is ', '').slice(0, -1)
+				  , version = human.match(/QTM (\d+)\.(\d+) \(build (\d+)\)/);
+				;
+				this.promiseQueue.pop().resolve({ major: version[1], minor: version[2], build: version[3], human: human });
+			}
+
+			else
 				this.promiseQueue.pop().resolve(packet);
 		}
-		else if (packet.type != qtmrt.DATA)
+		else if (packet.type != qtmrt.DATA || (command && _.str.startsWith(command.data, 'GetCurrentFrame')))
+		{
 			this.promiseQueue.pop().resolve(packet);
+		}
+		
 	},
 
 	checkConnection = function()
@@ -107,6 +126,7 @@ Api.prototype = function()
 			this.logger.log('Connecting to ' + host + ':' + port, 'white', 'bold');
 
 		this.client = this.net.connect(port, host, function() { });
+		this.issuedCommands.unshift('Connect');
 		bootstrap.call(this);
 
 		responsePromise
@@ -293,10 +313,11 @@ Api.prototype = function()
 var api = new Api({ debug: true });
 api.connect()
 	.then(function() { return api.qtmVersion(); })
-	.then(function() { return api.byteOrder(); })
-	.then(function() { return api.getState(); })
+	.then(function(version) { return api.byteOrder(); })
+	.then(function(byteOrder) { return api.getState(); })
 	//.then(function() { return api.getParameters('All'); })
-	//.then(function() { return api.getCurrentFrame('3D'); })
+	.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_3D); })
+	.then(function(frame) { })
 	//.then(function() { return api.takeControl('gait1'); })
 	//.then(function() { return api.releaseControl(); })
 	//.then(function() { return api.newMeasurement(); })
@@ -313,7 +334,7 @@ api.connect()
 	//.then(function() { return api.getCaptureC3D(); })
 	//.then(function() { return api.getCaptureQtm(); })
 	//.then(function() { return api.stopStreaming(); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_2D]); })
+	.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_2D]); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_3D]); })
 	//.then(function() { return api.streamFrames('Frequency:100',        [qtmrt.COMPONENT_3D_NO_LABELS]); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_3D_RESIDUALS]); })
@@ -326,7 +347,7 @@ api.connect()
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_ANALOG_SINGLE]); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_FORCE]); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_FORCE_SINGLE]); })
-	.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_IMAGE]); })
+	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_IMAGE]); })
 	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {

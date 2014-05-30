@@ -60,7 +60,7 @@ var Command = {
 		return this.build('GetParameters ' + components.join(' '));
 	},
 
-	getCurrentFrame: function()
+	getCurrentFrame: function(component)
 	{
 		var predicate = function(component) {
 				return _.contains(qtmrt.COMPONENTS, component);
@@ -71,7 +71,7 @@ var Command = {
 		if (_.contains(components, qtmrt.COMPONENT_ALL))
 			components = [qtmrt.COMPONENT_ALL];
 
-		return this.build('GetCurrentFrame ' + components.join(' '));
+		return this.build('GetCurrentFrame ' + components.map(Component.typeToString).join(' '));
 	},
 
 
