@@ -1,7 +1,7 @@
 'use strict';
 
 var _          = require('underscore')
-  , parser     = require('xml2json')
+  , parseString = require('xml2js').parseString
   , qtmrt      = require('./qtmrt')
   , readUInt32 = require('./mangler').readUInt32
   , Model      = require('./model')
@@ -69,8 +69,10 @@ var XmlPacket = Model.extend(
 		{
 			var underscoreCased = this.data.replace(/[a-z]([A-Z])/g, function (g) { return g[0] + '_' + g[1]; })
 			  , camelCased      = underscoreCased.toLowerCase().replace(/_([a-zA-Z0-9])/g, function (g) { return g[1].toUpperCase(); })
-			  , jsonData        = JSON.parse(parser.toJson(camelCased))
+			  , jsonData        = null
 			;
+
+			parseString(camelCased, function(err, result) { jsonData = result; });
 
 			for (var i in jsonData) {
 				var keys = Object.keys(jsonData[i]);
