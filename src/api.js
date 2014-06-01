@@ -26,7 +26,10 @@ var Api = function(options) {
 
 	this.options = _.defaults(options, {
 		debug: false,
+		frequency: 100,
 	});
+
+	this.frequency(this.options.frequency);
 }
 
 Api.prototype = function()
@@ -179,10 +182,17 @@ Api.prototype = function()
 	// XXX: Not tested with QTM file reply.
 	getCaptureQtm = function() { return send.call(this, Command.getCaptureQtm()); },
 
-	streamFrames = function()
+	streamFrames = function(options)
 	{
+		if (this.isStreaming)
+			return Q.reject('Could not start streaming, already streaming');
+
 		this.isStreaming = true;
-		return send.call(this, Command.streamFrames.apply(Command, arguments));
+
+		if (_.isUndefined(options.frequency))
+			options.frequency = this.options.frequency;
+
+		return send.call(this, Command.streamFrames.apply(Command, [options]));
 	},
 
 	stopStreaming = function()
@@ -282,7 +292,16 @@ Api.prototype = function()
 	{
 		checkConnection.call(this);
 		this.client.end();
+	},
+
+	frequency = function(freq)
+	{
+		if (isNaN(freq) && freq !== 'AllFrames')
+			throw TypeError('Frequency must be a number or \'AllFrames\'');
+
+		this.options.frequency = freq;
 	};
+
 
 	return {
 		'connect':          connect,
@@ -307,10 +326,12 @@ Api.prototype = function()
 		'trig':             trig,
 		'setQtmEvent':      setQtmEvent,
 		'disconnect':       disconnect,
+		'frequency':        frequency,
 	}
 }();
 
 var api = new Api({ debug: true });
+
 api.connect()
 	.then(function() { return api.qtmVersion(); })
 	.then(function(version) { return api.byteOrder(); })
@@ -341,7 +362,9 @@ api.connect()
 	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 1/10 }) })
 	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ components: ['2D'], frequency: 'AllFrames' }) })
-	.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/10 }) })
+	//.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/10 }) })
+	.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/100 }) })
+	//.then(function() { return api.streamFrames({ components: ['3D'] }) })
 	//.then(function() { return api.streamFrames({ components: ['Force', 'Image', 'Analog', 'AnalogSingle', '6D', '3D', '2D'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ frequency: 100, components: ['3DNoLabels'] }); })
 	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['3DRes']); })
