@@ -62,6 +62,11 @@ Api.prototype = function()
 			if ('GetState' === command.data)
 				this.promiseQueue.pop().resolve({ id: packet.eventId, name: packet.eventName });
 		}
+		else if (packet.type == qtmrt.XML)
+		{
+			this.promiseQueue.pop().resolve(packet.toJson());
+
+		}
 		else if (packet.type == qtmrt.COMMAND_RESPONSE)
 		{
 			if (_.str.startsWith(command.data, 'ByteOrder'))
@@ -319,9 +324,10 @@ api.connect()
 	.then(function() { return api.qtmVersion(); })
 	.then(function(version) { return api.byteOrder(); })
 	.then(function(byteOrder) { return api.getState(); })
-	//.then(function() { return api.getParameters('All'); })
-	.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
-	.then(function(frame) { console.log(frame); })
+	//.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
+	//.then(function(frame) { console.log(frame); })
+	.then(function() { return api.getParameters('3D', 'Analog'); })
+	.then(function(parameters) { console.log(parameters); })
 	//.then(function() { return api.takeControl('gait1'); })
 	//.then(function() { return api.releaseControl(); })
 	//.then(function() { return api.newMeasurement(); })

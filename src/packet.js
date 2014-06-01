@@ -1,6 +1,7 @@
 'use strict';
 
 var _          = require('underscore')
+  , parser     = require('xml2json')
   , qtmrt      = require('./qtmrt')
   , readUInt32 = require('./mangler').readUInt32
   , Model      = require('./model')
@@ -57,6 +58,29 @@ var CommandPacket = Model.extend(
 
 var XmlPacket = Model.extend(
 	{
+		init: function(buf)
+		{
+			Packet.init.call(this, buf);
+
+			this.data = buf.slice(this.munched, buf.length - 1).toString('utf8');
+		},
+
+		toJson: function()
+		{
+			var underscoreCased = this.data.replace(/[a-z]([A-Z])/g, function (g) { return g[0] + '_' + g[1]; })
+			  , camelCased      = underscoreCased.toLowerCase().replace(/_([a-zA-Z0-9])/g, function (g) { return g[1].toUpperCase(); })
+			  , jsonData        = JSON.parse(parser.toJson(camelCased))
+			;
+
+			for (var i in jsonData) {
+				var keys = Object.keys(jsonData[i]);
+
+				if (1 === keys.length)
+					return jsonData[i][keys[0]];
+				else
+					return jsonData[i];
+			}
+		}
 	},
 	Packet
 );
