@@ -119,7 +119,16 @@ var Component2d = Model.extend(
 				}
 				this.cameras.push(camera);
 			}
-		}
+		},
+
+		toJson: function() {
+			return {
+				cameraCount: this.cameraCount,
+				dropRate2d: this.dropRate2d,
+				outOfSyncRate2d: this.outOfSyncRate2d,
+				cameras: this.cameras,
+			};
+		},
 	},
 	Component
 );
@@ -147,7 +156,16 @@ var Component3d = Model.extend(
 					z: this.munchFloat(),
 				});
 			}
-		}
+		},
+
+		toJson: function() {
+			return {
+				markerCount: this.markerCount,
+				dropRate2d: this.dropRate2d,
+				outOfSyncRate2d: this.outOfSyncRate2d,
+				markers: this.markers,
+			};
+		},
 	},
 	Component
 );
@@ -165,7 +183,7 @@ var Component3dNoLabels = Model.extend(
 					id:  this.munchUInt32(),
 				});
 			}
-		}
+		},
 	},
 	Component3d
 );
@@ -235,7 +253,16 @@ var Component6d = Model.extend(
 
 				this.rigidBodies.push(rigidBody);
 			}
-		}
+		},
+
+		toJson: function() {
+			return {
+				rigidBodyCount: this.rigidBodyCount,
+				dropRate2d: this.dropRate2d,
+				outOfSyncRate2d: this.outOfSyncRate2d,
+				rigidBodies: this.rigidBodies,
+			};
+		},
 
 	},
 	Component
@@ -342,7 +369,14 @@ var ComponentAnalog = Model.extend(
 				}
 				this.devices.push(device);
 			}
-		}
+		},
+
+		toJson: function() {
+			return {
+				deviceCount: this.deviceCount,
+				devices: this.devices,
+			};
+		},
 
 	},
 	Component
@@ -375,7 +409,14 @@ var ComponentForce = Model.extend(
 	{
 		init: function(buf) {
 			Component.init.call(this, buf);
-			this.plateCount = this.munchUInt32();
+			
+			// XXX: Not quite sure about this, but sometimes QTM sends empty
+			// force components. 
+			if (12 === this.size)
+				this.plateCount = 0;
+			else
+				this.plateCount = this.munchUInt32();
+
 			this.plates     = [];
 
 			this.parsePlates();
@@ -407,7 +448,14 @@ var ComponentForce = Model.extend(
 
 				this.plates.push(plate);
 			}
-		}
+		},
+
+		toJson: function() {
+			return {
+				plateCount: this.plateCount,
+				plates: this.plates,
+			};
+		},
 
 	},
 	Component
@@ -447,7 +495,7 @@ var ComponentImage = Model.extend(
 		init: function(buf) {
 			Component.init.call(this, buf);
 			this.cameraCount = this.munchUInt32();
-			this.devices     = [];
+			this.cameras     = [];
 
 			this.parseCameras();
 		},
@@ -474,7 +522,14 @@ var ComponentImage = Model.extend(
 				this.cameras.push(camera);
 
 			}
-		}
+		},
+
+		toJson: function() {
+			return {
+				cameraCount: this.cameraCount,
+				cameras: this.plates,
+			};
+		},
 
 	},
 	Component

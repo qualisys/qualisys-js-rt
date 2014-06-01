@@ -78,7 +78,11 @@ Api.prototype = function()
 			else
 				this.promiseQueue.pop().resolve(packet);
 		}
-		else if (packet.type != qtmrt.DATA || (command && _.str.startsWith(command.data, 'GetCurrentFrame')))
+		else if (command && _.str.startsWith(command.data, 'GetCurrentFrame'))
+		{
+			this.promiseQueue.pop().resolve(packet.toJson());
+		}
+		else if (packet.type != qtmrt.DATA)
 		{
 			this.promiseQueue.pop().resolve(packet);
 		}
@@ -316,8 +320,8 @@ api.connect()
 	.then(function(version) { return api.byteOrder(); })
 	.then(function(byteOrder) { return api.getState(); })
 	//.then(function() { return api.getParameters('All'); })
-	.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_3D); })
-	.then(function(frame) { })
+	.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
+	.then(function(frame) { console.log(frame); })
 	//.then(function() { return api.takeControl('gait1'); })
 	//.then(function() { return api.releaseControl(); })
 	//.then(function() { return api.newMeasurement(); })
@@ -334,7 +338,7 @@ api.connect()
 	//.then(function() { return api.getCaptureC3D(); })
 	//.then(function() { return api.getCaptureQtm(); })
 	//.then(function() { return api.stopStreaming(); })
-	.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_2D]); })
+	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_2D]); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_3D]); })
 	//.then(function() { return api.streamFrames('Frequency:100',        [qtmrt.COMPONENT_3D_NO_LABELS]); })
 	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_3D_RESIDUALS]); })

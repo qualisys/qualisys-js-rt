@@ -89,6 +89,21 @@ var DataPacket = Model.extend(
 				throw new TypeError('Unexpected component');
 
 			return this.components[Component.stringToType(componentString)];
+		},
+		
+		toJson: function()
+		{
+			var json = {
+				frame: this.frameNumber,
+				timestamp: this.timestamp,
+				components: [],
+			};
+
+			for (var type in this.components) {
+				json.components.push(this.components[type].toJson());
+			};
+
+			return json;
 		}
 	},
 	Packet
