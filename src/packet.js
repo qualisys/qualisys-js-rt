@@ -163,6 +163,13 @@ var EventPacket = Model.extend(
 
 var DiscoverPacket = Model.extend(
 	{
+		init: function(buf)
+		{
+			Packet.init.call(this, buf);
+
+			this.serverInfo = buf.slice(this.munched, this.size - this.munched - qtmrt.UINT16_SIZE).toString('utf8');
+			console.log('my god', this.type, this.size, this.serverInfo);
+		}
 	},
 	Packet
 );

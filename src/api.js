@@ -1,6 +1,7 @@
 'use strict';
 
-var Q       = require('q')
+var dgram   = require('dgram')
+  , Q       = require('q')
   , _       = require('underscore')
   , colors  = require('colors')
   , qtmrt   = require('./qtmrt')
@@ -27,6 +28,7 @@ var Api = function(options) {
 	this.options = _.defaults(options, {
 		debug: false,
 		frequency: 100,
+		discoverPort: 22226,
 	});
 
 	this.frequency(this.options.frequency);
@@ -294,6 +296,53 @@ Api.prototype = function()
 		this.client.end();
 	},
 
+	discover = function(port)
+	{
+		if (_.isUndefined(port))
+			port = this.options.discoverPort;
+
+		var server = dgram.createSocket('udp4')
+		  , self = this
+		;
+
+		server.on('error', function (err) {
+			console.log('server error:\n' + err.stack);
+			server.close();
+		});
+
+		server.on('message', function (msg, rinfo) {
+			console.log('server got: ' + msg + ' from ' +
+			rinfo.address + ':' + rinfo.port);
+			self.logger.logPacket(Packet.create(msg));
+		});
+
+		server.on('listening', function () {
+			var address = server.address();
+			console.log('server listening ' + address.address + ':' + address.port);
+		});
+
+		server.bind(port);
+
+		// Create discover packet.
+		var buf = new Buffer(10);
+		buf.writeUInt32LE(10, 0);
+		buf.writeUInt32LE(7, 4);
+		buf.writeUInt16LE(port, 8);
+
+		var client = dgram.createSocket('udp4')
+		  //, address = 'localhost'
+		  , address = 'ff02::1' /*'255.255.255.255'*/
+		;
+
+		client.bind();
+		client.on('listening', function () {
+			client.setBroadcast(true);
+			client.send(buf, 0, buf.length, port, address, function(err, bytes) {
+				client.close();
+			});
+		});
+	},
+
 	frequency = function(freq)
 	{
 		if (isNaN(freq) && freq !== 'AllFrames')
@@ -301,7 +350,6 @@ Api.prototype = function()
 
 		this.options.frequency = freq;
 	};
-
 
 	return {
 		'connect':          connect,
@@ -326,6 +374,7 @@ Api.prototype = function()
 		'trig':             trig,
 		'setQtmEvent':      setQtmEvent,
 		'disconnect':       disconnect,
+		'discover':         discover,
 		'frequency':        frequency,
 	}
 }();
@@ -336,10 +385,12 @@ api.connect()
 	.then(function() { return api.qtmVersion(); })
 	.then(function(version) { return api.byteOrder(); })
 	.then(function(byteOrder) { return api.getState(); })
+	//.then(function() { api.discover(); })
+
 	//.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
 	//.then(function(frame) { console.log(frame); })
-	//.then(function() { return api.getParameters('3D', 'Analog'); })
-	//.then(function(parameters) { console.log(parameters); })
+	.then(function() { return api.getParameters('All'); })
+	.then(function(parameters) { console.log(parameters); })
 	//.then(function() { return api.takeControl('gait1'); })
 	//.then(function() { return api.releaseControl(); })
 	//.then(function() { return api.newMeasurement(); })
@@ -363,7 +414,7 @@ api.connect()
 	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ components: ['2D'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/10 }) })
-	.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/100 }) })
+	//.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/100 }) })
 	//.then(function() { return api.streamFrames({ components: ['3D'] }) })
 	//.then(function() { return api.streamFrames({ components: ['Force', 'Image', 'Analog', 'AnalogSingle', '6D', '3D', '2D'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ frequency: 100, components: ['3DNoLabels'] }); })

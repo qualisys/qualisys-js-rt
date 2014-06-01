@@ -41,7 +41,7 @@ Logger.prototype = function()
 		typeColors[qtmrt.NO_MORE_DATA]     = 'grey';
 		typeColors[qtmrt.C3D_FILE]         = 'cyan';
 		typeColors[qtmrt.EVENT]            = 'yellow';
-		typeColors[qtmrt.DISCOVER]         = 'yellow';
+		typeColors[qtmrt.DISCOVER]         = 'grey';
 		typeColors[qtmrt.QTM_FILE]         = 'cyan';
 		typeColors[qtmrt.COMMAND_RESPONSE] = 'green';
 
@@ -57,6 +57,11 @@ Logger.prototype = function()
 		else if (packet.type === qtmrt.XML)
 		{
 			value = packet.data.substr(0, 50).replace(/\r?\n|\r|\s+/g, '') + ' ...';
+		}
+		else if (packet.type === qtmrt.DISCOVER)
+		{
+			//value = packet.data.substr(0, 50).replace(/\r?\n|\r|\s+/g, '') + ' ...';
+			console.log('hohoho', packet.data);
 		}
 		else if (packet.type === qtmrt.DATA)
 		{
