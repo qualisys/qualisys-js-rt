@@ -64,7 +64,7 @@ Mangler.prototype = function()
 			this.currentPacketSize = readUInt32(chunk, 0);
 		
 		while (this.chunks.length < this.currentPacketSize && bytesRead < chunk.length) {
-			var copySize = Math.min(this.currentPacketSize, chunk.length - bytesRead);
+			var copySize = Math.min(this.currentPacketSize - this.chunks.length, chunk.length - bytesRead);
 			this.chunks  = Buffer.concat([this.chunks, chunk.slice(bytesRead, bytesRead + copySize)])
 			bytesRead   += copySize;
 

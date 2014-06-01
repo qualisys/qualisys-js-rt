@@ -107,6 +107,7 @@ var DataPacket = Model.extend(
 				this.components[component.type] = component;
 			}
 		},
+
 		component: function(componentString)
 		{
 			if (!_.contains(qtmrt.COMPONENT_STRINGS, componentString))

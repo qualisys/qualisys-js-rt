@@ -179,17 +179,8 @@ Api.prototype = function()
 	// XXX: Not tested with QTM file reply.
 	getCaptureQtm = function() { return send.call(this, Command.getCaptureQtm()); },
 
-	streamFrames = function(frequency, components, updPort)
+	streamFrames = function()
 	{
-		if (1 > arguments.length)
-			throw TypeError('No frequency specified');
-
-		if (2 > arguments.length)
-			throw TypeError('No components specified');
-
-		if (1 < arguments.length && !_.isArray(components))
-			throw TypeError('Expected components to be an array');
-		
 		this.isStreaming = true;
 		return send.call(this, Command.streamFrames.apply(Command, arguments));
 	},
@@ -266,7 +257,7 @@ Api.prototype = function()
 		checkConnection.call(this);
 		var promise = Q.resolve();
 
-		if (!_.str.startsWith(command, 'StreamFrames'))
+		if (!_.str.startsWith(command.data, 'StreamFrames'))
 			promise = promiseResponse.call(this);
 
 		this.issuedCommands.unshift(command);
@@ -326,8 +317,8 @@ api.connect()
 	.then(function(byteOrder) { return api.getState(); })
 	//.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
 	//.then(function(frame) { console.log(frame); })
-	.then(function() { return api.getParameters('3D', 'Analog'); })
-	.then(function(parameters) { console.log(parameters); })
+	//.then(function() { return api.getParameters('3D', 'Analog'); })
+	//.then(function(parameters) { console.log(parameters); })
 	//.then(function() { return api.takeControl('gait1'); })
 	//.then(function() { return api.releaseControl(); })
 	//.then(function() { return api.newMeasurement(); })
@@ -344,20 +335,26 @@ api.connect()
 	//.then(function() { return api.getCaptureC3D(); })
 	//.then(function() { return api.getCaptureQtm(); })
 	//.then(function() { return api.stopStreaming(); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_2D]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_3D]); })
-	//.then(function() { return api.streamFrames('Frequency:100',        [qtmrt.COMPONENT_3D_NO_LABELS]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_3D_RESIDUALS]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_6D]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_6D_RESIDUALS]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_6D_EULER]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_6D_EULER_RESIDUALS]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_ANALOG]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_ANALOG_SINGLE]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_FORCE]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_FORCE_SINGLE]); })
-	//.then(function() { return api.streamFrames('FrequencyDivisor:100', [qtmrt.COMPONENT_IMAGE]); })
+	//.then(function() { return api.streamFrames() })
+	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 1/100 }) })
+	//.then(function() { return api.stopStreaming() })
+	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 1/10 }) })
+	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 'AllFrames' }) })
+	//.then(function() { return api.streamFrames({ components: ['2D'], frequency: 'AllFrames' }) })
+	.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/10 }) })
+	//.then(function() { return api.streamFrames({ components: ['Force', 'Image', 'Analog', 'AnalogSingle', '6D', '3D', '2D'], frequency: 'AllFrames' }) })
+	//.then(function() { return api.streamFrames({ frequency: 100, components: ['3DNoLabels'] }); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['3DRes']); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['3DNoLabelsRes']); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['6D'] }); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['6DRes'] }); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['6DEuler'] }); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['6DEulerRes'] }); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['Analog'] }); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['AnalogSingle'] }); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['Force'] }); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['ForceSingle'] }); })
+	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['Image'] }); })
 	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {

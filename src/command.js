@@ -75,24 +75,40 @@ var Command = {
 	},
 
 
-	streamFrames: function(frequency, components, updPort, udpAddress)
+	streamFrames: function(options)
 	{
-		var udp = _.isUndefined(updPort)
+		if (!arguments.length)
+			options = {};
+
+		options = _.defaults(options, {
+			frequency: 100,
+			components: ['All'],
+		});
+
+		var udp = _.isUndefined(options.updPort)
 				? ''
-				: ' UDP:' + (_.isUndefined(udpAddress) ? '' : udpAddress + ':') + udpPort
+				: ' UDP:' + (_.isUndefined(options.udpAddress) ? '' : options.udpAddress + ':') + options.udpPort
+		  , frequency = ''
 		  , predicate = function(component) {
-				return _.contains(qtmrt.COMPONENTS, component);
+				return _.contains(_.union(['All'], qtmrt.COMPONENT_STRINGS), component);
 			}
-		  , components = _.filter(components, predicate)
+		  , components = _.filter(options.components, predicate)
 		;
+
+		if (1 > options.frequency)
+			frequency = 'FrequencyDivisor:' + (1 / options.frequency);
+		else if (isNaN(options.frequency))
+			frequency = 'AllFrames';
+		else
+			frequency = 'Frequency:' + options.frequency;
 
 		if (_.isEmpty(components))
 			throw TypeError('No valid components specified');
 
-		if (_.contains(components, qtmrt.COMPONENT_ALL))
-			components = [qtmrt.COMPONENT_ALL];
-
-		var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.map(Component.typeToString).join(' ');
+		if (_.contains(components, 'All'))
+			components = ['All'];
+	
+		var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.join(' ');
 
 		return this.build(cmdStr);
 	},
