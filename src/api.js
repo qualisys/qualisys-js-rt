@@ -300,8 +300,10 @@ Api.prototype = function()
 	{
 		if (_.isUndefined(port))
 			port = this.options.discoverPort;
+		
 
 		var server = dgram.createSocket('udp4')
+		  , receivePort = port + 1
 		  , self = this
 		;
 
@@ -313,7 +315,7 @@ Api.prototype = function()
 		server.on('message', function (msg, rinfo) {
 			console.log('server got: ' + msg + ' from ' +
 			rinfo.address + ':' + rinfo.port);
-			self.logger.logPacket(Packet.create(msg));
+			//self.logger.logPacket(Packet.create(msg));
 		});
 
 		server.on('listening', function () {
@@ -321,17 +323,18 @@ Api.prototype = function()
 			console.log('server listening ' + address.address + ':' + address.port);
 		});
 
-		server.bind(port);
+		server.bind(receivePort);
 
 		// Create discover packet.
 		var buf = new Buffer(10);
 		buf.writeUInt32LE(10, 0);
 		buf.writeUInt32LE(7, 4);
-		buf.writeUInt16LE(port, 8);
+		buf.writeUInt16BE(receivePort, 8);
 
 		var client = dgram.createSocket('udp4')
 		  //, address = 'localhost'
-		  , address = 'ff02::1' /*'255.255.255.255'*/
+		  //, address = 'ff02::1' 
+		  , address = '255.255.255.255'
 		;
 
 		client.bind();
@@ -385,12 +388,12 @@ api.connect()
 	.then(function() { return api.qtmVersion(); })
 	.then(function(version) { return api.byteOrder(); })
 	.then(function(byteOrder) { return api.getState(); })
-	//.then(function() { api.discover(); })
+	.then(function() { api.discover(); })
 
 	//.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
 	//.then(function(frame) { console.log(frame); })
-	.then(function() { return api.getParameters('All'); })
-	.then(function(parameters) { console.log(parameters); })
+	//.then(function() { return api.getParameters('All'); })
+	//.then(function(parameters) { console.log(parameters); })
 	//.then(function() { return api.takeControl('gait1'); })
 	//.then(function() { return api.releaseControl(); })
 	//.then(function() { return api.newMeasurement(); })
