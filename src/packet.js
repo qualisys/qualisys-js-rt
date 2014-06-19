@@ -3,7 +3,7 @@
 var _          = require('underscore')
   , parseString = require('xml2js').parseString
   , qtmrt      = require('./qtmrt')
-  , readUInt32 = require('./mangler').readUInt32
+  , readUInt32 = require('./helpers').readUInt32
   , Model      = require('./model')
   , Muncher    = require('./muncher')
   , Component  = require('./component')
@@ -166,9 +166,8 @@ var DiscoverPacket = Model.extend(
 		init: function(buf)
 		{
 			Packet.init.call(this, buf);
-
-			this.serverInfo = buf.slice(this.munched, this.size - this.munched - qtmrt.UINT16_SIZE).toString('utf8');
-			console.log('my god', this.type, this.size, this.serverInfo);
+			this.serverInfo = this.munch(this.size - this.munched - qtmrt.UINT16_SIZE).toString('utf8');
+			this.serverBasePort = this.munchUInt16();
 		}
 	},
 	Packet
@@ -180,21 +179,31 @@ var QtmFilePacket = Model.extend(
 	Packet
 );
 
-Packet.create = function(buf)
+Packet.create = function(buf, srcAddress, srcPort)
 {
-	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
+	var type   = readUInt32(buf, qtmrt.UINT32_SIZE)
+	  , packet = null
+	;
 
 	switch (type) {
-		case qtmrt.ERROR:         return new ErrorPacket(buf); break;
-		case qtmrt.COMMAND:       return new CommandPacket(buf); break;
-		case qtmrt.XML:           return new XmlPacket(buf); break;
-		case qtmrt.DATA:          return new DataPacket(buf); break;
-		case qtmrt.NO_MORE_DATA:  return new NoMoreDataPacket(buf); break;
-		case qtmrt.C3D_FILE:      return new C3dFilePacket(buf); break;
-		case qtmrt.EVENT:         return new EventPacket(buf); break;
-		case qtmrt.DISCOVER:      return new DiscoverPacket(buf); break;
-		case qtmrt.QTM_FILE:      return new QtmFilePacket(buf); break;
+		case qtmrt.ERROR:         packet = new ErrorPacket(buf); break;
+		case qtmrt.COMMAND:       packet = new CommandPacket(buf); break;
+		case qtmrt.XML:           packet = new XmlPacket(buf); break;
+		case qtmrt.DATA:          packet = new DataPacket(buf); break;
+		case qtmrt.NO_MORE_DATA:  packet = new NoMoreDataPacket(buf); break;
+		case qtmrt.C3D_FILE:      packet = new C3dFilePacket(buf); break;
+		case qtmrt.EVENT:         packet = new EventPacket(buf); break;
+		case qtmrt.DISCOVER:      packet = new DiscoverPacket(buf); break;
+		case qtmrt.QTM_FILE:      packet = new QtmFilePacket(buf); break;
 	}
+
+	if (1 < arguments.length)
+	{
+		packet.srcAddress = srcAddress;
+		packet.srcPort    = srcPort;
+	}
+
+	return packet;
 };
 
 Packet.typeToString = packetTypeToString;

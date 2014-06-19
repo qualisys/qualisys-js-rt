@@ -1,10 +1,10 @@
 'use strict';
 
-var readUInt8  = require('./mangler').readUInt8
-  , readUInt16 = require('./mangler').readUInt16
-  , readUInt32 = require('./mangler').readUInt32
-  , readUInt64 = require('./mangler').readUInt64
-  , readFloat  = require('./mangler').readFloat
+var readUInt8  = require('./helpers').readUInt8
+  , readUInt16 = require('./helpers').readUInt16
+  , readUInt32 = require('./helpers').readUInt32
+  , readUInt64 = require('./helpers').readUInt64
+  , readFloat  = require('./helpers').readFloat
   , Model      = require('./model')
 ;
 

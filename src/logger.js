@@ -39,7 +39,7 @@ Logger.prototype = function()
 		typeColors[qtmrt.XML]              = 'green';
 		typeColors[qtmrt.DATA]             = 'white';
 		typeColors[qtmrt.NO_MORE_DATA]     = 'grey';
-		typeColors[qtmrt.C3D_FILE]         = 'cyan';
+		typeColors[qtmrt.C3D_FILE]         = 'grey';
 		typeColors[qtmrt.EVENT]            = 'yellow';
 		typeColors[qtmrt.DISCOVER]         = 'grey';
 		typeColors[qtmrt.QTM_FILE]         = 'cyan';
@@ -47,6 +47,7 @@ Logger.prototype = function()
 
 		var typeColor = typeColors[packet.type]
 		  , value     = packet.data
+		  , suffix    = '';
 		;
 
 		// XXX: Move value stuff to toString on packets.
@@ -60,8 +61,12 @@ Logger.prototype = function()
 		}
 		else if (packet.type === qtmrt.DISCOVER)
 		{
-			//value = packet.data.substr(0, 50).replace(/\r?\n|\r|\s+/g, '') + ' ...';
-			console.log('hohoho', packet.data);
+			if (10 === packet.size)
+				value = 'QTM Discovery broadcast'.white;
+			else {
+				value  = packet.serverInfo;
+				suffix = (' (' + packet.srcAddress + ':' + packet.srcPort + ')').cyan;
+			}
 		}
 		else if (packet.type === qtmrt.DATA)
 		{
@@ -82,7 +87,7 @@ Logger.prototype = function()
 
 		this.log(
 			(sprintf("%-20s", '<' + Packet.typeToString(packet.type) + '>')
-			+ value)[typeColor]
+			+ value)[typeColor] + suffix
 		);
 	}
 	;

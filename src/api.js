@@ -1,14 +1,15 @@
 'use strict';
 
-var dgram   = require('dgram')
-  , Q       = require('q')
-  , _       = require('underscore')
-  , colors  = require('colors')
-  , qtmrt   = require('./qtmrt')
-  , Mangler = require('./mangler').Mangler
-  , Packet  = require('./packet')
-  , Command = require('./command')
-  , Logger  = require('./logger')
+var dgram       = require('dgram')
+  , Q           = require('q')
+  , _           = require('underscore')
+  , colors      = require('colors')
+  , qtmrt       = require('./qtmrt')
+  , writeUInt32 = require('./helpers').writeUInt32
+  , Mangler     = require('./mangler')
+  , Packet      = require('./packet')
+  , Command     = require('./command')
+  , Logger      = require('./logger')
 ;
 
 _.str = require('underscore.string')
@@ -308,19 +309,17 @@ Api.prototype = function()
 		;
 
 		server.on('error', function (err) {
-			console.log('server error:\n' + err.stack);
+			console.log('Server error:\n' + err.stack);
 			server.close();
 		});
 
 		server.on('message', function (msg, rinfo) {
-			console.log('server got: ' + msg + ' from ' +
-			rinfo.address + ':' + rinfo.port);
-			//self.logger.logPacket(Packet.create(msg));
+			writeUInt32(msg, 4, 7);
+			self.logger.logPacket(Packet.create(msg, rinfo.address, rinfo.port));
 		});
 
 		server.on('listening', function () {
 			var address = server.address();
-			console.log('server listening ' + address.address + ':' + address.port);
 		});
 
 		server.bind(receivePort);
@@ -343,6 +342,7 @@ Api.prototype = function()
 			client.send(buf, 0, buf.length, port, address, function(err, bytes) {
 				client.close();
 			});
+			self.logger.logPacket(Packet.create(buf));
 		});
 	},
 
