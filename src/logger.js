@@ -45,7 +45,7 @@ Logger.prototype = function()
 		typeColors[qtmrt.QTM_FILE]         = 'cyan';
 		typeColors[qtmrt.COMMAND_RESPONSE] = 'green';
 
-		var typeColor = typeColors[packet.type]
+		var typeColor = packet.isResponse ? typeColors[packet.type] : typeColors[qtmrt.COMMAND]
 		  , value     = packet.data
 		  , suffix    = '';
 		;

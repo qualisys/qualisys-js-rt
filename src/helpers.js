@@ -5,52 +5,52 @@ var _     = require('underscore')
   , qtmrt = require('./qtmrt')
 ;
 
-var readUInt8 = function(buffer, pos, bytesRead)
+var readUInt8 = function(buffer, offset, bytesRead)
 {
 	if (!_.isUndefined(bytesRead))
 		bytesRead.count += qtmrt.UINT8_SIZE;
 
-	return buffer.readUInt8(pos);
+	return buffer.readUInt8(offset);
 }
 
-var readUInt16 = function(buffer, pos, bytesRead)
+var readUInt16 = function(buffer, offset, bytesRead)
 {
 	if (!_.isUndefined(bytesRead))
 		bytesRead.count += qtmrt.UINT16_SIZE;
 
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
-		? buffer.readUInt16LE(pos) : buffer.readUInt16BE(pos);
+		? buffer.readUInt16LE(offset) : buffer.readUInt16BE(offset);
 }
 
-var readUInt32 = function(buffer, pos, bytesRead)
+var readUInt32 = function(buffer, offset, bytesRead)
 {
 	if (!_.isUndefined(bytesRead))
 		bytesRead.count += qtmrt.UINT32_SIZE;
 
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
-		? buffer.readUInt32LE(pos) : buffer.readUInt32BE(pos);
+		? buffer.readUInt32LE(offset) : buffer.readUInt32BE(offset);
 }
 
-var readUInt64 = function(buffer, pos)
+var readUInt64 = function(buffer, offset)
 {
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
-		? new Big(buffer.readUInt32LE(pos) << 8).plus(buffer.readUInt32LE(pos + 4))
-		: new Big(buffer.readUInt32BE(pos) << 8).plus(buffer.readUInt32BE(pos + 4))
+		? new Big(buffer.readUInt32LE(offset) << 8).plus(buffer.readUInt32LE(offset + 4))
+		: new Big(buffer.readUInt32BE(offset) << 8).plus(buffer.readUInt32BE(offset + 4))
 }
 
-var readFloat = function(buffer, pos, bytesRead)
+var readFloat = function(buffer, offset, bytesRead)
 {
 	if (!_.isUndefined(bytesRead))
 		bytesRead.count += qtmrt.FLOAT_SIZE;
 
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
-		? buffer.readFloatLE(pos) : buffer.readFloatBE(pos);
+		? buffer.readFloatLE(offset) : buffer.readFloatBE(offset);
 }
 
-var writeUInt32 = function(buffer, pos, value)
+var writeUInt32 = function(buffer, value, offset)
 {
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
-		? buffer.writeUInt32LE(value, pos) : buffer.writeUInt32BE(value, pos);
+		? buffer.writeUInt32LE(value, offset) : buffer.writeUInt32BE(value, offset);
 }
 
 module.exports = {

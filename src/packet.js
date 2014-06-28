@@ -36,10 +36,11 @@ var Packet = Model.extend(
 
 			Muncher.init.call(this, buf);
 
-			this.size     = this.munchUInt32();
-			this.type     = this.munchUInt32();
-			this.typeName = packetTypeToString(this.type);
-			this.data     = buf.slice(this.munched).toString('utf8');
+			this.size         = this.munchUInt32();
+			this.type         = this.munchUInt32();
+			this.typeName     = packetTypeToString(this.type);
+			this.data         = buf.slice(this.munched).toString('utf8');
+			this.isResponse   = true;
 		},
 	}, Muncher
 );

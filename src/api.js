@@ -172,6 +172,7 @@ Api.prototype = function()
 	byteOrder       = function() { return send.call(this, Command.byteOrder()) },
 	getState        = function() { return send.call(this, Command.getState()) },
 	getParameters   = function() { return send.call(this, Command.getParameters.apply(Command, arguments)); },
+	setParameters   = function() { return send.call(this, Command.setParameters.apply(Command, arguments)); },
 	getCurrentFrame = function() { return send.call(this, Command.getCurrentFrame.apply(Command, arguments)); },
 	releaseControl  = function() { return send.call(this, Command.releaseControl()); },
 	newMeasurement  = function() { return send.call(this, Command.newMeasurement()); },
@@ -275,6 +276,8 @@ Api.prototype = function()
 
 		this.issuedCommands.unshift(command);
 
+		command.isResponse = false;
+
 		this.client.write(command.buffer, 'utf8', function(data) {
 			if (this.options.debug)
 				this.logger.logPacket(command);
@@ -314,7 +317,7 @@ Api.prototype = function()
 		});
 
 		server.on('message', function (msg, rinfo) {
-			writeUInt32(msg, 4, 7);
+			writeUInt32(msg, 7, 4);
 			self.logger.logPacket(Packet.create(msg, rinfo.address, rinfo.port));
 		});
 
@@ -360,6 +363,7 @@ Api.prototype = function()
 		'byteOrder':        byteOrder,
 		'getState':         getState,
 		'getParameters':    getParameters,
+		'setParameters':    setParameters,
 		'getCurrentFrame':  getCurrentFrame,
 		'stopStreaming':    stopStreaming,
 		'streamFrames':     streamFrames,
@@ -392,12 +396,12 @@ api.connect()
 
 	//.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
 	//.then(function(frame) { console.log(frame); })
-	//.then(function() { return api.getParameters('All'); })
+	.then(function() { return api.getParameters('All'); })
 	//.then(function(parameters) { console.log(parameters); })
-	//.then(function() { return api.takeControl('gait1'); })
+	.then(function() { return api.takeControl('gait1'); })
+	.then(function() { return api.setParameters({ 'General': { 'Capture_Time': 2.5 } }); })
 	//.then(function() { return api.releaseControl(); })
 	//.then(function() { return api.newMeasurement(); })
-	//.then(function() { return api.takeControl('gait1'); })
 	//.then(function() { return api.setQtmEvent('foo_event'); })
 	//.then(function() { return api.newMeasurement(); })
 	//.then(function() { return api.close(); })

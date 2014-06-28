@@ -1,10 +1,12 @@
 'use strict';
 
-var _         = require('underscore')
-  , qtmrt     = require('./qtmrt')
-  , Model     = require('./model')
-  , Packet    = require('./packet')
-  , Component = require('./component')
+var _           = require('underscore')
+  , jsonxml     = require('jsontoxml')
+  , qtmrt       = require('./qtmrt')
+  , Model       = require('./model')
+  , Packet      = require('./packet')
+  , Component   = require('./component')
+  , writeUInt32 = require('./helpers').writeUInt32
 ;
 
 var Command = {
@@ -12,17 +14,8 @@ var Command = {
 	{
 		var buf = new Buffer(qtmrt.HEADER_SIZE + cmdStr.length);
 		
-		if (qtmrt.byteOrder == qtmrt.LITTLE_ENDIAN)
-		{
-			buf.writeUInt32LE(buf.length, 0);
-			buf.writeUInt32LE(qtmrt.COMMAND, 4);
-		}
-		else
-		{
-			buf.writeUInt32BE(buf.length);
-			buf.writeUInt32BE(qtmrt.COMMAND, qtmrt.UINT32_SIZE);
-		}
-
+		writeUInt32(buf, buf.length, 0);
+		writeUInt32(buf, qtmrt.COMMAND, qtmrt.UINT32_SIZE);
 		buf.write(cmdStr, qtmrt.HEADER_SIZE, cmdStr.length, 'utf8');
 
 		return new Packet(buf);
@@ -58,6 +51,19 @@ var Command = {
 			components = ['All'];
 
 		return this.build('GetParameters ' + components.join(' '));
+	},
+
+	setParameters: function(params)
+	{
+		var xml = jsonxml({ QTM_Settings: params }) + '\0'
+		  , buf = new Buffer(qtmrt.HEADER_SIZE + xml.length + 1)
+		;
+
+		writeUInt32(buf, buf.length, 0);
+		writeUInt32(buf, qtmrt.XML, qtmrt.UINT32_SIZE);
+		buf.write(xml, qtmrt.HEADER_SIZE);
+
+		return Packet.create(buf);
 	},
 
 	getCurrentFrame: function(component)
