@@ -1,7 +1,7 @@
 'use strict';
 
 var qtmrt      = require('./qtmrt')
-  , readUInt32 = require('./mangler').readUInt32
+  , readUInt32 = require('./helpers').readUInt32
   , Model      = require('./model')
   , Muncher    = require('./muncher')
 ;
