@@ -25,6 +25,9 @@ var Api = function(options) {
 	this.mangler           = new Mangler();
 	this.isStreaming       = false;
 	this.currentPacketSize = false;
+	
+	if (1 > arguments.length)
+		options = {};
 
 	this.options = _.defaults(options, {
 		debug: false,
@@ -318,7 +321,9 @@ Api.prototype = function()
 
 		server.on('message', function (msg, rinfo) {
 			writeUInt32(msg, 7, 4);
-			self.logger.logPacket(Packet.create(msg, rinfo.address, rinfo.port));
+
+			if (self.options.debug)
+				self.logger.logPacket(Packet.create(msg, rinfo.address, rinfo.port));
 		});
 
 		server.on('listening', function () {
@@ -345,7 +350,9 @@ Api.prototype = function()
 			client.send(buf, 0, buf.length, port, address, function(err, bytes) {
 				client.close();
 			});
-			self.logger.logPacket(Packet.create(buf));
+
+			if (self.options.debug)
+				self.logger.logPacket(Packet.create(buf));
 		});
 	},
 
@@ -398,8 +405,8 @@ api.connect()
 	//.then(function(frame) { console.log(frame); })
 	.then(function() { return api.getParameters('All'); })
 	//.then(function(parameters) { console.log(parameters); })
-	.then(function() { return api.takeControl('gait1'); })
-	.then(function() { return api.setParameters({ 'General': { 'Capture_Time': 2.5 } }); })
+	//.then(function() { return api.takeControl('gait1'); })
+	//.then(function() { return api.setParameters({ 'General': { 'Capture_Time': 2.5 } }); })
 	//.then(function() { return api.releaseControl(); })
 	//.then(function() { return api.newMeasurement(); })
 	//.then(function() { return api.setQtmEvent('foo_event'); })
@@ -421,7 +428,7 @@ api.connect()
 	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ components: ['2D'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/10 }) })
-	//.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/100 }) })
+	.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/100 }) })
 	//.then(function() { return api.streamFrames({ components: ['3D'] }) })
 	//.then(function() { return api.streamFrames({ components: ['Force', 'Image', 'Analog', 'AnalogSingle', '6D', '3D', '2D'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ frequency: 100, components: ['3DNoLabels'] }); })
