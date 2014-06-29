@@ -4,15 +4,18 @@ var dgram       = require('dgram')
   , Q           = require('q')
   , _           = require('underscore')
   , colors      = require('colors')
+  , util        = require('util')
+  , events      = require('events')
   , qtmrt       = require('./qtmrt')
   , writeUInt32 = require('./helpers').writeUInt32
+  , mixin       = require('./helpers').mixin
   , Mangler     = require('./mangler')
   , Packet      = require('./packet')
   , Command     = require('./command')
   , Logger      = require('./logger')
 ;
 
-_.str = require('underscore.string')
+_.str = require('underscore.string');
 
 var Api = function(options) {
 	this.net               = require('net');
@@ -25,6 +28,8 @@ var Api = function(options) {
 	this.mangler           = new Mangler();
 	this.isStreaming       = false;
 	this.currentPacketSize = false;
+
+	events.EventEmitter.call(this);
 	
 	if (1 > arguments.length)
 		options = {};
@@ -36,9 +41,9 @@ var Api = function(options) {
 	});
 
 	this.frequency(this.options.frequency);
-}
+};
 
-Api.prototype = function()
+Api.prototype = (function()
 {
 	var bootstrap = function()
 	{
@@ -53,6 +58,11 @@ Api.prototype = function()
 			this.logger.log('Disconnected', 'white', 'bold');
 		}.bind(this));
 	},
+
+	log = function(msg, color, style)
+	{
+		this.logger.logPacket(msg, color, style);
+	},
 	
 	receivePacket = function(data)
 	{
@@ -66,17 +76,19 @@ Api.prototype = function()
 		if (this.options.debug)
 			this.logger.logPacket(packet);
 
-		if (packet.type == qtmrt.EVENT)
+		if (packet.type === qtmrt.EVENT)
 		{
 			if ('GetState' === command.data)
 				this.promiseQueue.pop().resolve({ id: packet.eventId, name: packet.eventName });
+
+			this.emit('event', packet.eventName, packet);
 		}
-		else if (packet.type == qtmrt.XML)
+		else if (packet.type === qtmrt.XML)
 		{
 			this.promiseQueue.pop().resolve(packet.toJson());
 
 		}
-		else if (packet.type == qtmrt.COMMAND_RESPONSE)
+		else if (packet.type === qtmrt.COMMAND_RESPONSE)
 		{
 			if (_.str.startsWith(command.data, 'ByteOrder'))
 				this.promiseQueue.pop().resolve(/little endian/.test(packet.data) ? 'little endian' : 'big endian');
@@ -84,7 +96,7 @@ Api.prototype = function()
 			else if (_.str.startsWith(command.data, 'QTMVersion'))
 			{
 				var human   = 'QTM ' + packet.data.replace('QTM Version is ', '').slice(0, -1)
-				  , version = human.match(/QTM (\d+)\.(\d+) \(build (\d+)\)/);
+				  , version = human.match(/QTM (\d+)\.(\d+) \(build (\d+)\)/)
 				;
 				this.promiseQueue.pop().resolve({ major: version[1], minor: version[2], build: version[3], human: human });
 			}
@@ -96,14 +108,18 @@ Api.prototype = function()
 		{
 			this.promiseQueue.pop().resolve(packet.toJson());
 		}
-		else if (packet.type != qtmrt.DATA)
+		else if (packet.type !== qtmrt.DATA)
 		{
 			this.promiseQueue.pop().resolve(packet);
+		}
+		else if (packet.type === qtmrt.DATA)
+		{
+			this.emit('frame', packet);
 		}
 		
 	},
 
-	checkConnection = function()
+	isConnected = function()
 	{
 		if (_.isNull(this.client))
 			return Q.reject(new Error('Not connected to QTM. Connect and try again.'));
@@ -128,10 +144,10 @@ Api.prototype = function()
 		else
 		{
 			if (!_.isNumber(major))
-				throw TypeError('Major version must be a number');
+				throw new TypeError('Major version must be a number');
 
 			if (!_.isNumber(major))
-				throw TypeError('Minor version must be a number');
+				throw new TypeError('Minor version must be a number');
 		}
 		
 		var self = this
@@ -171,9 +187,9 @@ Api.prototype = function()
 		return deferredCommand.promise;
 	},
 
-	qtmVersion      = function() { return send.call(this, Command.qtmVersion()) },
-	byteOrder       = function() { return send.call(this, Command.byteOrder()) },
-	getState        = function() { return send.call(this, Command.getState()) },
+	qtmVersion      = function() { return send.call(this, Command.qtmVersion()); },
+	byteOrder       = function() { return send.call(this, Command.byteOrder()); },
+	getState        = function() { return send.call(this, Command.getState()); },
 	getParameters   = function() { return send.call(this, Command.getParameters.apply(Command, arguments)); },
 	setParameters   = function() { return send.call(this, Command.setParameters.apply(Command, arguments)); },
 	getCurrentFrame = function() { return send.call(this, Command.getCurrentFrame.apply(Command, arguments)); },
@@ -217,7 +233,7 @@ Api.prototype = function()
 	takeControl = function(pass)
 	{
 		if (!_.isUndefined(pass) && !_.isString(pass))
-			throw TypeError('Password must be a string');
+			throw new TypeError('Password must be a string');
 
 		return send.call(this, Command.takeControl(pass));
 	},
@@ -225,10 +241,10 @@ Api.prototype = function()
 	load = function(filename)
 	{
 		if (1 > arguments.length)
-			throw TypeError('No filename specified');
+			throw new TypeError('No filename specified');
 
 		if (!_.isString(filename))
-			throw TypeError('Filename must be a string');
+			throw new TypeError('Filename must be a string');
 
 		return send.call(this, Command.load(filename));
 	},
@@ -236,13 +252,13 @@ Api.prototype = function()
 	save = function(filename, overwrite)
 	{
 		if (1 > arguments.length)
-			throw TypeError('No filename specified');
+			throw new TypeError('No filename specified');
 
 		if (!_.isString(filename))
-			throw TypeError('Filename must be a string');
+			throw new TypeError('Filename must be a string');
 
 		if (1 < arguments.length)
-			overwrite = 'overwrite'
+			overwrite = 'overwrite';
 
 		return send.call(this, Command.save(filename, overwrite));
 	},
@@ -250,10 +266,10 @@ Api.prototype = function()
 	loadProject = function(projectPath)
 	{
 		if (1 > arguments.length)
-			throw TypeError('No project path specified');
+			throw new TypeError('No project path specified');
 
 		if (!_.isString(projectPath))
-			throw TypeError('Project path must be a string');
+			throw new TypeError('Project path must be a string');
 
 		return send.call(this, Command.loadProject(projectPath));
 	},
@@ -261,17 +277,17 @@ Api.prototype = function()
 	setQtmEvent = function(label)
 	{
 		if (1 > arguments.length)
-			throw TypeError('No label specified');
+			throw new TypeError('No label specified');
 
 		if (!_.isString(label))
-			throw TypeError('Label must be a string');
+			throw new TypeError('Label must be a string');
 
 		return send.call(this, Command.setQtmEvent(label));
 	},
 
 	send = function(command)
 	{
-		checkConnection.call(this);
+		isConnected.call(this);
 		var promise = Q.resolve();
 
 		if (!_.str.startsWith(command.data, 'StreamFrames'))
@@ -291,7 +307,6 @@ Api.prototype = function()
 
 	promiseResponse = function()
 	{
-
 		var deferredResponse = Q.defer();
 		this.promiseQueue.unshift(deferredResponse);
 		return deferredResponse.promise;
@@ -299,7 +314,7 @@ Api.prototype = function()
 
 	disconnect = function()
 	{
-		checkConnection.call(this);
+		isConnected.call(this);
 		this.client.end();
 	},
 
@@ -339,7 +354,6 @@ Api.prototype = function()
 		buf.writeUInt16BE(receivePort, 8);
 
 		var client = dgram.createSocket('udp4')
-		  //, address = 'localhost'
 		  //, address = 'ff02::1' 
 		  , address = '255.255.255.255'
 		;
@@ -359,12 +373,13 @@ Api.prototype = function()
 	frequency = function(freq)
 	{
 		if (isNaN(freq) && freq !== 'AllFrames')
-			throw TypeError('Frequency must be a number or \'AllFrames\'');
+			throw new TypeError('Frequency must be a number or \'AllFrames\'');
 
 		this.options.frequency = freq;
 	};
 
 	return {
+		'log':              log,
 		'connect':          connect,
 		'qtmVersion':       qtmVersion,
 		'byteOrder':        byteOrder,
@@ -390,64 +405,9 @@ Api.prototype = function()
 		'disconnect':       disconnect,
 		'discover':         discover,
 		'frequency':        frequency,
-	}
-}();
+	};
+})();
 
-var api = new Api({ debug: true });
-
-api.connect()
-	.then(function() { return api.qtmVersion(); })
-	.then(function(version) { return api.byteOrder(); })
-	.then(function(byteOrder) { return api.getState(); })
-	.then(function() { api.discover(); })
-
-	//.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
-	//.then(function(frame) { console.log(frame); })
-	.then(function() { return api.getParameters('All'); })
-	//.then(function(parameters) { console.log(parameters); })
-	//.then(function() { return api.takeControl('gait1'); })
-	//.then(function() { return api.setParameters({ 'General': { 'Capture_Time': 2.5 } }); })
-	//.then(function() { return api.releaseControl(); })
-	//.then(function() { return api.newMeasurement(); })
-	//.then(function() { return api.setQtmEvent('foo_event'); })
-	//.then(function() { return api.newMeasurement(); })
-	//.then(function() { return api.close(); })
-	//.then(function() { return api.start(); })
-	//.then(function() { return api.stop(); })
-	//.then(function() { return api.load('dadida'); })
-	//.then(function() { return api.save('dadida'); })
-	//.then(function() { return api.loadProject('dadida'); })
-	//.then(function() { return api.trig(); })
-	//.then(function() { return api.getCaptureC3D(); })
-	//.then(function() { return api.getCaptureQtm(); })
-	//.then(function() { return api.stopStreaming(); })
-	//.then(function() { return api.streamFrames() })
-	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 1/100 }) })
-	//.then(function() { return api.stopStreaming() })
-	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 1/10 }) })
-	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 'AllFrames' }) })
-	//.then(function() { return api.streamFrames({ components: ['2D'], frequency: 'AllFrames' }) })
-	//.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/10 }) })
-	.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/100 }) })
-	//.then(function() { return api.streamFrames({ components: ['3D'] }) })
-	//.then(function() { return api.streamFrames({ components: ['Force', 'Image', 'Analog', 'AnalogSingle', '6D', '3D', '2D'], frequency: 'AllFrames' }) })
-	//.then(function() { return api.streamFrames({ frequency: 100, components: ['3DNoLabels'] }); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['3DRes']); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['3DNoLabelsRes']); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['6D'] }); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['6DRes'] }); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['6DEuler'] }); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['6DEulerRes'] }); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['Analog'] }); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['AnalogSingle'] }); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['Force'] }); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['ForceSingle'] }); })
-	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['Image'] }); })
-	//.then(function() { return api.disconnect(); })
-
-	.catch(function(err) {
-		console.log(err);
-	});
-
+mixin(Api.prototype, events.EventEmitter.prototype);
 
 module.exports = Api;

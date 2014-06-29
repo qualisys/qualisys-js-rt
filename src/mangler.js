@@ -11,7 +11,7 @@ var Mangler = function()
 	this.currentPacketSize = null;
 };
 
-Mangler.prototype = function()
+Mangler.prototype = (function()
 {
 	var read = function(chunk, callback)
 	{
@@ -23,12 +23,12 @@ Mangler.prototype = function()
 		
 		while (this.chunks.length < this.currentPacketSize && bytesRead < chunk.length) {
 			var copySize = Math.min(this.currentPacketSize - this.chunks.length, chunk.length - bytesRead);
-			this.chunks  = Buffer.concat([this.chunks, chunk.slice(bytesRead, bytesRead + copySize)])
+			this.chunks  = Buffer.concat([this.chunks, chunk.slice(bytesRead, bytesRead + copySize)]);
 			bytesRead   += copySize;
 
 			if (this.chunks.length === this.currentPacketSize)
 			{
-				callback.fun.call(callback.thisArg, this.chunks)
+				callback.fun.call(callback.thisArg, this.chunks);
 				
 				if (bytesRead !== chunk.length)
 					this.currentPacketSize = readUInt32(chunk.slice(bytesRead, bytesRead + qtmrt.UINT32_SIZE), 0);
@@ -41,6 +41,6 @@ Mangler.prototype = function()
 	return {
 		read: read,
 	};
-}();
+})();
 
 module.exports = Mangler;

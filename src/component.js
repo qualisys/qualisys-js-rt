@@ -74,7 +74,7 @@ var Component = Model.extend(
 		init: function(buf)
 		{
 			if (!arguments.length)
-				throw TypeError('No buffer specified');
+				throw new TypeError('No buffer specified');
 
 			Muncher.init.call(this, buf);
 			this.size = this.munchUInt32();
@@ -358,7 +358,7 @@ var ComponentAnalog = Model.extend(
 					sampleCount:   this.munchUInt32(),
 					sampleNumber:  this.munchUInt32(),
 					data:          [],
-				}
+				};
 
 				for (var j = 0; j < device.channelCount; j++)
 				{
@@ -392,7 +392,7 @@ var ComponentAnalogSingle = Model.extend(
 					id:            this.munchUInt32(),
 					channelCount:  this.munchUInt32(),
 					data:          [],
-				}
+				};
 
 				for (var j = 0; j < device.channelCount; j++)
 					device.data.push([this.munchFloat()]);
@@ -431,7 +431,7 @@ var ComponentForce = Model.extend(
 					forceCount:   this.munchUInt32(),
 					forceNumber:  this.munchUInt32(),
 					data:         [],
-				}
+				};
 
 				for (var j = 0; j < plate.forceCount; j++)
 					plate.data.push({
@@ -515,7 +515,7 @@ var ComponentImage = Model.extend(
 					bottomCrop:   this.munchFloat(),
 					imageSize:    this.munchUInt(),
 					data:         null,
-				}
+				};
 				
 				camera.data = this.munch(camera.imageSize);
 
@@ -543,59 +543,45 @@ Component.create = function(buf)
 		case qtmrt.COMPONENT_2D:
 		case qtmrt.COMPONENT_2D_LINEARIZED:
 			return new Component2d(buf);
-		break;
 		
 		case qtmrt.COMPONENT_3D:
 			return new Component3d(buf);
-		break;
 		
 		case qtmrt.COMPONENT_3D_NO_LABELS:
 			return new Component3dNoLabels(buf);
-		break;
 		
 		case qtmrt.COMPONENT_3D_RESIDUALS:
 			return new Component3dResiduals(buf);
-		break;
 		
 		case qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS:
 			return new Component3dNoLabelsResiduals(buf);
-		break;
 		
 		case qtmrt.COMPONENT_6D:
 			return new Component6d(buf);
-		break;
 		
 		case qtmrt.COMPONENT_6D_EULER:
 			return new Component6dEuler(buf);
-		break;
 		
 		case qtmrt.COMPONENT_6D_RESIDUALS:
 			return new Component6dResiduals(buf);
-		break;
 		
 		case qtmrt.COMPONENT_6D_EULER_RESIDUALS:
 			return new Component6dEulerResiduals(buf);
-		break;
 
 		case qtmrt.COMPONENT_ANALOG:
 			return new ComponentAnalog(buf);
-		break;
 		
 		case qtmrt.COMPONENT_ANALOG_SINGLE:
 			return new ComponentAnalogSingle(buf);
-		break;
 		
 		case qtmrt.COMPONENT_FORCE:
 			return new ComponentForce(buf);
-		break;
 		
 		case qtmrt.COMPONENT_FORCE_SINGLE:
 			return new ComponentForceSingle(buf);
-		break;
 
 		case qtmrt.COMPONENT_IMAGE:
 			return new ComponentImage(buf);
-		break;
 	}
 };
 

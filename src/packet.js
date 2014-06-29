@@ -32,7 +32,7 @@ var Packet = Model.extend(
 		init: function(buf)
 		{
 			if (!arguments.length)
-				throw TypeError('No buffer specified');
+				throw new TypeError('No buffer specified');
 
 			Muncher.init.call(this, buf);
 
@@ -129,7 +129,7 @@ var DataPacket = Model.extend(
 
 			for (var type in this.components) {
 				json.components.push(this.components[type].toJson());
-			};
+			}
 
 			return json;
 		}
@@ -155,7 +155,7 @@ var EventPacket = Model.extend(
 		{
 			Packet.init.call(this, buf);
 			this.data      = this.munchUInt8();
-			this.eventId   = this.data
+			this.eventId   = this.data;
 			this.eventName = qtmrt.eventToString(this.eventId);
 		}
 	},

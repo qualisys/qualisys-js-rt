@@ -11,7 +11,7 @@ var readUInt8 = function(buffer, offset, bytesRead)
 		bytesRead.count += qtmrt.UINT8_SIZE;
 
 	return buffer.readUInt8(offset);
-}
+};
 
 var readUInt16 = function(buffer, offset, bytesRead)
 {
@@ -20,7 +20,7 @@ var readUInt16 = function(buffer, offset, bytesRead)
 
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
 		? buffer.readUInt16LE(offset) : buffer.readUInt16BE(offset);
-}
+};
 
 var readUInt32 = function(buffer, offset, bytesRead)
 {
@@ -29,14 +29,14 @@ var readUInt32 = function(buffer, offset, bytesRead)
 
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
 		? buffer.readUInt32LE(offset) : buffer.readUInt32BE(offset);
-}
+};
 
 var readUInt64 = function(buffer, offset)
 {
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
 		? new Big(buffer.readUInt32LE(offset) << 8).plus(buffer.readUInt32LE(offset + 4))
-		: new Big(buffer.readUInt32BE(offset) << 8).plus(buffer.readUInt32BE(offset + 4))
-}
+		: new Big(buffer.readUInt32BE(offset) << 8).plus(buffer.readUInt32BE(offset + 4));
+};
 
 var readFloat = function(buffer, offset, bytesRead)
 {
@@ -45,13 +45,19 @@ var readFloat = function(buffer, offset, bytesRead)
 
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
 		? buffer.readFloatLE(offset) : buffer.readFloatBE(offset);
-}
+};
 
 var writeUInt32 = function(buffer, value, offset)
 {
 	return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN 
 		? buffer.writeUInt32LE(value, offset) : buffer.writeUInt32BE(value, offset);
-}
+};
+
+var mixin = function(proto, otherProto)
+{
+	for (var i in otherProto)
+		proto[i] = otherProto[i];
+};
 
 module.exports = {
 	readUInt8: readUInt8,
@@ -60,4 +66,5 @@ module.exports = {
 	readUInt64: readUInt64,
 	readFloat: readFloat,
 	writeUInt32: writeUInt32,
+	mixin: mixin,
 };

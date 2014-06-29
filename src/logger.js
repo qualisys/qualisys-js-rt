@@ -10,7 +10,7 @@ var _         = require('underscore')
 
 var Logger = function() { };
 
-Logger.prototype = function()
+Logger.prototype = (function()
 {
 	var timestamp = function()
 	{
@@ -47,7 +47,7 @@ Logger.prototype = function()
 
 		var typeColor = packet.isResponse ? typeColors[packet.type] : typeColors[qtmrt.COMMAND]
 		  , value     = packet.data
-		  , suffix    = '';
+		  , suffix    = ''
 		;
 
 		// XXX: Move value stuff to toString on packets.
@@ -78,11 +78,11 @@ Logger.prototype = function()
 		}
 		else if (packet.type === qtmrt.C3D)
 		{
-			value = '<C3D file> (' + (packet.size - qtmrt.HEADER_SIZE) + ' bytes)'
+			value = '<C3D file> (' + (packet.size - qtmrt.HEADER_SIZE) + ' bytes)';
 		}
 		else if (packet.type === qtmrt.QTM)
 		{
-			value = '<QTM file> (' + (packet.size - qtmrt.HEADER_SIZE) + ' bytes)'
+			value = '<QTM file> (' + (packet.size - qtmrt.HEADER_SIZE) + ' bytes)';
 		}
 
 		this.log(
@@ -95,7 +95,7 @@ Logger.prototype = function()
 	return {
 		'logPacket': logPacket,
 		'log': log,
-	}
-}();
+	};
+})();
 
 module.exports = Logger;

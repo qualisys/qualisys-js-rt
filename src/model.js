@@ -42,6 +42,6 @@ Model.extend = function(attrs, _super)
 	
 	construct.prototype = Object.create(_super.prototype);
 	return construct;
-}
+};
 
 module.exports = Model;

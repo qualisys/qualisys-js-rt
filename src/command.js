@@ -55,7 +55,7 @@ var Command = {
 
 	setParameters: function(params)
 	{
-		var xml = jsonxml({ QTM_Settings: params }) + '\0'
+		var xml = jsonxml({ 'QTM_Settings': params }) + '\0'
 		  , buf = new Buffer(qtmrt.HEADER_SIZE + xml.length + 1)
 		;
 
@@ -109,7 +109,7 @@ var Command = {
 			frequency = 'Frequency:' + options.frequency;
 
 		if (_.isEmpty(components))
-			throw TypeError('No valid components specified');
+			throw new TypeError('No valid components specified');
 
 		if (_.contains(components, 'All'))
 			components = ['All'];
