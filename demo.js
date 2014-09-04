@@ -8,7 +8,6 @@ var api = new Api({ debug: true });
 
 api.on('frame', function(data) {
 	console.log('I received a frame :D');
-	//api.log(data);
 });
 
 api.on('event', function(eventName, data) {
@@ -19,7 +18,7 @@ api.connect()
 	.then(function() { return api.qtmVersion(); })
 	.then(function(version) { return api.byteOrder(); })
 	.then(function(byteOrder) { return api.getState(); })
-	.then(function() { api.discover(); })
+	//.then(function() { api.discover(); })
 
 	//.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
 	//.then(function(frame) { console.log(frame); })
@@ -48,7 +47,7 @@ api.connect()
 	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ components: ['2D'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/10 }) })
-	.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/100 }) })
+	.then(function() { return api.streamFrames({ udpPort: 15000, components: ['3D'], frequency: 1/100 }) })
 	//.then(function() { return api.streamFrames({ components: ['3D'] }) })
 	//.then(function() { return api.streamFrames({ components: ['Force', 'Image', 'Analog', 'AnalogSingle', '6D', '3D', '2D'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ frequency: 100, components: ['3DNoLabels'] }); })

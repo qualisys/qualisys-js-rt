@@ -91,7 +91,7 @@ var Command = {
 			components: ['All'],
 		});
 
-		var udp = _.isUndefined(options.updPort)
+		var udp = _.isUndefined(options.udpPort)
 				? ''
 				: ' UDP:' + (_.isUndefined(options.udpAddress) ? '' : options.udpAddress + ':') + options.udpPort
 		  , frequency = ''
@@ -113,9 +113,8 @@ var Command = {
 
 		if (_.contains(components, 'All'))
 			components = ['All'];
-	
-		var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.join(' ');
 
+		var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.join(' ');
 		return this.build(cmdStr);
 	},
 

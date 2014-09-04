@@ -59,6 +59,17 @@ Api.prototype = (function()
 		}.bind(this));
 	},
 
+	setupUdp = function(port)
+	{
+		var s = dgram.createSocket('udp4');
+
+		s.on('message', function(chunk) {
+			this.mangler.read(chunk, { fun: receivePacket, thisArg: this });
+		}.bind(this));
+
+		s.bind(port, this.host, function() { });
+	},
+
 	log = function(msg, color, style)
 	{
 		this.logger.logPacket(msg, color, style);
@@ -150,6 +161,9 @@ Api.prototype = (function()
 				throw new TypeError('Minor version must be a number');
 		}
 		
+		this.host = host;
+		this.port = port;
+
 		var self = this
 		  , deferredCommand  = Q.defer()
 		;
@@ -214,6 +228,9 @@ Api.prototype = (function()
 
 		if (_.isUndefined(options.frequency))
 			options.frequency = this.options.frequency;
+
+		if (!_.isUndefined(options.udpPort) && (_.isUndefined(options.udpAddress) || 'localhost' === options.updAddress || '127.0.0.1' === options.udpAddress))
+			setupUdp.call(this, options.udpPort);
 
 		return send.call(this, Command.streamFrames.apply(Command, [options]));
 	},
