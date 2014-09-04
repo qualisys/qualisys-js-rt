@@ -96,7 +96,7 @@ Api.prototype = (function()
 			else if (_.str.startsWith(command.data, 'QTMVersion'))
 			{
 				var human   = 'QTM ' + packet.data.replace('QTM Version is ', '').slice(0, -1)
-				  , version = human.match(/QTM (\d+)\.(\d+) \(build (\d+)\)/)
+				  , version = human.match(/QTM (\d+)\.(\d+) (?:(?:Beta)|(?:Alpha))? \(build (\d+)\)/)
 				;
 				this.promiseQueue.pop().resolve({ major: version[1], minor: version[2], build: version[3], human: human });
 			}
