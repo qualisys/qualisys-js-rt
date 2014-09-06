@@ -417,7 +417,7 @@ var ComponentForce = Model.extend(
 			else
 				this.plateCount = this.munchUInt32();
 
-			this.plates     = [];
+			this.plates = [];
 
 			this.parsePlates();
 		},
@@ -520,7 +520,6 @@ var ComponentImage = Model.extend(
 				camera.data = this.munch(camera.imageSize);
 
 				this.cameras.push(camera);
-
 			}
 		},
 

@@ -49,8 +49,8 @@ var qtmrt = {
 	COMPONENT_IMAGE:                   14,
 	COMPONENT_FORCE_SINGLE:            15,
 
-	LITTLE_ENDIAN:            0,
-	BIG_ENDIAN:               1,
+	LITTLE_ENDIAN: 0,
+	BIG_ENDIAN:    1,
 
 };
 

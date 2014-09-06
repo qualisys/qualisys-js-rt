@@ -45,27 +45,14 @@ var Packet = Model.extend(
 	}, Muncher
 );
 
-var ErrorPacket = Model.extend(
-	{
-	},
-	Packet
-);
-
-var CommandPacket = Model.extend(
-	{
-	},
-	Packet
-);
+var NoMoreDataPacket = Model.extend({ }, Packet);
+var C3dFilePacket    = Model.extend({ }, Packet);
+var QtmFilePacket    = Model.extend({ }, Packet);
+var ErrorPacket      = Model.extend({ }, Packet);
+var CommandPacket    = Model.extend({ }, Packet);
 
 var XmlPacket = Model.extend(
 	{
-		init: function(buf)
-		{
-			Packet.init.call(this, buf);
-
-			this.data = buf.slice(this.munched, buf.length - 1).toString('utf8');
-		},
-
 		toJson: function()
 		{
 			var underscoreCased = this.data.replace(/[a-z]([A-Z])/g, function (g) { return g[0] + '_' + g[1]; })
@@ -137,18 +124,6 @@ var DataPacket = Model.extend(
 	Packet
 );
 
-var NoMoreDataPacket = Model.extend(
-	{
-	},
-	Packet
-);
-
-var C3dFilePacket = Model.extend(
-	{
-	},
-	Packet
-);
-
 var EventPacket = Model.extend(
 	{
 		init: function(buf)
@@ -167,15 +142,9 @@ var DiscoverPacket = Model.extend(
 		init: function(buf)
 		{
 			Packet.init.call(this, buf);
-			this.serverInfo = this.munch(this.size - this.munched - qtmrt.UINT16_SIZE).toString('utf8');
+			this.serverInfo     = this.munch(this.size - this.munched - qtmrt.UINT16_SIZE).toString('utf8');
 			this.serverBasePort = this.munchUInt16();
 		}
-	},
-	Packet
-);
-
-var QtmFilePacket = Model.extend(
-	{
 	},
 	Packet
 );

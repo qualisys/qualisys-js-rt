@@ -3,7 +3,6 @@
 var dgram       = require('dgram')
   , Q           = require('q')
   , _           = require('underscore')
-  , colors      = require('colors')
   , util        = require('util')
   , events      = require('events')
   , qtmrt       = require('./qtmrt')
@@ -87,19 +86,21 @@ Api.prototype = (function()
 		if (this.options.debug)
 			this.logger.logPacket(packet);
 
-		if (packet.type === qtmrt.EVENT)
+		if (qtmrt.EVENT === packet.type)
 		{
 			if ('GetState' === command.data)
 				this.promiseQueue.pop().resolve({ id: packet.eventId, name: packet.eventName });
 
 			this.emit('event', packet.eventName, packet);
 		}
-		else if (packet.type === qtmrt.XML)
+		else if (qtmrt.XML === packet.type)
 		{
 			this.promiseQueue.pop().resolve(packet.toJson());
-
 		}
-		else if (packet.type === qtmrt.COMMAND_RESPONSE)
+		else if (qtmrt.C3D_FILE === packet.type)
+		{
+		}
+		else if (qtmrt.COMMAND_RESPONSE === packet.type)
 		{
 			if (_.str.startsWith(command.data, 'ByteOrder'))
 				this.promiseQueue.pop().resolve(/little endian/.test(packet.data) ? 'little endian' : 'big endian');
@@ -119,11 +120,11 @@ Api.prototype = (function()
 		{
 			this.promiseQueue.pop().resolve(packet.toJson());
 		}
-		else if (packet.type !== qtmrt.DATA)
+		else if (qtmrt.DATA !== packet.type)
 		{
 			this.promiseQueue.pop().resolve(packet);
 		}
-		else if (packet.type === qtmrt.DATA)
+		else if (qtmrt.DATA === packet.type)
 		{
 			this.emit('frame', packet);
 		}
