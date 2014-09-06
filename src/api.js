@@ -122,7 +122,10 @@ Api.prototype = (function()
 		}
 		else if (qtmrt.DATA !== packet.type)
 		{
-			this.promiseQueue.pop().resolve(packet);
+			if (qtmrt.NO_MORE_DATA === packet.type)
+				this.emit('end');
+			else
+				this.promiseQueue.pop().resolve(packet);
 		}
 		else if (qtmrt.DATA === packet.type)
 		{
