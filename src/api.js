@@ -77,7 +77,7 @@ Api.prototype = (function()
 	receivePacket = function(data)
 	{
 		var packet = Packet.create(data)
-		  , command = this.issuedCommands.pop()
+		  , command = packet.type === qtmrt.DATA ? null : this.issuedCommands.pop()
 		;
 
 		if (qtmrt.COMMAND === packet.type)
@@ -308,6 +308,7 @@ Api.prototype = (function()
 		isConnected.call(this);
 		var promise = Q.resolve();
 
+		// Don't expect a reply on the StreamFrames command. 
 		if (!_.str.startsWith(command.data, 'StreamFrames'))
 			promise = promiseResponse.call(this);
 
