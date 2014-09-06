@@ -91,7 +91,7 @@ Api.prototype = (function()
 			if ('GetState' === command.data)
 				this.promiseQueue.pop().resolve({ id: packet.eventId, name: packet.eventName });
 
-			this.emit('event', packet.eventName, packet);
+			this.emit('event', packet.toJson());
 		}
 		else if (qtmrt.XML === packet.type)
 		{
@@ -129,7 +129,7 @@ Api.prototype = (function()
 		}
 		else if (qtmrt.DATA === packet.type)
 		{
-			this.emit('frame', packet);
+			this.emit('frame', packet.toJson());
 		}
 		
 	},

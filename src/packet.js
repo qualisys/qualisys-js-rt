@@ -132,7 +132,12 @@ var EventPacket = Model.extend(
 			this.data      = this.munchUInt8();
 			this.eventId   = this.data;
 			this.eventName = qtmrt.eventToString(this.eventId);
-		}
+		},
+
+		toJson: function()
+		{
+			return { name: this.eventName, id: this.eventId };
+		},
 	},
 	Packet
 );
