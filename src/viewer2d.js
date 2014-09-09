@@ -129,21 +129,17 @@ Viewer2d.prototype = (function()
 				else
 				{
 					if (100 > lines[i][c])
-						lineStr += '‧'[this.options.color];
-					else if (150 > lines[i][c])
-						lineStr += 'ˑ'[this.options.color];
+						lineStr += '.'[this.options.color];
 					else if (200 > lines[i][c])
 						lineStr += '∙'[this.options.color];
-					else if (400 > lines[i][c])
-						lineStr += '⁕'[this.options.color];
-					else if (400 > lines[i][c])
-						lineStr += '※'[this.options.color];
-					else if (500 > lines[i][c])
+					else if (300 > lines[i][c])
 						lineStr += '•'[this.options.color];
+					else if (400 > lines[i][c])
+						lineStr += '*'[this.options.color];
 					else if (600 > lines[i][c])
-						lineStr += '◆'[this.options.color];
+						lineStr += 'x'[this.options.color];
 					else if (800 > lines[i][c])
-						lineStr += '█'[this.options.color];
+						lineStr += 'X'[this.options.color];
 				}
 			}
 			process.stdout.write(lineStr + ' ' + "\n");
