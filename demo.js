@@ -1,17 +1,24 @@
 'use strict';
 
-var Api = require('./src/api.js');
+var colors   = require('colors')
+  , Api      = require('./src/api')
+  , Viewer2d = require('./src/viewer2d')
+;
 
 var api = new Api({ debug: true });
 
-//var api = new Api();
-
 api.on('frame', function(data) {
-	console.log('I received a frame :D');
+	//console.log('Received frame:'.green);
+	//console.log(data);
 });
 
-api.on('event', function(eventName, data) {
-	console.log(eventName);
+api.on('end', function(data) {
+	console.log('No more data!'.red);
+	//api.disconnect();
+});
+
+api.on('event', function(event) {
+	console.log(event.name.yellow);
 });
 
 api.connect()
@@ -22,9 +29,32 @@ api.connect()
 
 	//.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
 	//.then(function(frame) { console.log(frame); })
-	.then(function() { return api.getParameters('All'); })
+	//.then(function() { return api.getParameters('All'); })
 	//.then(function(parameters) { console.log(parameters); })
-	//.then(function() { return api.takeControl('gait1'); })
+	//.then(function() { return api.takeControl(); })
+	.then(function() {
+		var viewer = new Viewer2d(api);
+		return viewer.render(1, { color: 'red' });
+	})
+	//.then(function() { return api.setParameters({
+			//'Image': {
+				//'Camera': {
+					//'ID': 9,
+					//'Enabled': 'True',
+					//'Format': 'JPG',
+					//'Width': 640,
+					//'Height': 400
+				//}
+			//}
+	//}); })
+	//.then(function() { return api.setParameters({
+			//'Image': {
+				//'Camera': {
+					//'ID': 10,
+					//'Enabled': 'False',
+				//}
+			//}
+	//}); })
 	//.then(function() { return api.setParameters({ 'General': { 'Capture_Time': 2.5 } }); })
 	//.then(function() { return api.releaseControl(); })
 	//.then(function() { return api.newMeasurement(); })
@@ -45,9 +75,10 @@ api.connect()
 	//.then(function() { return api.stopStreaming() })
 	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 1/10 }) })
 	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 'AllFrames' }) })
-	//.then(function() { return api.streamFrames({ components: ['2D'], frequency: 'AllFrames' }) })
+	//.then(function() { return api.streamFrames({ components: ['2D'], frequency: '2' }) })
+	//.then(function() { return api.streamFrames({ components: ['Image'], frequency: '2' }) })
 	//.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/10 }) })
-	.then(function() { return api.streamFrames({ udpPort: 15000, components: ['3D'], frequency: 1/100 }) })
+	//.then(function() { return api.streamFrames({ udpPort: 15000, components: ['3D'], frequency: 1/100 }) })
 	//.then(function() { return api.streamFrames({ components: ['3D'] }) })
 	//.then(function() { return api.streamFrames({ components: ['Force', 'Image', 'Analog', 'AnalogSingle', '6D', '3D', '2D'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ frequency: 100, components: ['3DNoLabels'] }); })
