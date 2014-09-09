@@ -1,12 +1,12 @@
 'use strict';
 
-var _          = require('underscore')
+var _           = require('underscore')
   , parseString = require('xml2js').parseString
-  , qtmrt      = require('./qtmrt')
-  , readUInt32 = require('./helpers').readUInt32
-  , Model      = require('./model')
-  , Muncher    = require('./muncher')
-  , Component  = require('./component')
+  , qtmrt       = require('./qtmrt')
+  , readUInt32  = require('./helpers').readUInt32
+  , Model       = require('./model')
+  , Muncher     = require('./muncher')
+  , Component   = require('./component')
 ;
 
 var packetTypeToString = function(typeId)
@@ -60,16 +60,14 @@ var XmlPacket = Model.extend(
 			  , jsonData        = null
 			;
 
-			parseString(camelCased, function(err, result) { jsonData = result; });
+			parseString(camelCased, { explicitArray: false }, function(err, result) { jsonData = result; });
 
-			for (var i in jsonData) {
-				var keys = Object.keys(jsonData[i]);
+			var keys = Object.keys(jsonData);
 
-				if (1 === keys.length)
-					return jsonData[i][keys[0]];
-				else
-					return jsonData[i];
-			}
+			if (1 === keys.length)
+				return jsonData[keys[0]];
+			else
+				return jsonData;
 		}
 	},
 	Packet

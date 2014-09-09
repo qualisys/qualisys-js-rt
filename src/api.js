@@ -123,7 +123,9 @@ Api.prototype = (function()
 		else if (qtmrt.DATA !== packet.type)
 		{
 			if (qtmrt.NO_MORE_DATA === packet.type)
+			{
 				this.emit('end');
+			}
 			else
 				this.promiseQueue.pop().resolve(packet);
 		}
@@ -248,6 +250,7 @@ Api.prototype = (function()
 		}
 
 		this.isStreaming = false;
+		this.emit('end');
 		return send.call(this, Command.stopStreaming());
 	},
 
@@ -398,7 +401,12 @@ Api.prototype = (function()
 			throw new TypeError('Frequency must be a number or \'AllFrames\'');
 
 		this.options.frequency = freq;
-	};
+	},
+
+	debug = function(val)
+	{
+		this.options.debug = val ? true: false;
+	}
 
 	return {
 		'log':              log,
@@ -427,6 +435,7 @@ Api.prototype = (function()
 		'disconnect':       disconnect,
 		'discover':         discover,
 		'frequency':        frequency,
+		'debug':            debug,
 	};
 })();
 
