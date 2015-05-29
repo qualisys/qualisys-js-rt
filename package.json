@@ -1,7 +1,7 @@
 {
   "name": "qualisys-rt",
-  "version": "0.0.0",
-  "description": "Qualisys Track Manager Real-time Api",
+  "version": "0.1.0",
+  "description": "Real-time Api for Qualisys Track Manager",
   "main": "index.js",
   "directories": {
     "test": "test"
@@ -39,5 +39,5 @@
     "udp",
     "qualisys"
   ],
-  "license": "ISC"
+  "license": "MIT"
 }

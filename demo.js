@@ -1,7 +1,7 @@
 'use strict';
 
 var colors   = require('colors')
-  , Api      = require('./src/api')
+  , Api      = require('./index')
   , Viewer2d = require('./src/viewer2d')
 ;
 
@@ -79,7 +79,7 @@ api.connect()
 	//.then(function() { return api.streamFrames({ components: ['Image'], frequency: '2' }) })
 	//.then(function() { return api.streamFrames({ components: ['3D'], frequency: 1/10 }) })
 	//.then(function() { return api.streamFrames({ udpPort: 15000, components: ['3D'], frequency: 1/100 }) })
-	//.then(function() { return api.streamFrames({ components: ['3D'] }) })
+	.then(function() { return api.streamFrames({ components: ['3D'] }) })
 	//.then(function() { return api.streamFrames({ components: ['Force', 'Image', 'Analog', 'AnalogSingle', '6D', '3D', '2D'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ frequency: 100, components: ['3DNoLabels'] }); })
 	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['3DRes']); })
