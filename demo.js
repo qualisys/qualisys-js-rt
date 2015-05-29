@@ -8,8 +8,8 @@ var colors   = require('colors')
 var api = new Api({ debug: true });
 
 api.on('frame', function(data) {
-	//console.log('Received frame:'.green);
-	//console.log(data);
+	console.log('Received frame:'.green);
+	console.log(data);
 });
 
 api.on('end', function(data) {
@@ -32,10 +32,10 @@ api.connect()
 	//.then(function() { return api.getParameters('All'); })
 	//.then(function(parameters) { console.log(parameters); })
 	//.then(function() { return api.takeControl(); })
-	.then(function() {
-		var viewer = new Viewer2d(api);
-		return viewer.render(1, { color: 'red' });
-	})
+	//.then(function() {
+		//var viewer = new Viewer2d(api);
+		//return viewer.render(1, { color: 'red' });
+	//})
 	//.then(function() { return api.setParameters({
 			//'Image': {
 				//'Camera': {
@@ -97,5 +97,22 @@ api.connect()
 
 	.catch(function(err) {
 		console.log(err);
+	})
+;
+
+// Handle graceful shutdown {{{
+if (process.platform === 'win32') {
+	var rl = require('readline').createInterface({
+		input: process.stdin,
+		output: process.stdout
 	});
 
+	rl.on('SIGINT', function () {
+		process.emit('SIGINT');
+	});
+}
+
+process.on('SIGINT', function () {
+	process.exit();
+});
+// }}} End Handle graceful shutdown
