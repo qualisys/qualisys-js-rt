@@ -23,6 +23,10 @@
     "grunt": "^0.4.5",
     "grunt-contrib-jshint": "^0.10.0"
   },
+  "repository": {
+    "type:" "git",
+    "url": "https://github.com/qualisys/qualisys-rt.git"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
