@@ -10,7 +10,7 @@ also be used to start and stop measurements, setting events and more.
 
 # Example
 
-´´´javascript
+```javascript
 var Api = require('qualisys-rt')
 
 var api = new Api({ debug: true });
@@ -27,8 +27,8 @@ api.connect()
 	.then(function() { return api.streamFrames({ components: ['3D'] }) })
 	.catch(console.log)
 ;
+```
 
-´´´
 # Getting started
 There is not much documentation yet so the best way to get started is by
 examining demo.js, which contains example code for common tasks. 
