@@ -22,12 +22,16 @@ Logger.prototype = (function()
 		if (2 > arguments.length)
 			color = 'white';
 
-		message = message[color];
-
-		if (!_.isUndefined(style))
-			message = message[style];
-
-		console.log(timestamp.call(this) + ' ' + message);
+		if (message && message[color]) {
+			message = message[color];
+		 
+			if (message) {
+				if (!_.isUndefined(style) && message[style])
+					message = message[style];
+		 
+				console.log(timestamp.call(this) + ' ' + message);
+			}
+		}
 	},
 
 	logPacket = function(packet)
