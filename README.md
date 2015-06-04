@@ -1,4 +1,4 @@
-# QTM Real-time Api
+# Real-time api for QTM
 This is a javascript implementation of the real-time protocol used by Qualisys
 Track Manager (QTM). 
 

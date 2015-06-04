@@ -1,7 +1,7 @@
 {
   "name": "qualisys-rt",
-  "version": "0.1.0",
-  "description": "Real-time Api for Qualisys Track Manager",
+  "version": "0.1.1",
+  "description": "Real-time api for Qualisys Track Manager",
   "main": "index.js",
   "directories": {
     "test": "test"
@@ -24,7 +24,7 @@
     "grunt-contrib-jshint": "^0.10.0"
   },
   "repository": {
-    "type:" "git",
+    "type": "git",
     "url": "https://github.com/qualisys/qualisys-rt.git"
   },
   "scripts": {
