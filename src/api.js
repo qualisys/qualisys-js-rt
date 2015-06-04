@@ -156,7 +156,7 @@ Api.prototype = (function()
 		if (3 > arguments.length)
 		{
 			major = 1;
-			minor = 12;
+			minor = 13;
 		}
 		else
 		{
