@@ -1,6 +1,6 @@
 {
   "name": "qualisys-rt",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Real-time api for Qualisys Track Manager",
   "main": "index.js",
   "directories": {
