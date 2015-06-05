@@ -39,14 +39,14 @@ Viewer2d.prototype = (function()
 
 				self.api.on('frame', function(data) {
 					var statusLine = 'CAMERA SELECT'
-					  , comp       = data.components[0]
+					  , comp       = data.components['2d']
 					;
 
 					if (!_.isUndefined(self.width))
 						clear.call(self)
 	
 					setupView.call(self, self.camera);
-					drawMarkers.call(self, self.camera, data.components[0].cameras);
+					drawMarkers.call(self, self.camera, data.components['2d'].cameras);
 
 					self.cameraCount = comp.cameraCount;
 
