@@ -1,645 +1,621 @@
 'use strict';
 
-var qtmrt      = require('./qtmrt')
-  , readUInt32 = require('./helpers').readUInt32
-  , Model      = require('./model')
-  , Muncher    = require('./muncher')
-;
+(function() {
+	var qtmrt      = require('./qtmrt')
+	  , readUInt32 = require('./helpers').readUInt32
+	  , Model      = require('./model')
+	  , Muncher    = require('./muncher')
+	;
 
-var componentTypeToString = function(typeId)
-{
-	var typeNames = {};
-	typeNames[qtmrt.COMPONENT_2D]                     = '2D';
-	typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2DLin';
-	typeNames[qtmrt.COMPONENT_3D]                     = '3D';
-	typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3DNoLabels';
-	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3DRes';
-	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3DNoLabelsRes';
-	typeNames[qtmrt.COMPONENT_6D]                     = '6D';
-	typeNames[qtmrt.COMPONENT_6D_EULER]               = '6DEuler';
-	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DRes';
-	typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DEulerRes';
-	typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
-	typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
-	typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'AnalogSingle';
-	typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
-	typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'ForceSingle';
-	typeNames[qtmrt.COMPONENT_GAZE_VECTOR]            = 'GazeVector';
-	return typeNames[typeId];
-};
-
-var componentTypeToPrettyString = function(typeId)
-{
-	var typeNames = {};
-	typeNames[qtmrt.COMPONENT_2D]                     = '2D';
-	typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2D (linearized)';
-	typeNames[qtmrt.COMPONENT_3D]                     = '3D';
-	typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3D (no labels)';
-	typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3D (with residuals)';
-	typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3D (no labels, with residuals)';
-	typeNames[qtmrt.COMPONENT_6D]                     = '6DOF';
-	typeNames[qtmrt.COMPONENT_6D_EULER]               = '6DOF (with euler angles)';
-	typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DOF (with residuals)';
-	typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DOF (with eauler angles and residuals)';
-	typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
-	typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
-	typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'Analog (single sample)';
-	typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
-	typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'Force (single sample)';
-	typeNames[qtmrt.COMPONENT_GAZE_VECTOR]            = 'Gaze vector';
-	return typeNames[typeId];
-};
-
-var componentStringToType = function(compStr)
-{
-	var typeIds = {};
-	typeIds['2D']            = qtmrt.COMPONENT_2D;
-	typeIds['2DLin']         = qtmrt.COMPONENT_2D_LINEARIZED;
-	typeIds['3D']            = qtmrt.COMPONENT_3D;
-	typeIds['3DNoLabels']    = qtmrt.COMPONENT_3D_NO_LABELS;
-	typeIds['3DRes']         = qtmrt.COMPONENT_3D_RESIDUALS;
-	typeIds['3DNoLabelsRes'] = qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS;
-	typeIds['6D']            = qtmrt.COMPONENT_6D;
-	typeIds['6DEuler']       = qtmrt.COMPONENT_6D_EULER;
-	typeIds['6DRes']         = qtmrt.COMPONENT_6D_RESIDUALS;
-	typeIds['6DEulerRes']    = qtmrt.COMPONENT_6D_EULER_RESIDUALS;
-	typeIds['Image']         = qtmrt.COMPONENT_IMAGE;
-	typeIds['Analog']        = qtmrt.COMPONENT_ANALOG;
-	typeIds['AnalogSingle']  = qtmrt.COMPONENT_ANALOG_SINGLE;
-	typeIds['Force']         = qtmrt.COMPONENT_FORCE;
-	typeIds['ForceSingle']   = qtmrt.COMPONENT_FORCE_SINGLE;
-	typeIds['GazeVector']    = qtmrt.COMPONENT_GAZE_VECTOR;
-	return typeIds[compStr];
-};
-
-var Component = Model.extend(
+	var componentTypeToString = function(typeId)
 	{
-		init: function(buf)
-		{
-			if (!arguments.length)
-				throw new TypeError('No buffer specified');
+		for (var compStr in qtmrt.COMPONENTS) {
+			if (typeId == qtmrt.COMPONENTS[compStr])
+				return compStr;
+		}
 
-			Muncher.init.call(this, buf);
-			this.size = this.munchUInt32();
-			this.type = this.munchUInt32();
-		},
-	}, Muncher
-);
+		if (typeId === qtmrt.COMPONENT_ALL)
+			return 'All';
 
-var Component2d = Model.extend(
+		throw new Error('Unknown component: ' + typeId + '.'); 
+	};
+
+	var componentTypeToPrettyString = function(typeId)
 	{
-		init: function(buf)
+		var typeNames = {};
+		typeNames[qtmrt.COMPONENT_2D]                     = '2D';
+		typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2D (linearized)';
+		typeNames[qtmrt.COMPONENT_3D]                     = '3D';
+		typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3D (no labels)';
+		typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3D (with residuals)';
+		typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3D (no labels, with residuals)';
+		typeNames[qtmrt.COMPONENT_6D]                     = '6DOF';
+		typeNames[qtmrt.COMPONENT_6D_EULER]               = '6DOF (with euler angles)';
+		typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DOF (with residuals)';
+		typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DOF (with eauler angles and residuals)';
+		typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
+		typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
+		typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'Analog (single sample)';
+		typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
+		typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'Force (single sample)';
+		typeNames[qtmrt.COMPONENT_GAZE_VECTOR]            = 'Gaze vector';
+		return typeNames[typeId];
+	};
+
+	var componentStringToType = function(compStr)
+	{
+		if (!qtmrt.COMPONENTS[compStr]) throw new Error('Unknown component string');
+		return qtmrt.COMPONENTS[compStr];
+	};
+
+	var Component = Model.extend(
 		{
-			Component.init.call(this, buf);
-			this.cameraCount     = this.munchUInt32();
-			this.dropRate2d      = this.munchUInt16();
-			this.outOfSyncRate2d = this.munchUInt16();
-			this.cameras         = [];
-
-			this.parseCameras();
-		},
-
-		parseCameras: function()
-		{
-			var markerOffset = 0;
-
-			for (var i = 0; i < this.cameraCount; i++)
+			init: function(buf)
 			{
-				var camera = {
-					markerCount: this.munchUInt32(),
-					statusFlags: this.munchUInt8(),
-					markers: [],
-				};
+				if (!arguments.length)
+					throw new TypeError('No buffer specified');
 
-				for (var j = 0; j < camera.markerCount; j++)
+				Muncher.init.call(this, buf);
+				this.size = this.munchUInt32();
+				this.type = this.munchUInt32();
+			},
+		}, Muncher
+	);
+
+	var Component2d = Model.extend(
+		{
+			init: function(buf)
+			{
+				Component.init.call(this, buf);
+				this.cameraCount     = this.munchUInt32();
+				this.dropRate2d      = this.munchUInt16();
+				this.outOfSyncRate2d = this.munchUInt16();
+				this.cameras         = [];
+
+				this.parseCameras();
+			},
+
+			parseCameras: function()
+			{
+				var markerOffset = 0;
+
+				for (var i = 0; i < this.cameraCount; i++)
 				{
-					camera.markers.push({
-						x:          this.munchUInt32(),
-						y:          this.munchUInt32(),
-						diameterX:  this.munchUInt16(),
-						diameterY:  this.munchUInt16(),
+					var camera = {
+						markerCount: this.munchUInt32(),
+						statusFlags: this.munchUInt8(),
+						markers: [],
+					};
+
+					for (var j = 0; j < camera.markerCount; j++)
+					{
+						camera.markers.push({
+							x:          this.munchUInt32(),
+							y:          this.munchUInt32(),
+							diameterX:  this.munchUInt16(),
+							diameterY:  this.munchUInt16(),
+						});
+					}
+					this.cameras.push(camera);
+				}
+			},
+
+			toJson: function() {
+				return {
+					cameraCount: this.cameraCount,
+					dropRate2d: this.dropRate2d,
+					outOfSyncRate2d: this.outOfSyncRate2d,
+					cameras: this.cameras,
+				};
+			},
+		},
+		Component
+	);
+
+	var Component3d = Model.extend(
+		{
+			init: function(buf)
+			{
+				Component.init.call(this, buf);
+				this.markerCount     = this.munchUInt32();
+				this.dropRate2d      = this.munchUInt16();
+				this.outOfSyncRate2d = this.munchUInt16();
+				this.markers         = [];
+
+				this.parseMarkers();
+			},
+
+			parseMarkers: function()
+			{
+				for (var i = 0; i < this.markerCount; i++)
+				{
+					this.markers.push({
+						x: this.munchFloat(),
+						y: this.munchFloat(),
+						z: this.munchFloat(),
 					});
 				}
-				this.cameras.push(camera);
-			}
-		},
+			},
 
-		toJson: function() {
-			return {
-				cameraCount: this.cameraCount,
-				dropRate2d: this.dropRate2d,
-				outOfSyncRate2d: this.outOfSyncRate2d,
-				cameras: this.cameras,
-			};
-		},
-	},
-	Component
-);
-
-var Component3d = Model.extend(
-	{
-		init: function(buf)
-		{
-			Component.init.call(this, buf);
-			this.markerCount     = this.munchUInt32();
-			this.dropRate2d      = this.munchUInt16();
-			this.outOfSyncRate2d = this.munchUInt16();
-			this.markers         = [];
-
-			this.parseMarkers();
-		},
-
-		parseMarkers: function()
-		{
-			for (var i = 0; i < this.markerCount; i++)
-			{
-				this.markers.push({
-					x: this.munchFloat(),
-					y: this.munchFloat(),
-					z: this.munchFloat(),
-				});
-			}
-		},
-
-		toJson: function() {
-			return {
-				markerCount: this.markerCount,
-				dropRate2d: this.dropRate2d,
-				outOfSyncRate2d: this.outOfSyncRate2d,
-				markers: this.markers,
-			};
-		},
-	},
-	Component
-);
-
-var Component3dNoLabels = Model.extend(
-	{
-		parseMarkers: function()
-		{
-			for (var i = 0; i < this.markerCount; i++)
-			{
-				this.markers.push({
-					x:  this.munchFloat(),
-					y:  this.munchFloat(),
-					z:  this.munchFloat(),
-					id:  this.munchUInt32(),
-				});
-			}
-		},
-	},
-	Component3d
-);
-
-var Component3dResiduals = Model.extend(
-	{
-		parseMarkers: function()
-		{
-			for (var i = 0; i < this.markerCount; i++)
-			{
-				this.markers.push({
-					x:  this.munchFloat(),
-					y:  this.munchFloat(),
-					z:  this.munchFloat(),
-					residual: this.munchFloat(),
-				});
-			}
-		}
-	},
-	Component3d
-);
-
-var Component3dNoLabelsResiduals = Model.extend(
-	{
-		parseMarkers: function()
-		{
-			for (var i = 0; i < this.markerCount; i++)
-			{
-				this.markers.push({
-					x:  this.munchFloat(),
-					y:  this.munchFloat(),
-					z:  this.munchFloat(),
-					id: this.munchUInt32(),
-					residual: this.munchFloat(),
-				});
-			}
-		}
-	},
-	Component3d
-);
-
-var Component6d = Model.extend(
-	{
-		init: function(buf) {
-			Component.init.call(this, buf);
-			this.rigidBodyCount  = this.munchUInt32();
-			this.dropRate2d      = this.munchUInt16();
-			this.outOfSyncRate2d = this.munchUInt16();
-			this.rigidBodies     = [];
-
-			this.parseRigidBodies();
-		},
-
-		parseRigidBodies: function()
-		{
-			for (var i = 0; i < this.rigidBodyCount; i++)
-			{
-				var rigidBody = {
-					x:        this.munchFloat(),
-					y:        this.munchFloat(),
-					z:        this.munchFloat(),
-					rotation: [],
+			toJson: function() {
+				return {
+					markerCount: this.markerCount,
+					dropRate2d: this.dropRate2d,
+					outOfSyncRate2d: this.outOfSyncRate2d,
+					markers: this.markers,
 				};
-
-				for (var j = 0; j < 9; j++)
-					rigidBody.rotation.push(this.munchFloat());
-
-				this.rigidBodies.push(rigidBody);
-			}
+			},
 		},
+		Component
+	);
 
-		toJson: function() {
-			return {
-				rigidBodyCount: this.rigidBodyCount,
-				dropRate2d: this.dropRate2d,
-				outOfSyncRate2d: this.outOfSyncRate2d,
-				rigidBodies: this.rigidBodies,
-			};
-		},
-
-	},
-	Component
-);
-
-var Component6dResiduals = Model.extend(
-	{
-		parseRigidBodies: function()
+	var Component3dNoLabels = Model.extend(
 		{
-			for (var i = 0; i < this.rigidBodyCount; i++)
+			parseMarkers: function()
 			{
-				var rigidBody = {
-					x:        this.munchFloat(),
-					y:        this.munchFloat(),
-					z:        this.munchFloat(),
-					rotation: [],
-					residual: null,
-				};
-
-				for (var j = 0; j < 9; j++)
-					rigidBody.rotation.push(this.munchFloat());
-
-				rigidBody.residual = this.munchFloat();
-
-				this.rigidBodies.push(rigidBody);
-			}
-		}
-
-	},
-	Component6d
-);
-
-var Component6dEuler = Model.extend(
-	{
-		parseRigidBodies: function()
-		{
-			for (var i = 0; i < this.rigidBodyCount; i++)
-			{
-				this.rigidBodies.push({
-					x:        this.munchFloat(),
-					y:        this.munchFloat(),
-					z:        this.munchFloat(),
-					euler1:   this.munchFloat(),
-					euler2:   this.munchFloat(),
-					euler3:   this.munchFloat(),
-				});
-			}
-		}
-
-	},
-	Component6d
-);
-
-var Component6dEulerResiduals = Model.extend(
-	{
-		parseRigidBodies: function()
-		{
-			for (var i = 0; i < this.rigidBodyCount; i++)
-			{
-				this.rigidBodies.push({
-					x:          this.munchFloat(),
-					y:          this.munchFloat(),
-					z:          this.munchFloat(),
-					euler1:     this.munchFloat(),
-					euler2:     this.munchFloat(),
-					euler3:     this.munchFloat(),
-					residuals:  this.munchFloat(),
-				});
-			}
-		}
-
-	},
-	Component6d
-);
-
-var ComponentAnalog = Model.extend(
-	{
-		init: function(buf) {
-			Component.init.call(this, buf);
-			this.deviceCount = this.munchUInt32();
-			this.devices     = [];
-
-			this.parseDevices();
-		},
-
-		parseDevices: function()
-		{
-			for (var i = 0; i < this.deviceCount; i++)
-			{
-				var device = {
-					id:            this.munchUInt32(),
-					channelCount:  this.munchUInt32(),
-					sampleCount:   this.munchUInt32(),
-					sampleNumber:  this.munchUInt32(),
-					data:          [],
-				};
-
-				for (var j = 0; j < device.channelCount; j++)
+				for (var i = 0; i < this.markerCount; i++)
 				{
-					var channel = [];
-					for (var k = 0; k < device.sampleCount; k++)
-						channel.push(this.munchFloat());
-					device.data.push(channel);
-				}
-				this.devices.push(device);
-			}
-		},
-
-		toJson: function() {
-			return {
-				deviceCount: this.deviceCount,
-				devices: this.devices,
-			};
-		},
-
-	},
-	Component
-);
-
-var ComponentAnalogSingle = Model.extend(
-	{
-		parseDevices: function()
-		{
-			for (var i = 0; i < this.deviceCount; i++)
-			{
-				var device = {
-					id:            this.munchUInt32(),
-					channelCount:  this.munchUInt32(),
-					data:          [],
-				};
-
-				for (var j = 0; j < device.channelCount; j++)
-					device.data.push([this.munchFloat()]);
-
-				this.devices.push(device);
-			}
-		}
-
-	},
-	ComponentAnalog
-);
-
-var ComponentForce = Model.extend(
-	{
-		init: function(buf) {
-			Component.init.call(this, buf);
-			
-			// XXX: Not quite sure about this, but sometimes QTM sends empty
-			// force components. 
-			if (12 === this.size)
-				this.plateCount = 0;
-			else
-				this.plateCount = this.munchUInt32();
-
-			this.plates = [];
-
-			this.parsePlates();
-		},
-
-		parsePlates: function()
-		{
-			for (var i = 0; i < this.plateCount; i++)
-			{
-				var plate = {
-					id:           this.munchUInt32(),
-					forceCount:   this.munchUInt32(),
-					forceNumber:  this.munchUInt32(),
-					data:         [],
-				};
-
-				for (var j = 0; j < plate.forceCount; j++)
-					plate.data.push({
-						forceX: this.munchFloat(),
-						forceY: this.munchFloat(),
-						forceZ: this.munchFloat(),
-						momentX: this.munchFloat(),
-						momentY: this.munchFloat(),
-						momentZ: this.munchFloat(),
-						posX: this.munchFloat(),
-						posY: this.munchFloat(),
-						posZ: this.munchFloat(),
+					this.markers.push({
+						x:  this.munchFloat(),
+						y:  this.munchFloat(),
+						z:  this.munchFloat(),
+						id:  this.munchUInt32(),
 					});
+				}
+			},
+		},
+		Component3d
+	);
 
-				this.plates.push(plate);
+	var Component3dResiduals = Model.extend(
+		{
+			parseMarkers: function()
+			{
+				for (var i = 0; i < this.markerCount; i++)
+				{
+					this.markers.push({
+						x:  this.munchFloat(),
+						y:  this.munchFloat(),
+						z:  this.munchFloat(),
+						residual: this.munchFloat(),
+					});
+				}
 			}
 		},
+		Component3d
+	);
 
-		toJson: function() {
-			return {
-				plateCount: this.plateCount,
-				plates: this.plates,
-			};
-		},
-
-	},
-	Component
-);
-
-var ComponentForceSingle = Model.extend(
-	{
-		parsePlates: function()
+	var Component3dNoLabelsResiduals = Model.extend(
 		{
-			for (var i = 0; i < this.plateCount; i++)
+			parseMarkers: function()
 			{
-				var plate = {
-					id:    this.munchUInt32(),
-					data:  [{
-						forceX: this.munchFloat(),
-						forceY: this.munchFloat(),
-						forceZ: this.munchFloat(),
-						momentX: this.munchFloat(),
-						momentY: this.munchFloat(),
-						momentZ: this.munchFloat(),
-						posX: this.munchFloat(),
-						posY: this.munchFloat(),
-						posZ: this.munchFloat(),
-					}],
-				};
-
-				this.plates.push(plate);
+				for (var i = 0; i < this.markerCount; i++)
+				{
+					this.markers.push({
+						x:  this.munchFloat(),
+						y:  this.munchFloat(),
+						z:  this.munchFloat(),
+						id: this.munchUInt32(),
+						residual: this.munchFloat(),
+					});
+				}
 			}
-		}
-
-	},
-	ComponentForce
-);
-
-var ComponentImage = Model.extend(
-	{
-		init: function(buf) {
-			Component.init.call(this, buf);
-			this.cameraCount = this.munchUInt32();
-			this.cameras     = [];
-
-			this.parseCameras();
 		},
+		Component3d
+	);
 
-		parseCameras: function()
+	var Component6d = Model.extend(
 		{
-			for (var i = 0; i < this.cameraCount; i++)
+			init: function(buf) {
+				Component.init.call(this, buf);
+				this.rigidBodyCount  = this.munchUInt32();
+				this.dropRate2d      = this.munchUInt16();
+				this.outOfSyncRate2d = this.munchUInt16();
+				this.rigidBodies     = [];
+
+				this.parseRigidBodies();
+			},
+
+			parseRigidBodies: function()
 			{
-				var camera = {
-					id:           this.munchUInt32(),
-					imageFormat:  this.munchUInt32(),
-					width:        this.munchUInt32(),
-					height:       this.munchUInt32(),
-					leftCrop:     this.munchFloat(),
-					topCrop:      this.munchFloat(),
-					rightCrop:    this.munchFloat(),
-					bottomCrop:   this.munchFloat(),
-					imageSize:    this.munchUInt(),
-					data:         null,
+				for (var i = 0; i < this.rigidBodyCount; i++)
+				{
+					var rigidBody = {
+						x:        this.munchFloat(),
+						y:        this.munchFloat(),
+						z:        this.munchFloat(),
+						rotation: [],
+					};
+
+					for (var j = 0; j < 9; j++)
+						rigidBody.rotation.push(this.munchFloat());
+
+					this.rigidBodies.push(rigidBody);
+				}
+			},
+
+			toJson: function() {
+				return {
+					rigidBodyCount: this.rigidBodyCount,
+					dropRate2d: this.dropRate2d,
+					outOfSyncRate2d: this.outOfSyncRate2d,
+					rigidBodies: this.rigidBodies,
 				};
+			},
+
+		},
+		Component
+	);
+
+	var Component6dResiduals = Model.extend(
+		{
+			parseRigidBodies: function()
+			{
+				for (var i = 0; i < this.rigidBodyCount; i++)
+				{
+					var rigidBody = {
+						x:        this.munchFloat(),
+						y:        this.munchFloat(),
+						z:        this.munchFloat(),
+						rotation: [],
+						residual: null,
+					};
+
+					for (var j = 0; j < 9; j++)
+						rigidBody.rotation.push(this.munchFloat());
+
+					rigidBody.residual = this.munchFloat();
+
+					this.rigidBodies.push(rigidBody);
+				}
+			}
+
+		},
+		Component6d
+	);
+
+	var Component6dEuler = Model.extend(
+		{
+			parseRigidBodies: function()
+			{
+				for (var i = 0; i < this.rigidBodyCount; i++)
+				{
+					this.rigidBodies.push({
+						x:        this.munchFloat(),
+						y:        this.munchFloat(),
+						z:        this.munchFloat(),
+						euler1:   this.munchFloat(),
+						euler2:   this.munchFloat(),
+						euler3:   this.munchFloat(),
+					});
+				}
+			}
+
+		},
+		Component6d
+	);
+
+	var Component6dEulerResiduals = Model.extend(
+		{
+			parseRigidBodies: function()
+			{
+				for (var i = 0; i < this.rigidBodyCount; i++)
+				{
+					this.rigidBodies.push({
+						x:          this.munchFloat(),
+						y:          this.munchFloat(),
+						z:          this.munchFloat(),
+						euler1:     this.munchFloat(),
+						euler2:     this.munchFloat(),
+						euler3:     this.munchFloat(),
+						residuals:  this.munchFloat(),
+					});
+				}
+			}
+
+		},
+		Component6d
+	);
+
+	var ComponentAnalog = Model.extend(
+		{
+			init: function(buf) {
+				Component.init.call(this, buf);
+				this.deviceCount = this.munchUInt32();
+				this.devices     = [];
+
+				this.parseDevices();
+			},
+
+			parseDevices: function()
+			{
+				for (var i = 0; i < this.deviceCount; i++)
+				{
+					var device = {
+						id:            this.munchUInt32(),
+						channelCount:  this.munchUInt32(),
+						sampleCount:   this.munchUInt32(),
+						sampleNumber:  this.munchUInt32(),
+						data:          [],
+					};
+
+					for (var j = 0; j < device.channelCount; j++)
+					{
+						var channel = [];
+						for (var k = 0; k < device.sampleCount; k++)
+							channel.push(this.munchFloat());
+						device.data.push(channel);
+					}
+					this.devices.push(device);
+				}
+			},
+
+			toJson: function() {
+				return {
+					deviceCount: this.deviceCount,
+					devices: this.devices,
+				};
+			},
+
+		},
+		Component
+	);
+
+	var ComponentAnalogSingle = Model.extend(
+		{
+			parseDevices: function()
+			{
+				for (var i = 0; i < this.deviceCount; i++)
+				{
+					var device = {
+						id:            this.munchUInt32(),
+						channelCount:  this.munchUInt32(),
+						data:          [],
+					};
+
+					for (var j = 0; j < device.channelCount; j++)
+						device.data.push([this.munchFloat()]);
+
+					this.devices.push(device);
+				}
+			}
+
+		},
+		ComponentAnalog
+	);
+
+	var ComponentForce = Model.extend(
+		{
+			init: function(buf) {
+				Component.init.call(this, buf);
 				
-				camera.data = this.munch(camera.imageSize);
+				// XXX: Not quite sure about this, but sometimes QTM sends empty
+				// force components. 
+				if (12 === this.size)
+					this.plateCount = 0;
+				else
+					this.plateCount = this.munchUInt32();
 
-				this.cameras.push(camera);
-			}
-		},
+				this.plates = [];
 
-		toJson: function() {
-			return {
-				cameraCount: this.cameraCount,
-				cameras: this.plates,
-			};
-		},
+				this.parsePlates();
+			},
 
-	},
-	Component
-);
-
-var ComponentGazeVector = Model.extend(
-	{
-		init: function(buf)
-		{
-			Component.init.call(this, buf);
-			this.gazeVectorCount = this.munchUInt32();
-			this.gazeVectors     = [];
-
-			this.parseGazeVectors();
-		},
-
-		parseGazeVectors: function()
-		{
-			for (var i = 0; i < this.gazeVectorCount; i++)
+			parsePlates: function()
 			{
-				var gazeVector   = {
-					sampleCount: this.munchUInt32(),
-					samples: [],
-				};
-
-				gazeVector.sampleNumber = (0 < gazeVector.sampleCount) ? this.munchUInt32() : 0;
-
-				for (var j = 0; j < gazeVector.sampleCount; j++)
+				for (var i = 0; i < this.plateCount; i++)
 				{
-					gazeVector.samples.push({
-						vectorX: this.munchFloat(),
-						vectorY: this.munchFloat(),
-						vectorZ: this.munchFloat(),
-						positionX: this.munchFloat(),
-						positionY: this.munchFloat(),
-						positionZ: this.munchFloat(),
-					});
+					var plate = {
+						id:           this.munchUInt32(),
+						forceCount:   this.munchUInt32(),
+						forceNumber:  this.munchUInt32(),
+						data:         [],
+					};
+
+					for (var j = 0; j < plate.forceCount; j++)
+						plate.data.push({
+							forceX: this.munchFloat(),
+							forceY: this.munchFloat(),
+							forceZ: this.munchFloat(),
+							momentX: this.munchFloat(),
+							momentY: this.munchFloat(),
+							momentZ: this.munchFloat(),
+							posX: this.munchFloat(),
+							posY: this.munchFloat(),
+							posZ: this.munchFloat(),
+						});
+
+					this.plates.push(plate);
 				}
+			},
 
-				this.gazeVectors.push(gazeVector);
+			toJson: function() {
+				return {
+					plateCount: this.plateCount,
+					plates: this.plates,
+				};
+			},
+
+		},
+		Component
+	);
+
+	var ComponentForceSingle = Model.extend(
+		{
+			parsePlates: function()
+			{
+				for (var i = 0; i < this.plateCount; i++)
+				{
+					var plate = {
+						id:    this.munchUInt32(),
+						data:  [{
+							forceX: this.munchFloat(),
+							forceY: this.munchFloat(),
+							forceZ: this.munchFloat(),
+							momentX: this.munchFloat(),
+							momentY: this.munchFloat(),
+							momentZ: this.munchFloat(),
+							posX: this.munchFloat(),
+							posY: this.munchFloat(),
+							posZ: this.munchFloat(),
+						}],
+					};
+
+					this.plates.push(plate);
+				}
 			}
+
 		},
+		ComponentForce
+	);
 
-		toJson: function() {
-			return {
-				gazeVectors: this.gazeVectors
-			};
+	var ComponentImage = Model.extend(
+		{
+			init: function(buf) {
+				Component.init.call(this, buf);
+				this.cameraCount = this.munchUInt32();
+				this.cameras     = [];
+
+				this.parseCameras();
+			},
+
+			parseCameras: function()
+			{
+				for (var i = 0; i < this.cameraCount; i++)
+				{
+					var camera = {
+						id:           this.munchUInt32(),
+						imageFormat:  this.munchUInt32(),
+						width:        this.munchUInt32(),
+						height:       this.munchUInt32(),
+						leftCrop:     this.munchFloat(),
+						topCrop:      this.munchFloat(),
+						rightCrop:    this.munchFloat(),
+						bottomCrop:   this.munchFloat(),
+						imageSize:    this.munchUInt(),
+						data:         null,
+					};
+					
+					camera.data = this.munch(camera.imageSize);
+
+					this.cameras.push(camera);
+				}
+			},
+
+			toJson: function() {
+				return {
+					cameraCount: this.cameraCount,
+					cameras: this.plates,
+				};
+			},
+
 		},
-	},
-	Component
-);
+		Component
+	);
 
-Component.create = function(buf)
-{
-	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
+	var ComponentGazeVector = Model.extend(
+		{
+			init: function(buf)
+			{
+				Component.init.call(this, buf);
+				this.gazeVectorCount = this.munchUInt32();
+				this.gazeVectors     = [];
 
-	switch (type) {
-		case qtmrt.COMPONENT_2D:
-		case qtmrt.COMPONENT_2D_LINEARIZED:
-			return new Component2d(buf);
-		
-		case qtmrt.COMPONENT_3D:
-			return new Component3d(buf);
-		
-		case qtmrt.COMPONENT_3D_NO_LABELS:
-			return new Component3dNoLabels(buf);
-		
-		case qtmrt.COMPONENT_3D_RESIDUALS:
-			return new Component3dResiduals(buf);
-		
-		case qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS:
-			return new Component3dNoLabelsResiduals(buf);
-		
-		case qtmrt.COMPONENT_6D:
-			return new Component6d(buf);
-		
-		case qtmrt.COMPONENT_6D_EULER:
-			return new Component6dEuler(buf);
-		
-		case qtmrt.COMPONENT_6D_RESIDUALS:
-			return new Component6dResiduals(buf);
-		
-		case qtmrt.COMPONENT_6D_EULER_RESIDUALS:
-			return new Component6dEulerResiduals(buf);
+				this.parseGazeVectors();
+			},
 
-		case qtmrt.COMPONENT_ANALOG:
-			return new ComponentAnalog(buf);
-		
-		case qtmrt.COMPONENT_ANALOG_SINGLE:
-			return new ComponentAnalogSingle(buf);
-		
-		case qtmrt.COMPONENT_FORCE:
-			return new ComponentForce(buf);
-		
-		case qtmrt.COMPONENT_FORCE_SINGLE:
-			return new ComponentForceSingle(buf);
+			parseGazeVectors: function()
+			{
+				for (var i = 0; i < this.gazeVectorCount; i++)
+				{
+					var gazeVector   = {
+						sampleCount: this.munchUInt32(),
+						samples: [],
+					};
 
-		case qtmrt.COMPONENT_IMAGE:
-			return new ComponentImage(buf);
+					gazeVector.sampleNumber = (0 < gazeVector.sampleCount) ? this.munchUInt32() : 0;
 
-		case qtmrt.COMPONENT_GAZE_VECTOR:
-			return new ComponentGazeVector(buf);
-	}
-};
+					for (var j = 0; j < gazeVector.sampleCount; j++)
+					{
+						gazeVector.samples.push({
+							vectorX: this.munchFloat(),
+							vectorY: this.munchFloat(),
+							vectorZ: this.munchFloat(),
+							positionX: this.munchFloat(),
+							positionY: this.munchFloat(),
+							positionZ: this.munchFloat(),
+						});
+					}
 
-Component.typeToString       = componentTypeToString;
-Component.typeToPrettyString = componentTypeToPrettyString;
-Component.stringToType       = componentStringToType;
+					this.gazeVectors.push(gazeVector);
+				}
+			},
 
-module.exports = Component;
+			toJson: function() {
+				return {
+					gazeVectors: this.gazeVectors
+				};
+			},
+		},
+		Component
+	);
 
+	Component.create = function(buf)
+	{
+		var type = readUInt32(buf, qtmrt.UINT32_SIZE);
+
+		switch (type) {
+			case qtmrt.COMPONENT_2D:
+			case qtmrt.COMPONENT_2D_LINEARIZED:
+				return new Component2d(buf);
+			
+			case qtmrt.COMPONENT_3D:
+				return new Component3d(buf);
+			
+			case qtmrt.COMPONENT_3D_NO_LABELS:
+				return new Component3dNoLabels(buf);
+			
+			case qtmrt.COMPONENT_3D_RESIDUALS:
+				return new Component3dResiduals(buf);
+			
+			case qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS:
+				return new Component3dNoLabelsResiduals(buf);
+			
+			case qtmrt.COMPONENT_6D:
+				return new Component6d(buf);
+			
+			case qtmrt.COMPONENT_6D_EULER:
+				return new Component6dEuler(buf);
+			
+			case qtmrt.COMPONENT_6D_RESIDUALS:
+				return new Component6dResiduals(buf);
+			
+			case qtmrt.COMPONENT_6D_EULER_RESIDUALS:
+				return new Component6dEulerResiduals(buf);
+
+			case qtmrt.COMPONENT_ANALOG:
+				return new ComponentAnalog(buf);
+			
+			case qtmrt.COMPONENT_ANALOG_SINGLE:
+				return new ComponentAnalogSingle(buf);
+			
+			case qtmrt.COMPONENT_FORCE:
+				return new ComponentForce(buf);
+			
+			case qtmrt.COMPONENT_FORCE_SINGLE:
+				return new ComponentForceSingle(buf);
+
+			case qtmrt.COMPONENT_IMAGE:
+				return new ComponentImage(buf);
+
+			case qtmrt.COMPONENT_GAZE_VECTOR:
+				return new ComponentGazeVector(buf);
+		}
+	};
+
+	Component.typeToString       = componentTypeToString;
+	Component.typeToPrettyString = componentTypeToPrettyString;
+	Component.stringToType       = componentStringToType;
+
+	module.exports = Component;
+})();
