@@ -76,8 +76,8 @@ Api.prototype = (function()
 	
 	receivePacket = function(data)
 	{
-		var packet = Packet.create(data)
-		  , command = packet.type === qtmrt.DATA ? null : this.issuedCommands.pop()
+		var packet  = Packet.create(data)
+		  , command = this.issuedCommands.pop()
 		;
 
 		if (qtmrt.COMMAND === packet.type)
