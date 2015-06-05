@@ -406,7 +406,7 @@ Api.prototype = (function()
 	debug = function(val)
 	{
 		this.options.debug = val ? true: false;
-	}
+	};
 
 	return {
 		'log':              log,

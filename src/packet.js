@@ -88,7 +88,7 @@
 							jsonData.the3d.bones = jsonData.the3d.bones.bone;
 
 						if (jsonData.the3d.label) {
-							jsonData.the3d.labels = jsonData.the3d.label
+							jsonData.the3d.labels = jsonData.the3d.label;
 							delete jsonData.the3d.label;
 						}
 					}

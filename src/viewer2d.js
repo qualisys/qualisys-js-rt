@@ -24,7 +24,7 @@ Viewer2d.prototype = (function()
 		this.camera  = camera;
 		this.options = _.defaults(options, {
 			frequency: 50,
-		})
+		});
 
 		this.api.debug(false);
 
@@ -43,7 +43,7 @@ Viewer2d.prototype = (function()
 					;
 
 					if (!_.isUndefined(self.width))
-						clear.call(self)
+						clear.call(self);
 	
 					setupView.call(self, self.camera);
 					drawMarkers.call(self, self.camera, data.components['2d'].cameras);
@@ -51,7 +51,7 @@ Viewer2d.prototype = (function()
 					self.cameraCount = comp.cameraCount;
 
 					for (var i = 1; i <= comp.cameraCount; i++)
-						statusLine += self.camera == i ? (' [' + i + ']').green : '  ' + i + ' ';
+						statusLine += self.camera === i ? (' [' + i + ']').green : '  ' + i + ' ';
 
 					statusLine += '  (N)ext  (P)rev       (Q)uit';
 					process.stdout.write(statusLine + ' ');
@@ -64,7 +64,8 @@ Viewer2d.prototype = (function()
 						
 	  				process.stdin.removeAllListeners('data');
 					process.stdin.on('data', function(char) { 
-						if (char == '\3')
+						// Ctrl+C.
+						if (char === '\3')
 							process.exit(); 
 					}.bind(this));
 
@@ -104,12 +105,13 @@ Viewer2d.prototype = (function()
 	{
 		var cameraData = data[camera - 1]
 		  , lines      = []
+		  , zero       = function () { return 0; }
 		;
 
 		for (var i = 0; i < this.maxHeight; i++)
-			lines[i] = _.range(this.viewWidth).map(function () { return 0; });
+			lines[i] = _.range(this.viewWidth).map(zero);
 
-		for (var i in cameraData.markers)
+		for (i in cameraData.markers)
 		{
 			var marker = cameraData.markers[i];
 			var x = Math.round((marker.x / this.width) * this.viewWidth);
@@ -118,7 +120,7 @@ Viewer2d.prototype = (function()
 			lines[y][x] = (marker.diameterX + marker.diameterY) / 2;
 		}
 
-		for (var i in lines)
+		for (i in lines)
 		{
 			var lineStr = '';
 
@@ -161,7 +163,7 @@ Viewer2d.prototype = (function()
 		}
 
 		// n, l and left arrow.
-		if ('n' === char || 'l' === char || '\u001b[C' == char)
+		if ('n' === char || 'l' === char || '\u001b[C' === char)
 			this.camera = Math.min(this.camera + 1, this.cameraCount);
 
 		// p, h and right arrow.
@@ -174,7 +176,7 @@ Viewer2d.prototype = (function()
 		// Ctrl+C.
 		if ('\3' === char)
 			quit.call(this, true);
-	}
+	},
 
 	listenForInput = function()
 	{
