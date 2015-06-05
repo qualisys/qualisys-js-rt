@@ -94,8 +94,9 @@ var XmlPacket = Model.extend(
 
 				if (jsonData.the6d) {
 					if (jsonData.the6d.bodies) {
-						jsonData.the6d.bodies = jsonData.the6d.body;
+						jsonData.the6d.rigidBodies = jsonData.the6d.body;
 						delete jsonData.the6d.body;
+						delete jsonData.the6d.bodies;
 					}
 				}
 
