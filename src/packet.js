@@ -143,11 +143,11 @@ var DataPacket = Model.extend(
 			var json = {
 				frame: this.frameNumber,
 				timestamp: this.timestamp,
-				components: [],
+				components: {},
 			};
 
 			for (var type in this.components) {
-				json.components.push(this.components[type].toJson());
+				json.components[toCamelCase(Component.typeToString(type))] = (this.components[type].toJson());
 			}
 
 			return json;
