@@ -24,6 +24,7 @@ var componentTypeToString = function(typeId)
 	typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'AnalogSingle';
 	typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
 	typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'ForceSingle';
+	typeNames[qtmrt.COMPONENT_GAZE_VECTOR]            = 'GazeVector';
 	return typeNames[typeId];
 };
 
@@ -45,6 +46,7 @@ var componentTypeToPrettyString = function(typeId)
 	typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'Analog (single sample)';
 	typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
 	typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'Force (single sample)';
+	typeNames[qtmrt.COMPONENT_GAZE_VECTOR]            = 'Gaze vector';
 	return typeNames[typeId];
 };
 
@@ -66,6 +68,7 @@ var componentStringToType = function(compStr)
 	typeIds['AnalogSingle']  = qtmrt.COMPONENT_ANALOG_SINGLE;
 	typeIds['Force']         = qtmrt.COMPONENT_FORCE;
 	typeIds['ForceSingle']   = qtmrt.COMPONENT_FORCE_SINGLE;
+	typeIds['GazeVector']    = qtmrt.COMPONENT_GAZE_VECTOR;
 	return typeIds[compStr];
 };
 
@@ -534,6 +537,53 @@ var ComponentImage = Model.extend(
 	Component
 );
 
+var ComponentGazeVector = Model.extend(
+	{
+		init: function(buf)
+		{
+			Component.init.call(this, buf);
+			this.gazeVectorCount = this.munchUInt32();
+			this.gazeVectors     = [];
+
+			this.parseGazeVectors();
+		},
+
+		parseGazeVectors: function()
+		{
+			for (var i = 0; i < this.gazeVectorCount; i++)
+			{
+				var gazeVector   = {
+					sampleCount: this.munchUInt32(),
+					samples: [],
+				};
+
+				gazeVector.sampleNumber = (0 < gazeVector.sampleCount) ? this.munchUInt32() : 0;
+
+				for (var j = 0; j < gazeVector.sampleCount; j++)
+				{
+					gazeVector.samples.push({
+						vectorX: this.munchFloat(),
+						vectorY: this.munchFloat(),
+						vectorZ: this.munchFloat(),
+						positionX: this.munchFloat(),
+						positionY: this.munchFloat(),
+						positionZ: this.munchFloat(),
+					});
+				}
+
+				this.gazeVectors.push(gazeVector);
+			}
+		},
+
+		toJson: function() {
+			return {
+				gazeVectors: this.gazeVectors
+			};
+		},
+	},
+	Component
+);
+
 Component.create = function(buf)
 {
 	var type = readUInt32(buf, qtmrt.UINT32_SIZE);
@@ -581,6 +631,9 @@ Component.create = function(buf)
 
 		case qtmrt.COMPONENT_IMAGE:
 			return new ComponentImage(buf);
+
+		case qtmrt.COMPONENT_GAZE_VECTOR:
+			return new ComponentGazeVector(buf);
 	}
 };
 

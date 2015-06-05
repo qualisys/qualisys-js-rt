@@ -48,6 +48,7 @@ var qtmrt = {
 	COMPONENT_ANALOG_SINGLE:           13,
 	COMPONENT_IMAGE:                   14,
 	COMPONENT_FORCE_SINGLE:            15,
+	COMPONENT_GAZE_VECTOR:             16,
 
 	LITTLE_ENDIAN: 0,
 	BIG_ENDIAN:    1,
@@ -73,7 +74,8 @@ qtmrt.COMPONENTS = [
 	qtmrt.COMPONENT_6D_RESIDUALS,
 	qtmrt.COMPONENT_6D_EULER,
 	qtmrt.COMPONENT_6D_EULER_RESIDUALS,
-	qtmrt.COMPONENT_IMAGE
+	qtmrt.COMPONENT_IMAGE,
+	qtmrt.COMPONENT_GAZE_VECTOR,
 ];
 
 qtmrt.COMPONENT_STRINGS = [
@@ -91,7 +93,8 @@ qtmrt.COMPONENT_STRINGS = [
 	'Analog',
 	'AnalogSingle',
 	'Force',
-	'ForceSingle'
+	'ForceSingle',
+	'GazeVector',
 ];
 
 qtmrt.eventToString = function(eventId)
