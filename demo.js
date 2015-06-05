@@ -1,7 +1,8 @@
 'use strict';
 
 var colors   = require('colors')
-  , Api      = require('./index')
+  , qtmrt    = require('./index')
+  , Api      = qtmrt.Api
   , Viewer2d = require('./src/viewer2d')
 ;
 

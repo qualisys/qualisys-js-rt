@@ -11,7 +11,7 @@ also be used to start and stop measurements, setting events and more.
 # Example
 
 ```javascript
-var Api = require('qualisys-rt')
+var Api = require('qualisys-rt').Api;
 
 var api = new Api({ debug: true });
 
