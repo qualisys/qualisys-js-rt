@@ -1,12 +1,14 @@
 'use strict';
 
-var _           = require('underscore')
-  , parseString = require('xml2js').parseString
-  , qtmrt       = require('./qtmrt')
-  , readUInt32  = require('./helpers').readUInt32
-  , Model       = require('./model')
-  , Muncher     = require('./muncher')
-  , Component   = require('./component')
+var _            = require('underscore')
+  , parseString  = require('xml2js').parseString
+  , parseNumbers = require('xml2js').processors.parseNumbers
+  , qtmrt        = require('./qtmrt')
+  , readUInt32   = require('./helpers').readUInt32
+  , toCamelCase  = require('./helpers').toCamelCase
+  , Model        = require('./model')
+  , Muncher      = require('./muncher')
+  , Component    = require('./component')
 ;
 
 var packetTypeToString = function(typeId)
@@ -55,19 +57,51 @@ var XmlPacket = Model.extend(
 	{
 		toJson: function()
 		{
-			var underscoreCased = this.data.replace(/[a-z]([A-Z])/g, function (g) { return g[0] + '_' + g[1]; })
-			  , camelCased      = underscoreCased.toLowerCase().replace(/_([a-zA-Z0-9])/g, function (g) { return g[1].toUpperCase(); })
-			  , jsonData        = null
+			var camelCased   = toCamelCase(this.data)
+			  , jsonData     = null
+			  , parseOptions = {
+					async: false,
+					mergeAttrs: true,
+					explicitArray: false,
+					valueProcessors: [
+						parseNumbers,
+						function(value) {
+							if ('true' === value) return true;
+							if ('false' === value) return false;
+							return value;
+						}
+					],
+				}
 			;
 
-			parseString(camelCased, { explicitArray: false }, function(err, result) { jsonData = result; });
+			parseString(camelCased, parseOptions, function(err, result) {
+				if (!result) return;
 
-			var keys = Object.keys(jsonData);
+				var keys = Object.keys(result);
 
-			if (1 === keys.length)
-				return jsonData[keys[0]];
-			else
-				return jsonData;
+				jsonData = (1 === keys.length) ? result[keys[0]] : result;
+
+				// Simplify result somewhat.
+				if (jsonData.the3d) {
+					if (jsonData.the3d.bones)
+						jsonData.the3d.bones = jsonData.the3d.bones.bone;
+
+					if (jsonData.the3d.label) {
+						jsonData.the3d.labels = jsonData.the3d.label
+						delete jsonData.the3d.label;
+					}
+				}
+
+				if (jsonData.the6d) {
+					if (jsonData.the6d.bodies) {
+						jsonData.the6d.bodies = jsonData.the6d.body;
+						delete jsonData.the6d.body;
+					}
+				}
+
+			});
+
+			return jsonData;
 		}
 	},
 	Packet
