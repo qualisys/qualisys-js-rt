@@ -10,7 +10,8 @@
 	var componentTypeToString = function(typeId)
 	{
 		for (var compStr in qtmrt.COMPONENTS) {
-			if (typeId === qtmrt.COMPONENTS[compStr])
+
+			if (Number(typeId) === qtmrt.COMPONENTS[compStr])
 				return compStr;
 		}
 
