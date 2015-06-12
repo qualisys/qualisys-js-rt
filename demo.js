@@ -22,11 +22,16 @@ api.on('event', function(event) {
 	console.log(event.name.yellow);
 });
 
+api.on('disconnect', function(event) {
+	process.exit();
+});
+
 api.connect()
 	.then(function() { return api.qtmVersion(); })
 	.then(function(version) { return api.byteOrder(); })
 	.then(function(byteOrder) { return api.getState(); })
-	//.then(function() { api.discover(); })
+	//.then(function() { return api.discover(); })
+	//.then(function(servers) { console.log(servers); })
 
 	//.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
 	//.then(function(frame) { console.log(frame); })
@@ -94,6 +99,7 @@ api.connect()
 	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['Force'] }); })
 	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['ForceSingle'] }); })
 	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['Image'] }); })
+	//.then(function() { return api.streamFrames({ frequency: 1/200, components: ['GazeVector'] }); })
 	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {

@@ -37,6 +37,7 @@ var Api = function(options) {
 		debug: false,
 		frequency: 100,
 		discoverPort: 22226,
+		discoverTimeout: 2000,
 	});
 
 	this.frequency(this.options.frequency);
@@ -55,6 +56,7 @@ Api.prototype = (function()
 
 		this.client.on('end', function() {
 			this.logger.log('Disconnected', 'white', 'bold');
+			this.emit('disconnect');
 		}.bind(this));
 	},
 
@@ -351,7 +353,9 @@ Api.prototype = (function()
 
 		var server = dgram.createSocket('udp4')
 		  , receivePort = port + 1
+		  , discoveredServers = []
 		  , self = this
+		  , deferred = Q.defer()
 		;
 
 		server.on('error', function (err) {
@@ -360,10 +364,19 @@ Api.prototype = (function()
 		});
 
 		server.on('message', function (msg, rinfo) {
+			// Set type to discover type.
 			writeUInt32(msg, 7, 4);
 
+			var discoverPacket = Packet.create(msg, rinfo.address, rinfo.port)
 			if (self.options.debug)
-				self.logger.logPacket(Packet.create(msg, rinfo.address, rinfo.port));
+				self.logger.logPacket(discoverPacket);
+
+			discoveredServers.push({
+				serverInfo: discoverPacket.serverInfo,
+				serverBasePort: discoverPacket.serverBasePort,
+				srcAddress: discoverPacket.srcAddress,
+				srcPort: discoverPacket.srcPort,
+			});
 		});
 
 		server.on('listening', function () {
@@ -392,7 +405,16 @@ Api.prototype = (function()
 
 			if (self.options.debug)
 				self.logger.logPacket(Packet.create(buf));
-		});
+
+			setTimeout(function() {
+				server.close();
+				server.unref();
+				deferred.resolve(discoveredServers);
+			}, this.options.discoverTimeout);
+
+		}.bind(this));
+
+		return deferred.promise;
 	},
 
 	frequency = function(freq)
