@@ -34,4 +34,4 @@ There is not much documentation yet so the best way to get started is by
 examining demo.js, which contains example code for common tasks. 
 
 For a reference of what's possible with the real-time protocol, refer to the
-QTM Real-time Server Protocol Documentation.
+[QTM Real-time Server Protocol Documentation](http://qualisys.github.io/rt-protocol/).
