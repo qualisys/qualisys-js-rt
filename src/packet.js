@@ -12,8 +12,7 @@
 	  , Component    = require('./component')
 	;
 
-	var packetTypeToString = function(typeId)
-	{
+	var packetTypeToString = function(typeId) {
 		var typeNames = {};
 
 		typeNames[qtmrt.ERROR]            = 'Error';
@@ -30,166 +29,146 @@
 		return typeNames[typeId];
 	};
 
-	var Packet = Model.extend(
-		{
-			init: function(buf)
-			{
-				if (!arguments.length)
-					throw new TypeError('No buffer specified');
+	var Packet = Model.extend({
+		init: function(buf) {
+			if (!arguments.length)
+				throw new TypeError('No buffer specified');
 
-				Muncher.init.call(this, buf);
+			Muncher.init.call(this, buf);
 
-				this.size         = this.munchUInt32();
-				this.type         = this.munchUInt32();
-				this.typeName     = packetTypeToString(this.type);
-				this.data         = buf.slice(this.munched).toString('utf8');
-				this.isResponse   = true;
-			},
-		}, Muncher
-	);
+			this.size       = this.munchUInt32();
+			this.type       = this.munchUInt32();
+			this.typeName   = packetTypeToString(this.type);
+			this.data       = buf.slice(this.munched).toString('utf8');
+			this.isResponse = true;
+		},
+	}, Muncher);
 
-	var NoMoreDataPacket = Model.extend({ }, Packet);
-	var C3dFilePacket    = Model.extend({ }, Packet);
-	var QtmFilePacket    = Model.extend({ }, Packet);
-	var ErrorPacket      = Model.extend({ }, Packet);
-	var CommandPacket    = Model.extend({ }, Packet);
+	var NoMoreDataPacket = Model.extend({ }, Packet)
+	  , C3dFilePacket    = Model.extend({ }, Packet)
+	  , QtmFilePacket    = Model.extend({ }, Packet)
+	  , ErrorPacket      = Model.extend({ }, Packet)
+	  , CommandPacket    = Model.extend({ }, Packet)
+	;
 
-	var XmlPacket = Model.extend(
-		{
-			toJson: function()
-			{
-				var camelCased   = toCamelCase(this.data)
-				  , jsonData     = null
-				  , parseOptions = {
-						async: false,
-						mergeAttrs: true,
-						explicitArray: false,
-						valueProcessors: [
-							parseNumbers,
-							function(value) {
-								if ('true' === value) return true;
-								if ('false' === value) return false;
-								return value;
-							}
-						],
+	var XmlPacket = Model.extend({
+		toJson: function() {
+			var camelCased   = toCamelCase(this.data)
+			  , jsonData     = null
+			;
+
+			var parseOptions = {
+				async: false,
+				mergeAttrs: true,
+				explicitArray: false,
+				valueProcessors: [
+					parseNumbers,
+					function(value) {
+						if (value === 'true') return true;
+						if (value === 'false') return false;
+
+						return value;
 					}
+				],
+			};
+
+			parseString(camelCased, parseOptions, function(err, result) {
+				if (!result) return;
+
+				var keys = Object.keys(result);
+
+				jsonData = (keys.length === 1) ? result[keys[0]] : result;
+
+				// Simplify result somewhat.
+				if (jsonData.the3d) {
+					if (jsonData.the3d.bones)
+						jsonData.the3d.bones = jsonData.the3d.bones.bone;
+
+					if (jsonData.the3d.label) {
+						jsonData.the3d.labels = jsonData.the3d.label;
+						delete jsonData.the3d.label;
+					}
+				}
+
+				if (jsonData.the6d) {
+					if (jsonData.the6d.bodies) {
+						jsonData.the6d.rigidBodies = jsonData.the6d.body;
+						delete jsonData.the6d.body;
+						delete jsonData.the6d.bodies;
+					}
+				}
+
+			});
+
+			return jsonData;
+		}
+	}, Packet);
+
+	var DataPacket = Model.extend({
+		init: function(buf) {
+			Packet.init.call(this, buf);
+
+			this.timestamp      = this.munchUInt64();
+			this.frameNumber    = this.munchUInt32();
+			this.componentCount = this.munchUInt32();
+			this.components     = {};
+
+			var offset = this.munched;
+
+			for (var i = 0; i < this.componentCount; i++) {
+				var size      = readUInt32(buf, offset)
+				  , component = Component.create(buf.slice(offset, offset + size))
 				;
+				offset += size;
 
-				parseString(camelCased, parseOptions, function(err, result) {
-					if (!result) return;
-
-					var keys = Object.keys(result);
-
-					jsonData = (1 === keys.length) ? result[keys[0]] : result;
-
-					// Simplify result somewhat.
-					if (jsonData.the3d) {
-						if (jsonData.the3d.bones)
-							jsonData.the3d.bones = jsonData.the3d.bones.bone;
-
-						if (jsonData.the3d.label) {
-							jsonData.the3d.labels = jsonData.the3d.label;
-							delete jsonData.the3d.label;
-						}
-					}
-
-					if (jsonData.the6d) {
-						if (jsonData.the6d.bodies) {
-							jsonData.the6d.rigidBodies = jsonData.the6d.body;
-							delete jsonData.the6d.body;
-							delete jsonData.the6d.bodies;
-						}
-					}
-
-				});
-
-				return jsonData;
+				this.components[component.type] = component;
 			}
 		},
-		Packet
-	);
 
-	var DataPacket = Model.extend(
-		{
-			init: function(buf)
-			{
-				Packet.init.call(this, buf);
-				
-				this.timestamp      = this.munchUInt64();
-				this.frameNumber    = this.munchUInt32();
-				this.componentCount = this.munchUInt32();
-				this.components     = {};
+		component: function(componentString) {
+			if (!_.contains(Object.keys(qtmrt.COMPONENTS), componentString))
+				throw new TypeError('Unexpected component');
 
-				var offset = this.munched;
+			return this.components[Component.stringToType(componentString)];
+		},
 
-				for (var i = 0; i < this.componentCount; i++) {
-					var size      = readUInt32(buf, offset)
-					  , component = Component.create(buf.slice(offset, offset + size))
-					;
-					offset += size;
+		toJson: function() {
+			var json = {
+				frame: this.frameNumber,
+				timestamp: this.timestamp,
+				components: {},
+			};
 
-					this.components[component.type] = component;
-				}
-			},
-
-			component: function(componentString)
-			{
-				if (!_.contains(Object.keys(qtmrt.COMPONENTS), componentString))
-					throw new TypeError('Unexpected component');
-
-				return this.components[Component.stringToType(componentString)];
-			},
-			
-			toJson: function()
-			{
-				var json = {
-					frame: this.frameNumber,
-					timestamp: this.timestamp,
-					components: {},
-				};
-
-				for (var type in this.components) {
-					json.components[toCamelCase(Component.typeToString(type))] = (this.components[type].toJson());
-				}
-
-				return json;
+			for (var type in this.components) {
+				json.components[toCamelCase(Component.typeToString(type))] = (this.components[type].toJson());
 			}
+
+			return json;
+		}
+	}, Packet);
+
+	var EventPacket = Model.extend({
+		init: function(buf) {
+			Packet.init.call(this, buf);
+			this.data      = this.munchUInt8();
+			this.eventId   = this.data;
+			this.eventName = qtmrt.eventToString(this.eventId);
 		},
-		Packet
-	);
 
-	var EventPacket = Model.extend(
-		{
-			init: function(buf)
-			{
-				Packet.init.call(this, buf);
-				this.data      = this.munchUInt8();
-				this.eventId   = this.data;
-				this.eventName = qtmrt.eventToString(this.eventId);
-			},
-
-			toJson: function()
-			{
-				return { name: this.eventName, id: this.eventId };
-			},
+		toJson: function() {
+			return { name: this.eventName, id: this.eventId };
 		},
-		Packet
-	);
+	}, Packet);
 
-	var DiscoverPacket = Model.extend(
-		{
-			init: function(buf)
-			{
-				Packet.init.call(this, buf);
-				this.serverInfo     = this.munch(this.size - this.munched - qtmrt.UINT16_SIZE).toString('utf8');
-				this.serverBasePort = this.munchUInt16();
-			}
-		},
-		Packet
-	);
+	var DiscoverPacket = Model.extend({
+		init: function(buf) {
+			Packet.init.call(this, buf);
+			this.serverInfo     = this.munch(this.size - this.munched - qtmrt.UINT16_SIZE).toString('utf8');
+			this.serverBasePort = this.munchUInt16();
+		}
+	}, Packet);
 
-	Packet.create = function(buf, srcAddress, srcPort)
-	{
+	Packet.create = function(buf, srcAddress, srcPort) {
 		var type   = readUInt32(buf, qtmrt.UINT32_SIZE)
 		  , packet = null
 		;
@@ -206,8 +185,7 @@
 			case qtmrt.QTM_FILE:      packet = new QtmFilePacket(buf); break;
 		}
 
-		if (1 < arguments.length)
-		{
+		if (arguments.length > 1) {
 			packet.srcAddress = srcAddress;
 			packet.srcPort    = srcPort;
 		}

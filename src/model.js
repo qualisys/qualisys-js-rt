@@ -3,8 +3,7 @@
 (function() {
 	var Model = function() {};
 
-	Model.applyChain = function(obj, _super)
-	{
+	Model.applyChain = function(obj, _super) {
 		if (_super._super)
 			Model.applyChain(obj, _super._super);
 
@@ -13,17 +12,15 @@
 				obj[attr] = _super[attr];
 	};
 
-	Model.extend = function(attrs, _super)
-	{   
-		if (2 > arguments.length)
+	Model.extend = function(attrs, _super) {
+		if (arguments.length < 2)
 			_super = Model;
 
 		var construct = function() {
 			this._super = _super;
 			Model.applyChain(this, _super);
-			
-			if (attrs)
-			{
+
+			if (attrs) {
 				for (var attr in attrs)
 					if (attrs.hasOwnProperty(attr) && attr !== 'init')
 						this[attr] = attrs[attr];
@@ -35,12 +32,12 @@
 			}
 		};
 		construct._super = _super;
-		
+
 		if (attrs)
 			for (var attr in attrs)
 				if (attrs.hasOwnProperty(attr))
 					construct[attr] = attrs[attr];
-		
+
 		construct.prototype = Object.create(_super.prototype);
 		return construct;
 	};

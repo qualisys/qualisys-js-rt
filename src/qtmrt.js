@@ -78,8 +78,7 @@
 		'GazeVector'    : qtmrt.COMPONENT_GAZE_VECTOR,
 	};
 
-	qtmrt.eventToString = function(eventId)
-	{
+	qtmrt.eventToString = function(eventId) {
 		var eventNames = {};
 
 		eventNames[qtmrt.CONNECTED]               = 'Connected';

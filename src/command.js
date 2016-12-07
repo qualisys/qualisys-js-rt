@@ -4,17 +4,15 @@
 	var _           = require('underscore')
 	  , jsonxml     = require('jsontoxml')
 	  , qtmrt       = require('./qtmrt')
-	  , Model       = require('./model')
 	  , Packet      = require('./packet')
 	  , Component   = require('./component')
 	  , writeUInt32 = require('./helpers').writeUInt32
 	;
 
 	var Command = {
-		createPacket: function(cmdStr)
-		{
+		createPacket: function(cmdStr) {
 			var buf = new Buffer(qtmrt.HEADER_SIZE + cmdStr.length);
-			
+
 			writeUInt32(buf, buf.length, 0);
 			writeUInt32(buf, qtmrt.COMMAND, qtmrt.UINT32_SIZE);
 			buf.write(cmdStr, qtmrt.HEADER_SIZE, cmdStr.length, 'utf8');
@@ -40,8 +38,7 @@
 		loadProject:     function(projectPath)  { return this.createPacket('LoadProject ' + projectPath); },
 		version:         function(major, minor) { return this.createPacket('Version ' + major + '.' + minor); },
 
-		getParameters: function()
-		{
+		getParameters: function() {
 			var predicate = function(component) {
 					return _.contains(['All', 'General', '3D', '6D', 'Analog', 'Force', 'Image'], component);
 				}
@@ -54,9 +51,8 @@
 			return this.createPacket('GetParameters ' + components.join(' '));
 		},
 
-		setParameters: function(params)
-		{
-			var xml = jsonxml({ 'QTM_Settings': params }) + '\0'
+		setParameters: function(params) {
+			var xml = jsonxml({ 'QTM_Settings': params }) + '\0'
 			  , buf = new Buffer(qtmrt.HEADER_SIZE + xml.length + 1)
 			;
 
@@ -67,8 +63,7 @@
 			return Packet.create(buf);
 		},
 
-		getCurrentFrame: function(component)
-		{
+		getCurrentFrame: function(component) {
 			var predicate = function(component) {
 					return _.contains(_.values(qtmrt.COMPONENTS), component);
 				}
@@ -81,9 +76,7 @@
 			return this.createPacket('GetCurrentFrame ' + components.map(Component.typeToString).join(' '));
 		},
 
-
-		streamFrames: function(options)
-		{
+		streamFrames: function(options) {
 			if (!arguments.length)
 				options = {};
 
@@ -92,17 +85,13 @@
 				components: ['All'],
 			});
 
-			var udp = _.isUndefined(options.udpPort)
-					? ''
-					: ' UDP:' + (_.isUndefined(options.udpAddress) ? '' : options.udpAddress + ':') + options.udpPort
-			  , frequency = ''
-			  , predicate = function(component) {
-					return _.contains(_.union(['All'], Object.keys(qtmrt.COMPONENTS)), component);
-				}
+			var udp        = _.isUndefined(options.udpPort) ? '' : ' UDP:' + (_.isUndefined(options.udpAddress) ? '' : options.udpAddress + ':') + options.udpPort
+			  , frequency  = ''
+			  , predicate  = function(component) { return _.contains(_.union(['All'], Object.keys(qtmrt.COMPONENTS)), component); }
 			  , components = _.filter(options.components, predicate)
 			;
 
-			if (1 > options.frequency)
+			if (options.frequency < 1)
 				frequency = 'FrequencyDivisor:' + (1 / options.frequency);
 			else if (isNaN(options.frequency))
 				frequency = 'AllFrames';
@@ -119,9 +108,7 @@
 			return this.createPacket(cmdStr);
 		},
 
-
-		save: function(filename, overwrite)
-		{
+		save: function(filename, overwrite) {
 			var cmdStr = 'Save ' + filename + (_.isUndefined(overwrite) ? '' : (' ' + overwrite));
 			return this.createPacket(cmdStr);
 		},
