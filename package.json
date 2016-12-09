@@ -19,9 +19,9 @@
     "xml2js": "^0.4.9"
   },
   "devDependencies": {
-    "load-grunt-tasks": "^0.6.0",
-    "grunt": "^0.4.5",
-    "grunt-contrib-jshint": "^0.10.0"
+    "gulp": "^3.9.1",
+    "gulp-eslint": "^3.0.1",
+    "gulp-load-plugins": "^1.4.0"
   },
   "repository": {
     "type": "git",
