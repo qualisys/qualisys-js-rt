@@ -9,8 +9,8 @@
 	  , writeUInt32 = require('./helpers').writeUInt32
 	;
 
-	var Command = {
-		createPacket: function(cmdStr) {
+	class Command {
+		static createPacket(cmdStr) {
 			var buf = new Buffer(qtmrt.HEADER_SIZE + cmdStr.length);
 
 			writeUInt32(buf, buf.length, 0);
@@ -18,28 +18,28 @@
 			buf.write(cmdStr, qtmrt.HEADER_SIZE, cmdStr.length, 'utf8');
 
 			return new Packet(buf);
-		},
+		}
 
-		qtmVersion:      function()             { return this.createPacket('QTMVersion'); },
-		byteOrder:       function()             { return this.createPacket('ByteOrder'); },
-		getState:        function()             { return this.createPacket('GetState'); },
-		releaseControl:  function()             { return this.createPacket('ReleaseControl'); },
-		newMeasurement:  function()             { return this.createPacket('New'); },
-		close:           function()             { return this.createPacket('Close'); },
-		start:           function()             { return this.createPacket('Start'); },
-		stop:            function()             { return this.createPacket('Stop'); },
-		getCaptureC3D:   function()             { return this.createPacket('GetCaptureC3D'); },
-		getCaptureQtm:   function()             { return this.createPacket('GetCaptureQtm'); },
-		trig:            function()             { return this.createPacket('Trig'); },
-		stopStreaming:   function()             { return this.createPacket('StreamFrames Stop'); },
-		setQtmEvent:     function(label)        { return this.createPacket('SetQTMEvent ' + label); },
-		takeControl:     function(pass)         { return this.createPacket('TakeControl ' + (_.isUndefined(pass) ? '' : pass)); },
-		load:            function(filename)     { return this.createPacket('Load ' + filename); },
-		loadProject:     function(projectPath)  { return this.createPacket('LoadProject ' + projectPath); },
-		version:         function(major, minor) { return this.createPacket('Version ' + major + '.' + minor); },
+		static qtmVersion()             { return this.createPacket('QTMVersion'); }
+		static byteOrder()              { return this.createPacket('ByteOrder'); }
+		static getState()               { return this.createPacket('GetState'); }
+		static releaseControl()         { return this.createPacket('ReleaseControl'); }
+		static newMeasurement()         { return this.createPacket('New'); }
+		static close()                  { return this.createPacket('Close'); }
+		static start()                  { return this.createPacket('Start'); }
+		static stop()                   { return this.createPacket('Stop'); }
+		static getCaptureC3D()          { return this.createPacket('GetCaptureC3D'); }
+		static getCaptureQtm()          { return this.createPacket('GetCaptureQtm'); }
+		static trig()                   { return this.createPacket('Trig'); }
+		static stopStreaming()          { return this.createPacket('StreamFrames Stop'); }
+		static setQtmEvent(label)       { return this.createPacket('SetQTMEvent ' + label); }
+		static takeControl(pass)        { return this.createPacket('TakeControl ' + (_.isUndefined(pass) ? '' : pass)); }
+		static load(filename)           { return this.createPacket('Load ' + filename); }
+		static loadProject(projectPath) { return this.createPacket('LoadProject ' + projectPath); }
+		static version(major, minor)    { return this.createPacket('Version ' + major + '.' + minor); }
 
-		getParameters: function() {
-			var predicate = function(component) {
+		static getParameters() {
+			var predicate = (component) => {
 					return _.contains(['All', 'General', '3D', '6D', 'Analog', 'Force', 'Image'], component);
 				}
 			   , components = _.filter(arguments, predicate)
@@ -49,9 +49,9 @@
 				components = ['All'];
 
 			return this.createPacket('GetParameters ' + components.join(' '));
-		},
+		}
 
-		setParameters: function(params) {
+		static setParameters(params) {
 			var xml = jsonxml({ 'QTM_Settings': params }) + '\0'
 			  , buf = new Buffer(qtmrt.HEADER_SIZE + xml.length + 1)
 			;
@@ -61,9 +61,9 @@
 			buf.write(xml, qtmrt.HEADER_SIZE);
 
 			return Packet.create(buf);
-		},
+		}
 
-		getCurrentFrame: function(component) {
+		static getCurrentFrame(component) {
 			var predicate = function(component) {
 					return _.contains(_.values(qtmrt.COMPONENTS), component);
 				}
@@ -74,9 +74,9 @@
 				components = [qtmrt.COMPONENT_ALL];
 
 			return this.createPacket('GetCurrentFrame ' + components.map(Component.typeToString).join(' '));
-		},
+		}
 
-		streamFrames: function(options) {
+		static streamFrames(options) {
 			if (!arguments.length)
 				options = {};
 
@@ -106,15 +106,13 @@
 
 			var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.join(' ');
 			return this.createPacket(cmdStr);
-		},
+		}
 
-		save: function(filename, overwrite) {
+		static save(filename, overwrite) {
 			var cmdStr = 'Save ' + filename + (_.isUndefined(overwrite) ? '' : (' ' + overwrite));
 			return this.createPacket(cmdStr);
-		},
-
-
-	};
+		}
+	}
 
 	module.exports = Command;
 })();
