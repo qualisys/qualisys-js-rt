@@ -3,72 +3,126 @@
 (function() {
 	var qtmrt      = require('./qtmrt')
 	  , readUInt32 = require('./helpers').readUInt32
-	  , Model      = require('./model')
 	  , Muncher    = require('./muncher')
 	;
 
-	var componentTypeToString = function(typeId) {
-		for (var compStr in qtmrt.COMPONENTS) {
-
-			if (Number(typeId) === qtmrt.COMPONENTS[compStr])
-				return compStr;
-		}
-
-		if (typeId === qtmrt.COMPONENT_ALL)
-			return 'All';
-
-		throw new Error('Unknown component: ' + typeId + '.');
-	};
-
-	var componentTypeToPrettyString = function(typeId) {
-		var typeNames = {};
-		typeNames[qtmrt.COMPONENT_2D]                     = '2D';
-		typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2D (linearized)';
-		typeNames[qtmrt.COMPONENT_3D]                     = '3D';
-		typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3D (no labels)';
-		typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3D (with residuals)';
-		typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3D (no labels, with residuals)';
-		typeNames[qtmrt.COMPONENT_6D]                     = '6DOF';
-		typeNames[qtmrt.COMPONENT_6D_EULER]               = '6DOF (with euler angles)';
-		typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DOF (with residuals)';
-		typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DOF (with eauler angles and residuals)';
-		typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
-		typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
-		typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'Analog (single sample)';
-		typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
-		typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'Force (single sample)';
-		typeNames[qtmrt.COMPONENT_GAZE_VECTOR]            = 'Gaze vector';
-		return typeNames[typeId];
-	};
-
-	var componentStringToType = function(compStr) {
-		if (!qtmrt.COMPONENTS[compStr]) throw new Error('Unknown component string');
-		return qtmrt.COMPONENTS[compStr];
-	};
-
-	var Component = Model.extend({
-		init: function(buf) {
+	class Component extends Muncher {
+		constructor(buf) {
 			if (!arguments.length)
 				throw new TypeError('No buffer specified');
 
-			Muncher.init.call(this, buf);
+			super(buf)
+
 			this.size = this.munchUInt32();
 			this.type = this.munchUInt32();
-		},
-	}, Muncher);
+		}
 
-	var Component2d = Model.extend({
-		init: function(buf) {
-			Component.init.call(this, buf);
+		static create(buf) {
+			var type = readUInt32(buf, qtmrt.UINT32_SIZE);
+
+			switch (type) {
+				case qtmrt.COMPONENT_2D:
+				case qtmrt.COMPONENT_2D_LINEARIZED:
+					return new Component2d(buf);
+
+				case qtmrt.COMPONENT_3D:
+					return new Component3d(buf);
+
+				case qtmrt.COMPONENT_3D_NO_LABELS:
+					return new Component3dNoLabels(buf);
+
+				case qtmrt.COMPONENT_3D_RESIDUALS:
+					return new Component3dResiduals(buf);
+
+				case qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS:
+					return new Component3dNoLabelsResiduals(buf);
+
+				case qtmrt.COMPONENT_6D:
+					return new Component6d(buf);
+
+				case qtmrt.COMPONENT_6D_EULER:
+					return new Component6dEuler(buf);
+
+				case qtmrt.COMPONENT_6D_RESIDUALS:
+					return new Component6dResiduals(buf);
+
+				case qtmrt.COMPONENT_6D_EULER_RESIDUALS:
+					return new Component6dEulerResiduals(buf);
+
+				case qtmrt.COMPONENT_ANALOG:
+					return new ComponentAnalog(buf);
+
+				case qtmrt.COMPONENT_ANALOG_SINGLE:
+					return new ComponentAnalogSingle(buf);
+
+				case qtmrt.COMPONENT_FORCE:
+					return new ComponentForce(buf);
+
+				case qtmrt.COMPONENT_FORCE_SINGLE:
+					return new ComponentForceSingle(buf);
+
+				case qtmrt.COMPONENT_IMAGE:
+					return new ComponentImage(buf);
+
+				case qtmrt.COMPONENT_GAZE_VECTOR:
+					return new ComponentGazeVector(buf);
+			}
+		}
+
+		static typeToString(typeId) {
+			for (var compStr in qtmrt.COMPONENTS) {
+				if (Number(typeId) === qtmrt.COMPONENTS[compStr])
+					return compStr;
+			}
+
+			if (typeId === qtmrt.COMPONENT_ALL)
+				return 'All';
+
+			throw new Error('Unknown component: ' + typeId + '.');
+		}
+
+		static stringToType(compStr) {
+			if (!qtmrt.COMPONENTS[compStr]) throw new Error('Unknown component string');
+			return qtmrt.COMPONENTS[compStr];
+		}
+
+		static typeToPrettyString(typeId) {
+			var typeNames = {};
+
+			typeNames[qtmrt.COMPONENT_2D]                     = '2D';
+			typeNames[qtmrt.COMPONENT_2D_LINEARIZED]          = '2D (linearized)';
+			typeNames[qtmrt.COMPONENT_3D]                     = '3D';
+			typeNames[qtmrt.COMPONENT_3D_NO_LABELS]           = '3D (no labels)';
+			typeNames[qtmrt.COMPONENT_3D_RESIDUALS]           = '3D (with residuals)';
+			typeNames[qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS] = '3D (no labels, with residuals)';
+			typeNames[qtmrt.COMPONENT_6D]                     = '6DOF';
+			typeNames[qtmrt.COMPONENT_6D_EULER]               = '6DOF (with euler angles)';
+			typeNames[qtmrt.COMPONENT_6D_RESIDUALS]           = '6DOF (with residuals)';
+			typeNames[qtmrt.COMPONENT_6D_EULER_RESIDUALS]     = '6DOF (with eauler angles and residuals)';
+			typeNames[qtmrt.COMPONENT_IMAGE]                  = 'Image';
+			typeNames[qtmrt.COMPONENT_ANALOG]                 = 'Analog';
+			typeNames[qtmrt.COMPONENT_ANALOG_SINGLE]          = 'Analog (single sample)';
+			typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
+			typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'Force (single sample)';
+			typeNames[qtmrt.COMPONENT_GAZE_VECTOR]            = 'Gaze vector';
+
+			return typeNames[typeId];
+		}
+	}
+
+	class Component2d extends Component {
+		constructor(buf) {
+			super(buf);
+
 			this.cameraCount     = this.munchUInt32();
 			this.dropRate2d      = this.munchUInt16();
 			this.outOfSyncRate2d = this.munchUInt16();
 			this.cameras         = [];
 
 			this.parseCameras();
-		},
+		}
 
-		parseCameras: function() {
+		parseCameras() {
 			for (var i = 0; i < this.cameraCount; i++) {
 				var camera = {
 					markerCount: this.munchUInt32(),
@@ -86,30 +140,31 @@
 				}
 				this.cameras.push(camera);
 			}
-		},
+		}
 
-		toJson: function() {
+		toJson() {
 			return {
 				cameraCount: this.cameraCount,
 				dropRate2d: this.dropRate2d,
 				outOfSyncRate2d: this.outOfSyncRate2d,
 				cameras: this.cameras,
 			};
-		},
-	}, Component);
+		}
+	}
 
-	var Component3d = Model.extend({
-		init: function(buf) {
-			Component.init.call(this, buf);
+	class Component3d extends Component {
+		constructor(buf) {
+			super(buf);
+
 			this.markerCount     = this.munchUInt32();
 			this.dropRate2d      = this.munchUInt16();
 			this.outOfSyncRate2d = this.munchUInt16();
 			this.markers         = [];
 
 			this.parseMarkers();
-		},
+		}
 
-		parseMarkers: function() {
+		parseMarkers() {
 			for (var i = 0; i < this.markerCount; i++) {
 				this.markers.push({
 					x: this.munchFloat(),
@@ -117,20 +172,20 @@
 					z: this.munchFloat(),
 				});
 			}
-		},
+		}
 
-		toJson: function() {
+		toJson() {
 			return {
 				markerCount: this.markerCount,
 				dropRate2d: this.dropRate2d,
 				outOfSyncRate2d: this.outOfSyncRate2d,
 				markers: this.markers,
 			};
-		},
-	}, Component);
+		}
+	}
 
-	var Component3dNoLabels = Model.extend({
-		parseMarkers: function() {
+	class Component3dNoLabels extends Component {
+		parseMarkers() {
 			for (var i = 0; i < this.markerCount; i++) {
 				this.markers.push({
 					x:  this.munchFloat(),
@@ -139,11 +194,11 @@
 					id:  this.munchUInt32(),
 				});
 			}
-		},
-	}, Component3d);
+		}
+	}
 
-	var Component3dResiduals = Model.extend({
-		parseMarkers: function() {
+	class Component3dResiduals extends Component {
+		parseMarkers() {
 			for (var i = 0; i < this.markerCount; i++) {
 				this.markers.push({
 					x:  this.munchFloat(),
@@ -153,10 +208,10 @@
 				});
 			}
 		}
-	}, Component3d);
+	}
 
-	var Component3dNoLabelsResiduals = Model.extend({
-		parseMarkers: function() {
+	class Component3dNoLabelsResiduals extends Component {
+		parseMarkers() {
 			for (var i = 0; i < this.markerCount; i++) {
 				this.markers.push({
 					x:  this.munchFloat(),
@@ -167,20 +222,21 @@
 				});
 			}
 		}
-	}, Component3d);
+	}
 
-	var Component6d = Model.extend({
-		init: function(buf) {
-			Component.init.call(this, buf);
+	class Component6d extends Component {
+		constructor(buf) {
+			super(buf);
+
 			this.rigidBodyCount  = this.munchUInt32();
 			this.dropRate2d      = this.munchUInt16();
 			this.outOfSyncRate2d = this.munchUInt16();
 			this.rigidBodies     = [];
 
 			this.parseRigidBodies();
-		},
+		}
 
-		parseRigidBodies: function() {
+		parseRigidBodies() {
 			for (var i = 0; i < this.rigidBodyCount; i++) {
 				var rigidBody = {
 					x:        this.munchFloat(),
@@ -194,21 +250,20 @@
 
 				this.rigidBodies.push(rigidBody);
 			}
-		},
+		}
 
-		toJson: function() {
+		toJson() {
 			return {
 				rigidBodyCount: this.rigidBodyCount,
 				dropRate2d: this.dropRate2d,
 				outOfSyncRate2d: this.outOfSyncRate2d,
 				rigidBodies: this.rigidBodies,
 			};
-		},
+		}
+	}
 
-	}, Component);
-
-	var Component6dResiduals = Model.extend({
-		parseRigidBodies: function() {
+	class Component6dResiduals extends Component6d {
+		parseRigidBodies() {
 			for (var i = 0; i < this.rigidBodyCount; i++) {
 				var rigidBody = {
 					x:        this.munchFloat(),
@@ -226,10 +281,10 @@
 				this.rigidBodies.push(rigidBody);
 			}
 		}
-	}, Component6d);
+	}
 
-	var Component6dEuler = Model.extend({
-		parseRigidBodies: function() {
+	class Component6dEuler extends Component6d {
+		parseRigidBodies() {
 			for (var i = 0; i < this.rigidBodyCount; i++) {
 				this.rigidBodies.push({
 					x:        this.munchFloat(),
@@ -241,10 +296,10 @@
 				});
 			}
 		}
-	}, Component6d);
+	}
 
-	var Component6dEulerResiduals = Model.extend({
-		parseRigidBodies: function() {
+	class Component6dEulerResiduals extends Component6d {
+		parseRigidBodies() {
 			for (var i = 0; i < this.rigidBodyCount; i++) {
 				this.rigidBodies.push({
 					x:          this.munchFloat(),
@@ -257,19 +312,19 @@
 				});
 			}
 		}
+	}
 
-	}, Component6d);
+	class ComponentAnalog extends Component {
+		constructor(buf) {
+			super(buf);
 
-	var ComponentAnalog = Model.extend({
-		init: function(buf) {
-			Component.init.call(this, buf);
 			this.deviceCount = this.munchUInt32();
 			this.devices     = [];
 
 			this.parseDevices();
-		},
+		}
 
-		parseDevices: function() {
+		parseDevices() {
 			for (var i = 0; i < this.deviceCount; i++) {
 				var device = {
 					id:            this.munchUInt32(),
@@ -285,20 +340,21 @@
 						channel.push(this.munchFloat());
 					device.data.push(channel);
 				}
+
 				this.devices.push(device);
 			}
-		},
+		}
 
-		toJson: function() {
+		toJson() {
 			return {
 				deviceCount: this.deviceCount,
 				devices: this.devices,
 			};
-		},
-	}, Component);
+		}
+	}
 
-	var ComponentAnalogSingle = Model.extend({
-		parseDevices: function() {
+	class ComponentAnalogSingle extends ComponentAnalog {
+		parseDevices() {
 			for (var i = 0; i < this.deviceCount; i++) {
 				var device = {
 					id:            this.munchUInt32(),
@@ -313,11 +369,11 @@
 			}
 		}
 
-	}, ComponentAnalog);
+	}
 
-	var ComponentForce = Model.extend({
-		init: function(buf) {
-			Component.init.call(this, buf);
+	class ComponentForce extends Component {
+		constructor(buf) {
+			super(buf);
 
 			// XXX: Not quite sure about this, but sometimes QTM sends empty
 			// force components.
@@ -329,9 +385,9 @@
 			this.plates = [];
 
 			this.parsePlates();
-		},
+		}
 
-		parsePlates: function() {
+		parsePlates() {
 			for (var i = 0; i < this.plateCount; i++) {
 				var plate = {
 					id:           this.munchUInt32(),
@@ -355,23 +411,22 @@
 
 				this.plates.push(plate);
 			}
-		},
+		}
 
-		toJson: function() {
+		toJson() {
 			return {
 				plateCount: this.plateCount,
 				plates: this.plates,
 			};
-		},
+		}
+	}
 
-	}, Component);
-
-	var ComponentForceSingle = Model.extend({
-		parsePlates: function() {
+	class ComponentForceSingle extends ComponentForce {
+		parsePlates() {
 			for (var i = 0; i < this.plateCount; i++) {
 				var plate = {
-					id:    this.munchUInt32(),
-					data:  [{
+					id:   this.munchUInt32(),
+					data: [{
 						forceX: this.munchFloat(),
 						forceY: this.munchFloat(),
 						forceZ: this.munchFloat(),
@@ -387,18 +442,19 @@
 				this.plates.push(plate);
 			}
 		}
-	}, ComponentForce);
+	}
 
-	var ComponentImage = Model.extend({
-		init: function(buf) {
-			Component.init.call(this, buf);
+	class ComponentImage extends Component {
+		constructor(buf) {
+			super(buf);
+
 			this.cameraCount = this.munchUInt32();
 			this.cameras     = [];
 
 			this.parseCameras();
-		},
+		}
 
-		parseCameras: function() {
+		parseCameras() {
 			for (var i = 0; i < this.cameraCount; i++) {
 				var camera = {
 					id:           this.munchUInt32(),
@@ -417,27 +473,27 @@
 
 				this.cameras.push(camera);
 			}
-		},
+		}
 
-		toJson: function() {
+		toJson() {
 			return {
 				cameraCount: this.cameraCount,
 				cameras: this.plates,
 			};
-		},
+		}
+	}
 
-	}, Component);
+	class ComponentGazeVector extends Component {
+		constructor(buf) {
+			super(buf);
 
-	var ComponentGazeVector = Model.extend({
-		init: function(buf) {
-			Component.init.call(this, buf);
 			this.gazeVectorCount = this.munchUInt32();
 			this.gazeVectors     = [];
 
 			this.parseGazeVectors();
-		},
+		}
 
-		parseGazeVectors: function() {
+		parseGazeVectors() {
 			for (var i = 0; i < this.gazeVectorCount; i++) {
 				var gazeVector   = {
 					sampleCount: this.munchUInt32(),
@@ -459,70 +515,14 @@
 
 				this.gazeVectors.push(gazeVector);
 			}
-		},
+		}
 
-		toJson: function() {
+		toJson() {
 			return {
 				gazeVectors: this.gazeVectors
 			};
-		},
-	}, Component);
-
-	Component.create = function(buf) {
-		var type = readUInt32(buf, qtmrt.UINT32_SIZE);
-
-		switch (type) {
-			case qtmrt.COMPONENT_2D:
-			case qtmrt.COMPONENT_2D_LINEARIZED:
-				return new Component2d(buf);
-
-			case qtmrt.COMPONENT_3D:
-				return new Component3d(buf);
-
-			case qtmrt.COMPONENT_3D_NO_LABELS:
-				return new Component3dNoLabels(buf);
-
-			case qtmrt.COMPONENT_3D_RESIDUALS:
-				return new Component3dResiduals(buf);
-
-			case qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS:
-				return new Component3dNoLabelsResiduals(buf);
-
-			case qtmrt.COMPONENT_6D:
-				return new Component6d(buf);
-
-			case qtmrt.COMPONENT_6D_EULER:
-				return new Component6dEuler(buf);
-
-			case qtmrt.COMPONENT_6D_RESIDUALS:
-				return new Component6dResiduals(buf);
-
-			case qtmrt.COMPONENT_6D_EULER_RESIDUALS:
-				return new Component6dEulerResiduals(buf);
-
-			case qtmrt.COMPONENT_ANALOG:
-				return new ComponentAnalog(buf);
-
-			case qtmrt.COMPONENT_ANALOG_SINGLE:
-				return new ComponentAnalogSingle(buf);
-
-			case qtmrt.COMPONENT_FORCE:
-				return new ComponentForce(buf);
-
-			case qtmrt.COMPONENT_FORCE_SINGLE:
-				return new ComponentForceSingle(buf);
-
-			case qtmrt.COMPONENT_IMAGE:
-				return new ComponentImage(buf);
-
-			case qtmrt.COMPONENT_GAZE_VECTOR:
-				return new ComponentGazeVector(buf);
 		}
-	};
-
-	Component.typeToString       = componentTypeToString;
-	Component.typeToPrettyString = componentTypeToPrettyString;
-	Component.stringToType       = componentStringToType;
+	}
 
 	module.exports = Component;
 })();

@@ -7,52 +7,76 @@
 	  , qtmrt        = require('./qtmrt')
 	  , readUInt32   = require('./helpers').readUInt32
 	  , toCamelCase  = require('./helpers').toCamelCase
-	  , Model        = require('./model')
 	  , Muncher      = require('./muncher')
 	  , Component    = require('./component')
 	;
 
-	var packetTypeToString = function(typeId) {
-		var typeNames = {};
 
-		typeNames[qtmrt.ERROR]            = 'Error';
-		typeNames[qtmrt.COMMAND]          = 'Command';
-		typeNames[qtmrt.XML]              = 'XML';
-		typeNames[qtmrt.DATA]             = 'Data';
-		typeNames[qtmrt.NO_MORE_DATA]     = 'No More Data';
-		typeNames[qtmrt.C3D_FILE]         = 'C3D file';
-		typeNames[qtmrt.EVENT]            = 'Event';
-		typeNames[qtmrt.DISCOVER]         = 'Discover';
-		typeNames[qtmrt.QTM_FILE]         = 'QTM file';
-		typeNames[qtmrt.COMMAND_RESPONSE] = 'Command Response';
-
-		return typeNames[typeId];
-	};
-
-	var Packet = Model.extend({
-		init: function(buf) {
+	class Packet extends Muncher {
+		constructor(buf) {
 			if (!arguments.length)
 				throw new TypeError('No buffer specified');
 
-			Muncher.init.call(this, buf);
+			super(buf);
 
 			this.size       = this.munchUInt32();
 			this.type       = this.munchUInt32();
-			this.typeName   = packetTypeToString(this.type);
+			this.typeName   = Packet.typeToString(this.type);
 			this.data       = buf.slice(this.munched).toString('utf8');
 			this.isResponse = true;
-		},
-	}, Muncher);
+		}
 
-	var NoMoreDataPacket = Model.extend({ }, Packet)
-	  , C3dFilePacket    = Model.extend({ }, Packet)
-	  , QtmFilePacket    = Model.extend({ }, Packet)
-	  , ErrorPacket      = Model.extend({ }, Packet)
-	  , CommandPacket    = Model.extend({ }, Packet)
-	;
+		static create(buf, srcAddress, srcPort) {
+			var type   = readUInt32(buf, qtmrt.UINT32_SIZE)
+			  , packet = null
+			;
 
-	var XmlPacket = Model.extend({
-		toJson: function() {
+			switch (type) {
+				case qtmrt.ERROR:         packet = new ErrorPacket(buf); break;
+				case qtmrt.COMMAND:       packet = new CommandPacket(buf); break;
+				case qtmrt.XML:           packet = new XmlPacket(buf); break;
+				case qtmrt.DATA:          packet = new DataPacket(buf); break;
+				case qtmrt.NO_MORE_DATA:  packet = new NoMoreDataPacket(buf); break;
+				case qtmrt.C3D_FILE:      packet = new C3dFilePacket(buf); break;
+				case qtmrt.EVENT:         packet = new EventPacket(buf); break;
+				case qtmrt.DISCOVER:      packet = new DiscoverPacket(buf); break;
+				case qtmrt.QTM_FILE:      packet = new QtmFilePacket(buf); break;
+			}
+
+			if (arguments.length > 1) {
+				packet.srcAddress = srcAddress;
+				packet.srcPort    = srcPort;
+			}
+
+			return packet;
+		};
+
+		static typeToString(typeId) {
+			var typeNames = {};
+
+			typeNames[qtmrt.ERROR]            = 'Error';
+			typeNames[qtmrt.COMMAND]          = 'Command';
+			typeNames[qtmrt.XML]              = 'XML';
+			typeNames[qtmrt.DATA]             = 'Data';
+			typeNames[qtmrt.NO_MORE_DATA]     = 'No More Data';
+			typeNames[qtmrt.C3D_FILE]         = 'C3D file';
+			typeNames[qtmrt.EVENT]            = 'Event';
+			typeNames[qtmrt.DISCOVER]         = 'Discover';
+			typeNames[qtmrt.QTM_FILE]         = 'QTM file';
+			typeNames[qtmrt.COMMAND_RESPONSE] = 'Command Response';
+
+			return typeNames[typeId];
+		}
+	}
+
+	class NoMoreDataPacket extends Packet {}
+	class C3dFilePacket    extends Packet {}
+	class QtmFilePacket    extends Packet {}
+	class ErrorPacket      extends Packet {}
+	class CommandPacket    extends Packet {}
+
+	class XmlPacket extends Packet {
+		toJson() {
 			var camelCased   = toCamelCase(this.data)
 			  , jsonData     = null
 			;
@@ -102,11 +126,11 @@
 
 			return jsonData;
 		}
-	}, Packet);
+	}
 
-	var DataPacket = Model.extend({
-		init: function(buf) {
-			Packet.init.call(this, buf);
+	class DataPacket extends Packet {
+		constructor(buf) {
+			super(buf);
 
 			this.timestamp      = this.munchUInt64();
 			this.frameNumber    = this.munchUInt32();
@@ -123,16 +147,16 @@
 
 				this.components[component.type] = component;
 			}
-		},
+		}
 
-		component: function(componentString) {
+		component(componentString) {
 			if (!_.contains(Object.keys(qtmrt.COMPONENTS), componentString))
 				throw new TypeError('Unexpected component');
 
 			return this.components[Component.stringToType(componentString)];
-		},
+		}
 
-		toJson: function() {
+		toJson() {
 			var json = {
 				frame: this.frameNumber,
 				timestamp: this.timestamp,
@@ -145,55 +169,30 @@
 
 			return json;
 		}
-	}, Packet);
+	}
 
-	var EventPacket = Model.extend({
-		init: function(buf) {
-			Packet.init.call(this, buf);
+	class EventPacket extends Packet {
+		constructor(buf) {
+			super(buf);
+
 			this.data      = this.munchUInt8();
 			this.eventId   = this.data;
 			this.eventName = qtmrt.eventToString(this.eventId);
-		},
+		}
 
-		toJson: function() {
+		toJson() {
 			return { name: this.eventName, id: this.eventId };
-		},
-	}, Packet);
+		}
+	}
 
-	var DiscoverPacket = Model.extend({
-		init: function(buf) {
-			Packet.init.call(this, buf);
+	class DiscoverPacket extends Packet {
+		constructor(buf) {
+			super(buf);
+
 			this.serverInfo     = this.munch(this.size - this.munched - qtmrt.UINT16_SIZE).toString('utf8');
 			this.serverBasePort = this.munchUInt16();
 		}
-	}, Packet);
-
-	Packet.create = function(buf, srcAddress, srcPort) {
-		var type   = readUInt32(buf, qtmrt.UINT32_SIZE)
-		  , packet = null
-		;
-
-		switch (type) {
-			case qtmrt.ERROR:         packet = new ErrorPacket(buf); break;
-			case qtmrt.COMMAND:       packet = new CommandPacket(buf); break;
-			case qtmrt.XML:           packet = new XmlPacket(buf); break;
-			case qtmrt.DATA:          packet = new DataPacket(buf); break;
-			case qtmrt.NO_MORE_DATA:  packet = new NoMoreDataPacket(buf); break;
-			case qtmrt.C3D_FILE:      packet = new C3dFilePacket(buf); break;
-			case qtmrt.EVENT:         packet = new EventPacket(buf); break;
-			case qtmrt.DISCOVER:      packet = new DiscoverPacket(buf); break;
-			case qtmrt.QTM_FILE:      packet = new QtmFilePacket(buf); break;
-		}
-
-		if (arguments.length > 1) {
-			packet.srcAddress = srcAddress;
-			packet.srcPort    = srcPort;
-		}
-
-		return packet;
-	};
-
-	Packet.typeToString = packetTypeToString;
+	}
 
 	module.exports = Packet;
 })();
