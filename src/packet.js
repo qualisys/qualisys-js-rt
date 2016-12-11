@@ -5,12 +5,11 @@
 	  , parseString  = require('xml2js').parseString
 	  , parseNumbers = require('xml2js').processors.parseNumbers
 	  , qtmrt        = require('./qtmrt')
-	  , readUInt32   = require('./helpers').readUInt32
 	  , toCamelCase  = require('./helpers').toCamelCase
+	  , readUInt32   = require('./buffer-io').readUInt32
 	  , Muncher      = require('./muncher')
 	  , Component    = require('./component')
 	;
-
 
 	class Packet extends Muncher {
 		constructor(buf) {

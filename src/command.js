@@ -6,7 +6,7 @@
 	  , qtmrt       = require('./qtmrt')
 	  , Packet      = require('./packet')
 	  , Component   = require('./component')
-	  , writeUInt32 = require('./helpers').writeUInt32
+	  , writeUInt32 = require('./buffer-io').writeUInt32
 	;
 
 	class Command {

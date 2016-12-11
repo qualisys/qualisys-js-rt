@@ -2,8 +2,8 @@
 
 (function() {
 	var qtmrt      = require('./qtmrt')
-	  , readUInt32 = require('./helpers').readUInt32
 	  , Muncher    = require('./muncher')
+	  , readUInt32 = require('./buffer-io').readUInt32
 	;
 
 	class Component extends Muncher {

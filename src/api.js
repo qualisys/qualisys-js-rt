@@ -6,7 +6,7 @@
 	  , _           = require('underscore')
 	  , events      = require('events')
 	  , qtmrt       = require('./qtmrt')
-	  , writeUInt32 = require('./helpers').writeUInt32
+	  , writeUInt32 = require('./buffer-io').writeUInt32
 	  , mixin       = require('./helpers').mixin
 	  , Mangler     = require('./mangler')
 	  , Packet      = require('./packet')
