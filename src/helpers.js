@@ -21,11 +21,11 @@
 			? buffer.readUInt16LE(offset) : buffer.readUInt16BE(offset);
 	};
 
-	var readUInt32 = function(buffer, offset, bytesRead) {
+	var readUInt32 = function(buffer, offset, bytesRead, byteOrder) {
 		if (!_.isUndefined(bytesRead))
 			bytesRead.count += qtmrt.UINT32_SIZE;
 
-		return qtmrt.byteOrder === qtmrt.LITTLE_ENDIAN
+		return (arguments.length < 4 || byteOrder === qtmrt.LITTLE_ENDIAN)
 			? buffer.readUInt32LE(offset) : buffer.readUInt32BE(offset);
 	};
 
