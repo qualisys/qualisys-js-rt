@@ -1,7 +1,7 @@
 'use strict';
 
 (function() {
-	var _           = require('underscore')
+	var _           = require('lodash')
 	  , jsonxml     = require('jsontoxml')
 	  , qtmrt       = require('./qtmrt')
 	  , Packet      = require('./packet')
@@ -40,12 +40,12 @@
 
 		static getParameters() {
 			var predicate = (component) => {
-					return _.contains(['All', 'General', '3D', '6D', 'Analog', 'Force', 'Image'], component);
+					return _.includes(['All', 'General', '3D', '6D', 'Analog', 'Force', 'Image'], component);
 				}
 			   , components = _.filter(arguments, predicate)
 			;
 
-			if (_.contains(components, 'All'))
+			if (_.includes(components, 'All'))
 				components = ['All'];
 
 			return this.createPacket('GetParameters ' + components.join(' '));
@@ -65,12 +65,12 @@
 
 		static getCurrentFrame(component) {
 			var predicate = function(component) {
-					return _.contains(_.values(qtmrt.COMPONENTS), component);
+					return _.includes(_.values(qtmrt.COMPONENTS), component);
 				}
 			   , components = _.filter(arguments, predicate)
 			;
 
-			if (_.contains(arguments, qtmrt.COMPONENT_ALL))
+			if (_.includes(arguments, qtmrt.COMPONENT_ALL))
 				components = [qtmrt.COMPONENT_ALL];
 
 			return this.createPacket('GetCurrentFrame ' + components.map(Component.typeToString).join(' '));
@@ -87,7 +87,7 @@
 
 			var udp        = _.isUndefined(options.udpPort) ? '' : ' UDP:' + (_.isUndefined(options.udpAddress) ? '' : options.udpAddress + ':') + options.udpPort
 			  , frequency  = ''
-			  , predicate  = function(component) { return _.contains(_.union(['All'], Object.keys(qtmrt.COMPONENTS)), component); }
+			  , predicate  = function(component) { return _.includes(_.union(['All'], Object.keys(qtmrt.COMPONENTS)), component); }
 			  , components = _.filter(options.components, predicate)
 			;
 
@@ -101,7 +101,7 @@
 			if (_.isEmpty(components))
 				throw new TypeError('No valid components specified');
 
-			if (_.contains(components, 'All'))
+			if (_.includes(components, 'All'))
 				components = ['All'];
 
 			var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.join(' ');

@@ -3,7 +3,7 @@
 (function() {
 	var dgram       = require('dgram')
 	  , Q           = require('q')
-	  , _           = require('underscore')
+	  , _           = require('lodash')
 	  , events      = require('events')
 	  , qtmrt       = require('./qtmrt')
 	  , writeUInt32 = require('./buffer-io').writeUInt32

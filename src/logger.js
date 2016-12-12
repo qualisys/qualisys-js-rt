@@ -1,7 +1,7 @@
 'use strict';
 
 (function() {
-	var _         = require('underscore')
+	var _         = require('lodash')
 	  , moment    = require('moment')
 	  , sprintf   = require('sprintf')
 	  , qtmrt     = require('./qtmrt')

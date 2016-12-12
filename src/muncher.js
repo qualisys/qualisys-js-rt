@@ -1,8 +1,7 @@
 'use strict';
 
 (function() {
-	var _          = require('underscore')
-	  , readUInt8  = require('./buffer-io').readUInt8
+	var readUInt8  = require('./buffer-io').readUInt8
 	  , readUInt16 = require('./buffer-io').readUInt16
 	  , readUInt32 = require('./buffer-io').readUInt32
 	  , readUInt64 = require('./buffer-io').readUInt64

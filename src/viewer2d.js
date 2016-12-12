@@ -1,5 +1,5 @@
 var Q         = require('Q')
-  , _         = require('underscore')
+  , _         = require('lodash')
   , isNumeric = require('isnumeric')
 ;
 

@@ -1,7 +1,7 @@
 'use strict';
 
 (function() {
-	var _            = require('underscore')
+	var _            = require('lodash')
 	  , parseString  = require('xml2js').parseString
 	  , parseNumbers = require('xml2js').processors.parseNumbers
 	  , qtmrt        = require('./qtmrt')
@@ -149,7 +149,7 @@
 		}
 
 		component(componentString) {
-			if (!_.contains(Object.keys(qtmrt.COMPONENTS), componentString))
+			if (!_.includes(Object.keys(qtmrt.COMPONENTS), componentString))
 				throw new TypeError('Unexpected component');
 
 			return this.components[Component.stringToType(componentString)];
