@@ -7,17 +7,21 @@
 	  , Packet      = require('./packet')
 	  , Component   = require('./component')
 	  , writeUInt32 = require('./buffer-io').writeUInt32
+	  , byteOrder   = qtmrt.LITTLE_ENDIAN
 	;
 
 	class Command {
+		static get _byteOrder() { return byteOrder; }
+		static set _byteOrder(value) { byteOrder = value; }
+
 		static createPacket(cmdStr) {
 			var buf = new Buffer(qtmrt.HEADER_SIZE + cmdStr.length);
 
-			writeUInt32(buf, buf.length, 0);
-			writeUInt32(buf, qtmrt.COMMAND, qtmrt.UINT32_SIZE);
+			writeUInt32(buf, buf.length, 0, Command._byteOrder);
+			writeUInt32(buf, qtmrt.COMMAND, qtmrt.UINT32_SIZE, Command._byteOrder);
 			buf.write(cmdStr, qtmrt.HEADER_SIZE, cmdStr.length, 'utf8');
 
-			return new Packet(buf);
+			return new Packet(buf, Command._byteOrder);
 		}
 
 		static qtmVersion()             { return this.createPacket('QTMVersion'); }
@@ -51,7 +55,7 @@
 			return this.createPacket('GetParameters ' + components.join(' '));
 		}
 
-		static setParameters(params) {
+		static setParameters(params, byteOrder) {
 			var xml = jsonxml({ 'QTM_Settings': params }) + '\0'
 			  , buf = new Buffer(qtmrt.HEADER_SIZE + xml.length + 1)
 			;
@@ -60,7 +64,7 @@
 			writeUInt32(buf, qtmrt.XML, qtmrt.UINT32_SIZE);
 			buf.write(xml, qtmrt.HEADER_SIZE);
 
-			return Packet.create(buf);
+			return Packet.create(buf, byteOrder);
 		}
 
 		static getCurrentFrame(component) {

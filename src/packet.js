@@ -12,11 +12,11 @@
 	;
 
 	class Packet extends Muncher {
-		constructor(buf) {
+		constructor(buf, byteOrder) {
 			if (!arguments.length)
 				throw new TypeError('No buffer specified');
 
-			super(buf);
+			super(buf, byteOrder);
 
 			this.size       = this.munchUInt32();
 			this.type       = this.munchUInt32();
@@ -25,24 +25,24 @@
 			this.isResponse = true;
 		}
 
-		static create(buf, srcAddress, srcPort) {
-			var type   = readUInt32(buf, qtmrt.UINT32_SIZE)
+		static create(buf, byteOrder, srcAddress, srcPort) {
+			var type   = readUInt32(buf, qtmrt.UINT32_SIZE, null, byteOrder)
 			  , packet = null
 			;
 
 			switch (type) {
-				case qtmrt.ERROR:         packet = new ErrorPacket(buf); break;
-				case qtmrt.COMMAND:       packet = new CommandPacket(buf); break;
-				case qtmrt.XML:           packet = new XmlPacket(buf); break;
-				case qtmrt.DATA:          packet = new DataPacket(buf); break;
-				case qtmrt.NO_MORE_DATA:  packet = new NoMoreDataPacket(buf); break;
-				case qtmrt.C3D_FILE:      packet = new C3dFilePacket(buf); break;
-				case qtmrt.EVENT:         packet = new EventPacket(buf); break;
-				case qtmrt.DISCOVER:      packet = new DiscoverPacket(buf); break;
-				case qtmrt.QTM_FILE:      packet = new QtmFilePacket(buf); break;
+				case qtmrt.ERROR:         packet = new ErrorPacket(buf, byteOrder); break;
+				case qtmrt.COMMAND:       packet = new CommandPacket(buf, byteOrder); break;
+				case qtmrt.XML:           packet = new XmlPacket(buf, byteOrder); break;
+				case qtmrt.DATA:          packet = new DataPacket(buf, byteOrder); break;
+				case qtmrt.NO_MORE_DATA:  packet = new NoMoreDataPacket(buf, byteOrder); break;
+				case qtmrt.C3D_FILE:      packet = new C3dFilePacket(buf, byteOrder); break;
+				case qtmrt.EVENT:         packet = new EventPacket(buf, byteOrder); break;
+				case qtmrt.DISCOVER:      packet = new DiscoverPacket(buf, byteOrder); break;
+				case qtmrt.QTM_FILE:      packet = new QtmFilePacket(buf, byteOrder); break;
 			}
 
-			if (arguments.length > 1) {
+			if (arguments.length > 2) {
 				packet.srcAddress = srcAddress;
 				packet.srcPort    = srcPort;
 			}
@@ -128,8 +128,8 @@
 	}
 
 	class DataPacket extends Packet {
-		constructor(buf) {
-			super(buf);
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
 
 			this.timestamp      = this.munchUInt64();
 			this.frameNumber    = this.munchUInt32();
@@ -139,9 +139,10 @@
 			var offset = this.munched;
 
 			for (var i = 0; i < this.componentCount; i++) {
-				var size      = readUInt32(buf, offset)
-				  , component = Component.create(buf.slice(offset, offset + size))
+				var size      = readUInt32(buf, offset, null, byteOrder)
+				  , component = Component.create(buf.slice(offset, offset + size), byteOrder)
 				;
+
 				offset += size;
 
 				this.components[component.type] = component;
@@ -171,8 +172,8 @@
 	}
 
 	class EventPacket extends Packet {
-		constructor(buf) {
-			super(buf);
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
 
 			this.data      = this.munchUInt8();
 			this.eventId   = this.data;
@@ -185,9 +186,11 @@
 	}
 
 	class DiscoverPacket extends Packet {
-		constructor(buf) {
-			super(buf);
+		constructor(buf, byteOrder) {
+			// Size and type of discover packets are always sent with little endian byte order.
+			super(buf, qtmrt.LITTLE_ENDIAN);
 
+			this.byteOrder      = byteOrder;
 			this.serverInfo     = this.munch(this.size - this.munched - qtmrt.UINT16_SIZE).toString('utf8');
 			this.serverBasePort = this.munchUInt16();
 		}

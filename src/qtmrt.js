@@ -50,11 +50,10 @@ class QtmRt {
 	static get COMPONENT_FORCE_SINGLE()           { return 15; }
 	static get COMPONENT_GAZE_VECTOR()            { return 16; }
 
-	static get LITTLE_ENDIAN() { return 0; }
-	static get BIG_ENDIAN() { return 1; }
+	static get LITTLE_ENDIAN() { return 'LE'; }
+	static get BIG_ENDIAN() { return 'BE'; }
 
 	static get HEADER_SIZE() { return 2 * this.UINT32_SIZE }
-	static get byteOrder() { return this.LITTLE_ENDIAN }
 
 	static get COMPONENTS() {
 		return {

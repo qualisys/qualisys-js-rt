@@ -7,65 +7,65 @@
 	;
 
 	class Component extends Muncher {
-		constructor(buf) {
+		constructor(buf, byteOrder) {
 			if (!arguments.length)
 				throw new TypeError('No buffer specified');
 
-			super(buf)
+			super(buf, byteOrder)
 
 			this.size = this.munchUInt32();
 			this.type = this.munchUInt32();
 		}
 
-		static create(buf) {
-			var type = readUInt32(buf, qtmrt.UINT32_SIZE);
+		static create(buf, byteOrder) {
+			var type = readUInt32(buf, qtmrt.UINT32_SIZE, null, byteOrder);
 
 			switch (type) {
 				case qtmrt.COMPONENT_2D:
 				case qtmrt.COMPONENT_2D_LINEARIZED:
-					return new Component2d(buf);
+					return new Component2d(buf, byteOrder);
 
 				case qtmrt.COMPONENT_3D:
-					return new Component3d(buf);
+					return new Component3d(buf, byteOrder);
 
 				case qtmrt.COMPONENT_3D_NO_LABELS:
-					return new Component3dNoLabels(buf);
+					return new Component3dNoLabels(buf, byteOrder);
 
 				case qtmrt.COMPONENT_3D_RESIDUALS:
-					return new Component3dResiduals(buf);
+					return new Component3dResiduals(buf, byteOrder);
 
 				case qtmrt.COMPONENT_3D_NO_LABELS_RESIDUALS:
-					return new Component3dNoLabelsResiduals(buf);
+					return new Component3dNoLabelsResiduals(buf, byteOrder);
 
 				case qtmrt.COMPONENT_6D:
-					return new Component6d(buf);
+					return new Component6d(buf, byteOrder);
 
 				case qtmrt.COMPONENT_6D_EULER:
-					return new Component6dEuler(buf);
+					return new Component6dEuler(buf, byteOrder);
 
 				case qtmrt.COMPONENT_6D_RESIDUALS:
-					return new Component6dResiduals(buf);
+					return new Component6dResiduals(buf, byteOrder);
 
 				case qtmrt.COMPONENT_6D_EULER_RESIDUALS:
-					return new Component6dEulerResiduals(buf);
+					return new Component6dEulerResiduals(buf, byteOrder);
 
 				case qtmrt.COMPONENT_ANALOG:
-					return new ComponentAnalog(buf);
+					return new ComponentAnalog(buf, byteOrder);
 
 				case qtmrt.COMPONENT_ANALOG_SINGLE:
-					return new ComponentAnalogSingle(buf);
+					return new ComponentAnalogSingle(buf, byteOrder);
 
 				case qtmrt.COMPONENT_FORCE:
-					return new ComponentForce(buf);
+					return new ComponentForce(buf, byteOrder);
 
 				case qtmrt.COMPONENT_FORCE_SINGLE:
-					return new ComponentForceSingle(buf);
+					return new ComponentForceSingle(buf, byteOrder);
 
 				case qtmrt.COMPONENT_IMAGE:
-					return new ComponentImage(buf);
+					return new ComponentImage(buf, byteOrder);
 
 				case qtmrt.COMPONENT_GAZE_VECTOR:
-					return new ComponentGazeVector(buf);
+					return new ComponentGazeVector(buf, byteOrder);
 			}
 		}
 
@@ -111,8 +111,8 @@
 	}
 
 	class Component2d extends Component {
-		constructor(buf) {
-			super(buf);
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
 
 			this.cameraCount     = this.munchUInt32();
 			this.dropRate2d      = this.munchUInt16();
@@ -153,8 +153,8 @@
 	}
 
 	class Component3d extends Component {
-		constructor(buf) {
-			super(buf);
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
 
 			this.markerCount     = this.munchUInt32();
 			this.dropRate2d      = this.munchUInt16();
@@ -225,8 +225,8 @@
 	}
 
 	class Component6d extends Component {
-		constructor(buf) {
-			super(buf);
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
 
 			this.rigidBodyCount  = this.munchUInt32();
 			this.dropRate2d      = this.munchUInt16();
@@ -315,8 +315,8 @@
 	}
 
 	class ComponentAnalog extends Component {
-		constructor(buf) {
-			super(buf);
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
 
 			this.deviceCount = this.munchUInt32();
 			this.devices     = [];
@@ -372,8 +372,8 @@
 	}
 
 	class ComponentForce extends Component {
-		constructor(buf) {
-			super(buf);
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
 
 			// XXX: Not quite sure about this, but sometimes QTM sends empty
 			// force components.
@@ -445,8 +445,8 @@
 	}
 
 	class ComponentImage extends Component {
-		constructor(buf) {
-			super(buf);
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
 
 			this.cameraCount = this.munchUInt32();
 			this.cameras     = [];
@@ -484,8 +484,8 @@
 	}
 
 	class ComponentGazeVector extends Component {
-		constructor(buf) {
-			super(buf);
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
 
 			this.gazeVectorCount = this.munchUInt32();
 			this.gazeVectors     = [];

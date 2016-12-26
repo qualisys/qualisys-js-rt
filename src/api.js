@@ -39,6 +39,7 @@
 				frequency: 100,
 				discoverPort: 22226,
 				discoverTimeout: 2000,
+				byteOrder: qtmrt.LITTLE_ENDIAN,
 			});
 
 			this.frequency(this.options.frequency);
@@ -48,8 +49,11 @@
 			// Disable Nagle's algorithm.
 			this.client.setNoDelay(true);
 
+			// Set byte order on commands.
+			Command._byteOrder = this.options.byteOrder;
+
 			this.client.on('data', function(chunk) {
-				this.mangler.read(chunk, { fun: this.receivePacket, thisArg: this });
+				this.mangler.read(chunk, this.options.byteOrder, { fun: this.receivePacket, thisArg: this });
 			}.bind(this));
 
 			this.client.on('end', function() {
@@ -62,7 +66,7 @@
 			var s = dgram.createSocket('udp4');
 
 			s.on('message', function(chunk) {
-				this.mangler.read(chunk, { fun: this.receivePacket, thisArg: this });
+				this.mangler.read(chunk, this.options.byteOrder, { fun: this.receivePacket, thisArg: this });
 			}.bind(this));
 
 			s.bind(port, this.host, function() { });
@@ -73,7 +77,7 @@
 		}
 
 		receivePacket(data) {
-			var packet  = Packet.create(data)
+			var packet  = Packet.create(data, this.options.byteOrder)
 			  , command = this.issuedCommands.pop()
 			;
 
@@ -334,7 +338,7 @@
 				// Set type to discover type.
 				writeUInt32(msg, 7, 4);
 
-				var discoverPacket = Packet.create(msg, rinfo.address, rinfo.port);
+				var discoverPacket = Packet.create(msg, this.options.byteOrder, rinfo.address, rinfo.port);
 
 				if (this.options.debug)
 					this.logger.logPacket(discoverPacket);
@@ -368,7 +372,7 @@
 				});
 
 				if (this.options.debug)
-					this.logger.logPacket(Packet.create(buf));
+					this.logger.logPacket(Packet.create(buf, this.options.byteOrder));
 
 				setTimeout(function() {
 					server.close();
