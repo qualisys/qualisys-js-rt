@@ -157,7 +157,8 @@
 			var deferredCommand  = Q.defer();
 
 			if (this.options.debug)
-				this.logger.log('Connecting to ' + host + ':' + port, 'white', 'bold');
+				this.logger.log('Connecting to ' + host + ':' + port + ' (byte order: '
+					+ this.options.byteOrder + ')', 'white', 'bold');
 
 			this.client = this.net.connect(port, host, function() { });
 			this.issuedCommands.unshift('Connect');
