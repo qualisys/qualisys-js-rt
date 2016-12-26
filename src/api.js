@@ -283,23 +283,23 @@
 			return this.send(Command.setQtmEvent(label));
 		}
 
-		send(command) {
+		send(commandPacket) {
 			if (this.client === null)
 				new Error('Not connected to QTM. Connect and try again.');
 
 			var promise = Q.resolve();
 
 			// Don't expect a reply on the StreamFrames command.
-			if (!_.str.startsWith(command.data, 'StreamFrames'))
+			if (!_.str.startsWith(commandPacket.data, 'StreamFrames'))
 				promise = this.promiseResponse();
 
-			this.issuedCommands.unshift(command);
+			commandPacket.isResponse = false;
+			this.issuedCommands.unshift(commandPacket);
 
-			command.isResponse = false;
 
-			this.client.write(command.buffer, 'utf8', function(data) {
+			this.client.write(commandPacket.buffer, 'utf8', function(data) {
 				if (this.options.debug)
-					this.logger.logPacket(command);
+					this.logger.logPacket(commandPacket);
 			}.bind(this));
 
 			return promise;
