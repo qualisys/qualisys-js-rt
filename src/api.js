@@ -26,8 +26,9 @@
 			this.issuedCommands    = [];
 			this.logger            = new Logger();
 			this.mangler           = new Mangler();
-			this.isStreaming       = false;
 			this.currentPacketSize = false;
+			this._isConnected      = false;
+			this._isStreaming      = false;
 
 			events.EventEmitter.call(this);
 
@@ -44,6 +45,9 @@
 
 			this.frequency(this.options.frequency);
 		}
+
+		get isConnected() { return this._isConnected; }
+		get isStreaming() { return this._isStreaming; }
 
 		bootstrap() {
 			// Disable Nagle's algorithm.
@@ -167,6 +171,8 @@
 			this.promiseResponse()
 				.then((packet) => {
 					if (packet.data.toString() === 'QTM RT Interface connected\0') {
+						this._isConnected = true;
+
 						this.send(Command.version(major, minor))
 							.then(function(data) {
 								deferredCommand.resolve();
@@ -206,10 +212,10 @@
 		getCaptureQtm() { return this.send(Command.getCaptureQtm()); }
 
 		streamFrames(options) {
-			if (this.isStreaming)
+			if (this._isStreaming)
 				return Q.reject('Could not start streaming, already streaming');
 
-			this.isStreaming = true;
+			this._isStreaming = true;
 
 			if (_.isUndefined(options.frequency))
 				options.frequency = this.options.frequency;
@@ -222,12 +228,12 @@
 		}
 
 		stopStreaming() {
-			if (!this.isStreaming) {
+			if (!this._isStreaming) {
 				this.logger.log('Cannot stop streaming, not currently streaming', 'red');
 				return;
 			}
 
-			this.isStreaming = false;
+			this._isStreaming = false;
 			this.emit('end');
 
 			return this.send(Command.stopStreaming());
@@ -318,6 +324,8 @@
 				new Error('Not connected to QTM. Connect and try again.');
 
 			this.client.end();
+
+			this.isConnected = false;
 		}
 
 		discover(port) {
