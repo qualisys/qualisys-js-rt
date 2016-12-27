@@ -74,10 +74,10 @@
 			   , components = _.filter(arguments, predicate)
 			;
 
-			if (_.includes(arguments, qtmrt.COMPONENT_ALL))
+			if (_.includes(arguments, qtmrt.COMPONENT_ALL) || components.length === 0)
 				components = [qtmrt.COMPONENT_ALL];
 
-			return this.createPacket('GetCurrentFrame ' + components.map(Component.typeToString).join(' '));
+			return this.createPacket('GetCurrentFrame ' + _.map(components, Component.typeToString).join(' '));
 		}
 
 		static streamFrames(options) {
