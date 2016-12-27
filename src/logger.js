@@ -2,6 +2,7 @@
 
 (function() {
 	var _         = require('lodash')
+	  , colors    = require('colors')
 	  , moment    = require('moment')
 	  , sprintf   = require('sprintf')
 	  , qtmrt     = require('./qtmrt')
