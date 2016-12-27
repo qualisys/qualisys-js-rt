@@ -184,7 +184,7 @@
 		}
 	}
 
-	class Component3dNoLabels extends Component {
+	class Component3dNoLabels extends Component3d {
 		parseMarkers() {
 			for (var i = 0; i < this.markerCount; i++) {
 				this.markers.push({
@@ -197,7 +197,7 @@
 		}
 	}
 
-	class Component3dResiduals extends Component {
+	class Component3dResiduals extends Component3d {
 		parseMarkers() {
 			for (var i = 0; i < this.markerCount; i++) {
 				this.markers.push({
@@ -210,7 +210,7 @@
 		}
 	}
 
-	class Component3dNoLabelsResiduals extends Component {
+	class Component3dNoLabelsResiduals extends Component3d {
 		parseMarkers() {
 			for (var i = 0; i < this.markerCount; i++) {
 				this.markers.push({
