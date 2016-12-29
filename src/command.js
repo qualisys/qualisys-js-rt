@@ -67,17 +67,18 @@
 			return Packet.create(buf, byteOrder);
 		}
 
-		static getCurrentFrame(component) {
-			var predicate = function(component) {
-					return _.includes(_.values(qtmrt.COMPONENTS), component);
-				}
-			   , components = _.filter(arguments, predicate)
+		static getCurrentFrame() {
+			var predicate  = function(component) { return _.includes(_.union(['All'], Object.keys(qtmrt.COMPONENTS)), component); }
+			  , components = arguments.length === 0 ? ['All'] : _.filter(arguments, predicate);
 			;
 
-			if (_.includes(arguments, qtmrt.COMPONENT_ALL) || components.length === 0)
-				components = [qtmrt.COMPONENT_ALL];
+			if (_.isEmpty(components))
+				throw new TypeError('No valid components specified');
 
-			return this.createPacket('GetCurrentFrame ' + _.map(components, Component.typeToString).join(' '));
+			if (_.includes(components, 'All'))
+				components = ['All'];
+
+			return this.createPacket('GetCurrentFrame ' + components.join(' '));
 		}
 
 		static streamFrames(options) {
