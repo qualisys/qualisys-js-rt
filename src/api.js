@@ -131,7 +131,9 @@
 			else if (packet.type === qtmrt.DATA) {
 				this.emit('frame', packet.toJson());
 			}
-
+			else if (packet.type === qtmrt.ERROR) {
+				this.promiseQueue.pop().reject(packet.data);
+			}
 		}
 
 		connect(port, host, major, minor) {
