@@ -32,7 +32,7 @@
 		static close()                  { return this.createPacket('Close'); }
 		static start()                  { return this.createPacket('Start'); }
 		static stop()                   { return this.createPacket('Stop'); }
-		static getCaptureC3D()          { return this.createPacket('GetCaptureC3D'); }
+		static getCaptureC3d()          { return this.createPacket('GetCaptureC3D'); }
 		static getCaptureQtm()          { return this.createPacket('GetCaptureQtm'); }
 		static trig()                   { return this.createPacket('Trig'); }
 		static stopStreaming()          { return this.createPacket('StreamFrames Stop'); }
