@@ -34,7 +34,7 @@
 		static stop()                   { return this.createPacket('Stop'); }
 		static getCaptureC3d()          { return this.createPacket('GetCaptureC3D'); }
 		static getCaptureQtm()          { return this.createPacket('GetCaptureQtm'); }
-		static trig()                   { return this.createPacket('Trig'); }
+		static trigger()                { return this.createPacket('Trig'); }
 		static stopStreaming()          { return this.createPacket('StreamFrames Stop'); }
 		static setQtmEvent(label)       { return this.createPacket('SetQTMEvent ' + label); }
 		static takeControl(pass)        { return this.createPacket('TakeControl ' + (_.isUndefined(pass) ? '' : pass)); }
