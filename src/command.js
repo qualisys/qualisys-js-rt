@@ -81,7 +81,7 @@
 		}
 
 		static streamFrames(options) {
-			if (!arguments.length)
+			if (arguments.length === 0)
 				options = {};
 
 			options = _.defaults(options, {
