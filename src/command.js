@@ -49,7 +49,7 @@
 			   , components = _.filter(arguments, predicate)
 			;
 
-			if (_.includes(components, 'All'))
+			if (_.includes(components, 'All') || arguments.length === 0)
 				components = ['All'];
 
 			return this.createPacket('GetParameters ' + components.join(' '));
