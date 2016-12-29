@@ -296,11 +296,10 @@
 			if (this.client === null)
 				new Error('Not connected to QTM. Connect and try again.');
 
-			var promise = Q.resolve();
-
 			// Don't expect a reply on the StreamFrames command.
-			if (!_.str.startsWith(commandPacket.data, 'StreamFrames'))
-				promise = this.promiseResponse();
+			var promise = (_.str.startsWith(commandPacket.data, 'StreamFrames'))
+				? Q.resolve()
+				: this.promiseResponse();
 
 			commandPacket.isResponse = false;
 			this.issuedCommands.unshift(commandPacket);
