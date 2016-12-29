@@ -85,49 +85,50 @@
 			  , command = this.issuedCommands.pop()
 			;
 
-			if (qtmrt.COMMAND === packet.type)
+			if (packet.type === qtmrt.COMMAND)
 				packet.type = qtmrt.COMMAND_RESPONSE;
 
 			if (this.options.debug)
 				this.logger.logPacket(packet);
 
-			if (qtmrt.EVENT === packet.type) {
+			if (packet.type === qtmrt.EVENT) {
 				if (command.data === 'GetState')
 					this.promiseQueue.pop().resolve({ id: packet.eventId, name: packet.eventName });
 
 				this.emit('event', packet.toJson());
 			}
-			else if (qtmrt.XML === packet.type) {
+			else if (packet.type === qtmrt.XML) {
 				this.promiseQueue.pop().resolve(packet.toJson());
 			}
-			else if (qtmrt.C3D_FILE === packet.type) {
+			else if (packet.type === qtmrt.C3D_FILE) {
 				// Implement.
 			}
-			else if (qtmrt.COMMAND_RESPONSE === packet.type) {
-				if (_.str.startsWith(command.data, 'ByteOrder'))
+			else if (packet.type === qtmrt.COMMAND_RESPONSE) {
+				if (_.str.startsWith(command.data, 'ByteOrder')) {
 					this.promiseQueue.pop().resolve(/little endian/.test(packet.data) ? 'little endian' : 'big endian');
-
+				}
 				else if (_.str.startsWith(command.data, 'QTMVersion')) {
 					var human   = 'QTM ' + packet.data.replace('QTM Version is ', '').slice(0, -1)
 					  , version = human.match(/QTM (\d+)\.(\d+)(?: (?:Beta)|(?:Alpha))? \(build (\d+)\)/)
 					;
 					this.promiseQueue.pop().resolve({ major: version[1], minor: version[2], build: version[3], human: human });
 				}
-
-				else
+				else {
 					this.promiseQueue.pop().resolve(packet);
+				}
 			}
 			else if (command && _.str.startsWith(command.data, 'GetCurrentFrame')) {
 				this.promiseQueue.pop().resolve(packet.toJson());
 			}
-			else if (qtmrt.DATA !== packet.type) {
-				if (qtmrt.NO_MORE_DATA === packet.type) {
+			else if (packet.type !== qtmrt.DATA) {
+				if (packet.type === qtmrt.NO_MORE_DATA) {
 					this.emit('end');
 				}
-				else
+				else {
 					this.promiseQueue.pop().resolve(packet);
+				}
 			}
-			else if (qtmrt.DATA === packet.type) {
+			else if (packet.type === qtmrt.DATA) {
 				this.emit('frame', packet.toJson());
 			}
 
