@@ -114,7 +114,7 @@
 					this.promiseQueue.pop().resolve({ major: version[1], minor: version[2], build: version[3], human: human });
 				}
 				else {
-					this.promiseQueue.pop().resolve(packet);
+					this.promiseQueue.pop().resolve(packet.data);
 				}
 			}
 			else if (command && _.str.startsWith(command.data, 'GetCurrentFrame')) {
@@ -172,8 +172,8 @@
 			this.bootstrap();
 
 			this.promiseResponse()
-				.then((packet) => {
-					if (packet.data.toString() === 'QTM RT Interface connected\0') {
+				.then((result) => {
+					if (result === 'QTM RT Interface connected\0') {
 						this._isConnected = true;
 
 						this.send(Command.version(major, minor))
@@ -186,7 +186,7 @@
 						;
 					}
 					else {
-						deferredCommand.reject(new Error(packet.data.toString()));
+						deferredCommand.reject(new Error(result));
 					}
 				})
 				.catch(function(err) {
