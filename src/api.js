@@ -333,7 +333,7 @@
 
 			this.client.end();
 
-			this.isConnected = false;
+			this._isConnected = false;
 		}
 
 		discover(port) {
