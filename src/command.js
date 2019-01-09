@@ -29,9 +29,9 @@
 		static getState()               { return this.createPacket('GetState'); }
 		static releaseControl()         { return this.createPacket('ReleaseControl'); }
 		static newMeasurement()         { return this.createPacket('New'); }
-		static close()                  { return this.createPacket('Close'); }
-		static start()                  { return this.createPacket('Start'); }
-		static stop()                   { return this.createPacket('Stop'); }
+		static closeMeasurement()       { return this.createPacket('Close'); }
+		static startCapture()           { return this.createPacket('Start'); }
+		static stopCapture()            { return this.createPacket('Stop'); }
 		static getCaptureC3d()          { return this.createPacket('GetCaptureC3D'); }
 		static getCaptureQtm()          { return this.createPacket('GetCaptureQtm'); }
 		static trigger()                { return this.createPacket('Trig'); }

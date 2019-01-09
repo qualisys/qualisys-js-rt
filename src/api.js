@@ -204,10 +204,10 @@
 		getCurrentFrame() { return this.send(Command.getCurrentFrame.apply(Command, arguments)); }
 		releaseControl() { return this.send(Command.releaseControl()); }
 		newMeasurement() { return this.send(Command.newMeasurement()); }
-		close() { return this.send(Command.close()); }
-		start() { return this.send(Command.start()); }
-		stop() { return this.send(Command.stop()); }
-		trig() { return this.send(Command.trig()); }
+		closeMeasurement() { return this.send(Command.closeMeasurement()); }
+		startCapture() { return this.send(Command.startCapture()); }
+		stopCapture() { return this.send(Command.stopCapture()); }
+		trigger() { return this.send(Command.trig()); }
 
 		// XXX: Not tested with C3D file reply.
 		getCaptureC3D() { return this.send(Command.getCaptureC3D()); }
