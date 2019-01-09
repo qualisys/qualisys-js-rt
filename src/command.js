@@ -55,7 +55,7 @@
 			return this.createPacket('GetParameters ' + components.join(' '));
 		}
 
-		static setParameters(params, byteOrder) {
+		static setParameters(params) {
 			var xml = jsonxml({ 'QTM_Settings': params }) + '\0'
 			  , buf = new Buffer(qtmrt.HEADER_SIZE + xml.length + 1)
 			;
@@ -64,7 +64,7 @@
 			writeUInt32(buf, qtmrt.XML, qtmrt.UINT32_SIZE);
 			buf.write(xml, qtmrt.HEADER_SIZE);
 
-			return Packet.create(buf, byteOrder);
+			return Packet.create(buf, Command._byteOrder);
 		}
 
 		static getCurrentFrame() {
