@@ -92,7 +92,7 @@
 				this.logger.logPacket(packet);
 
 			if (packet.type === qtmrt.EVENT) {
-				if (command.data === 'GetState')
+				if (command && command.data === 'GetState')
 					this.promiseQueue.pop().resolve({ id: packet.eventId, name: packet.eventName });
 
 				this.emit('event', packet.toJson());
@@ -104,21 +104,31 @@
 				// Implement.
 			}
 			else if (packet.type === qtmrt.COMMAND_RESPONSE) {
-				if (_.str.startsWith(command.data, 'ByteOrder')) {
-					this.promiseQueue.pop().resolve(/little endian/.test(packet.data) ? 'little endian' : 'big endian');
-				}
-				else if (_.str.startsWith(command.data, 'QTMVersion')) {
-					var human   = 'QTM ' + packet.data.replace('QTM Version is ', '').slice(0, -1)
-					  , version = human.match(/QTM (\d+)\.(\d+)(?: (?:Beta)|(?:Alpha))? \(build (\d+)\)/)
-					;
-					this.promiseQueue.pop().resolve({ major: version[1], minor: version[2], build: version[3], human: human });
-				}
-				else {
-					this.promiseQueue.pop().resolve(packet.data);
+				if (command) {
+					if (_.str.startsWith(command.data, 'ByteOrder')) {
+						this.promiseQueue.pop().resolve(/little endian/.test(packet.data) ? 'little endian' : 'big endian');
+					}
+					else if (_.str.startsWith(command.data, 'QTMVersion')) {
+						var human   = 'QTM ' + packet.data.replace('QTM Version is ', '').slice(0, -1)
+						  , version = human.match(/QTM (\d+)\.(\d+)(?: (?:Beta)|(?:Alpha))? \(build (\d+)\)/)
+						;
+						this.promiseQueue.pop().resolve({ major: version[1], minor: version[2], build: version[3], human: human });
+					}
+					else {
+						this.promiseQueue.pop().resolve(packet.data);
+					}
 				}
 			}
+			else if (packet.type === qtmrt.ERROR) {
+				this.promiseQueue.pop().reject(packet.data.toString());
+			}
 			else if (command && _.str.startsWith(command.data, 'GetCurrentFrame')) {
-				this.promiseQueue.pop().resolve(packet.toJson());
+				if (packet.type === qtmrt.NO_MORE_DATA) {
+					this.promiseQueue.pop().reject('No more data');
+				}
+				else {
+					this.promiseQueue.pop().resolve(packet.toJson());
+				}
 			}
 			else if (packet.type !== qtmrt.DATA) {
 				if (packet.type === qtmrt.NO_MORE_DATA) {
@@ -130,9 +140,6 @@
 			}
 			else if (packet.type === qtmrt.DATA) {
 				this.emit('frame', packet.toJson());
-			}
-			else if (packet.type === qtmrt.ERROR) {
-				this.promiseQueue.pop().reject(packet.data);
 			}
 		}
 
