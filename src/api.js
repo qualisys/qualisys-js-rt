@@ -1,23 +1,25 @@
 'use strict';
 
 (function() {
-	var dgram       = require('dgram')
-	  , Q           = require('q')
-	  , _           = require('lodash')
-	  , events      = require('events')
-	  , qtmrt       = require('./qtmrt')
-	  , writeUInt32 = require('./buffer-io').writeUInt32
-	  , mixin       = require('./helpers').mixin
-	  , Mangler     = require('./mangler')
-	  , Packet      = require('./packet')
-	  , Command     = require('./command')
-	  , Logger      = require('./logger')
+	var dgram        = require('dgram')
+	  , Q            = require('q')
+	  , _            = require('lodash')
+	  , events       = require('events')
+	  , qtmrt        = require('./qtmrt')
+	  , writeUInt32  = require('./buffer-io').writeUInt32
+	  , Mangler      = require('./mangler')
+	  , Packet       = require('./packet')
+	  , Command      = require('./command')
+	  , Logger       = require('./logger')
+	  , EventEmitter = require('events')
 	;
 
 	_.str = require('underscore.string');
 
-	class Api {
+	class Api extends EventEmitter {
 		constructor(options) {
+			super();
+
 			this.net               = require('net');
 			this.client            = null;
 			this.response          = null;
@@ -29,8 +31,6 @@
 			this.currentPacketSize = false;
 			this._isConnected      = false;
 			this._isStreaming      = false;
-
-			events.EventEmitter.call(this);
 
 			if (arguments.length < 1)
 				options = {};
@@ -304,7 +304,6 @@
 			commandPacket.isResponse = false;
 			this.issuedCommands.unshift(commandPacket);
 
-
 			this.client.write(commandPacket.buffer, 'utf8', function(data) {
 				if (this.options.debug)
 					this.logger.logPacket(commandPacket);
@@ -407,8 +406,6 @@
 			this.options.debug = val ? true : false;
 		}
 	}
-
-	mixin(Api.prototype, events.EventEmitter.prototype);
 
 	module.exports = Api;
 })();
