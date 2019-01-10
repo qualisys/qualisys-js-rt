@@ -311,10 +311,12 @@
 			commandPacket.isResponse = false;
 			this.issuedCommands.unshift(commandPacket);
 
-			this.client.write(commandPacket.buffer, 'utf8', function(data) {
-				if (this.options.debug)
-					this.logger.logPacket(commandPacket);
-			}.bind(this));
+			if (!this.client.destroyed && this.client.writable) {
+				this.client.write(commandPacket.buffer, 'utf8', data => {
+					if (this.options.debug)
+						this.logger.logPacket(commandPacket);
+				});
+			}
 
 			return promise;
 		}
@@ -391,13 +393,13 @@
 				if (this.options.debug)
 					this.logger.logPacket(Packet.create(buf, this.options.byteOrder));
 
-				setTimeout(function() {
+				setTimeout(() => {
 					server.close();
 					server.unref();
 					deferred.resolve(discoveredServers);
 				}, this.options.discoverTimeout);
 
-			}.bind(this));
+			});
 
 			return deferred.promise;
 		}
