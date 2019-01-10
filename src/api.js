@@ -371,7 +371,7 @@
 			server.bind(receivePort);
 
 			// Create discover packet.
-			var buf = new Buffer(10);
+			var buf = Buffer.alloc(10);
 			buf.writeUInt32LE(10, 0);
 			buf.writeUInt32LE(7, 4);
 			buf.writeUInt16BE(receivePort, 8);

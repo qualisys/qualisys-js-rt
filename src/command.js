@@ -15,7 +15,7 @@
 		static set _byteOrder(value) { byteOrder = value; }
 
 		static createPacket(cmdStr) {
-			var buf = new Buffer(qtmrt.HEADER_SIZE + cmdStr.length);
+			var buf = Buffer.alloc(qtmrt.HEADER_SIZE + cmdStr.length);
 
 			writeUInt32(buf, buf.length, 0, Command._byteOrder);
 			writeUInt32(buf, qtmrt.COMMAND, qtmrt.UINT32_SIZE, Command._byteOrder);
@@ -57,7 +57,7 @@
 
 		static setParameters(params) {
 			var xml = jsonxml({ 'QTM_Settings': params }) + '\0'
-			  , buf = new Buffer(qtmrt.HEADER_SIZE + xml.length + 1)
+			  , buf = Buffer.alloc(qtmrt.HEADER_SIZE + xml.length + 1)
 			;
 
 			writeUInt32(buf, buf.length, 0);

@@ -7,7 +7,7 @@
 
 	class Mangler {
 		constructor() {
-			this.chunks            = new Buffer(0);
+			this.chunks            = Buffer.alloc(0);
 			this.currentPacketSize = null;
 		}
 
@@ -29,7 +29,7 @@
 					if (bytesRead !== chunk.length)
 						this.currentPacketSize = readUInt32(chunk.slice(bytesRead, bytesRead + qtmrt.UINT32_SIZE, null, byteOrder), 0);
 
-					this.chunks = new Buffer(0);
+					this.chunks = Buffer.alloc(0);
 				}
 			}
 		}
