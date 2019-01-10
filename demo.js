@@ -121,12 +121,14 @@ if (process.platform === 'win32') {
 		output: process.stdout
 	});
 
-	rl.on('SIGINT', function () {
+	rl.on('SIGINT', () => {
+		api.disconnect();
 		process.emit('SIGINT');
 	});
 }
 
-process.on('SIGINT', function () {
+process.on('SIGINT', () => {
+	api.disconnect();
 	process.exit();
 });
 // }}} End Handle graceful shutdown
