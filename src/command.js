@@ -44,7 +44,7 @@
 
 		static getParameters() {
 			var predicate = (component) => {
-					return _.includes(['All', 'General', '3D', '6D', 'Analog', 'Force', 'Image'], component);
+					return _.includes(['All', 'General', '3D', '6D', 'Analog', 'Force', 'Image', 'GazeVector', 'Skeleton', 'Skeleton:global'], component);
 				}
 			   , components = _.filter(arguments, predicate)
 			;
