@@ -2,24 +2,21 @@
 
 var colors   = require('colors')
   , qtmrt    = require('./index')
-  , Api      = qtmrt.Api
+  , api      = new qtmrt.Api({ debug: true, byteOrder: qtmrt.LITTLE_ENDIAN })
   , Viewer2d = require('./src/viewer2d')
 ;
 
-var api = new Api({ debug: true });
-
 api.on('frame', function(data) {
-	console.log('Received frame:'.green);
-	console.log(data);
-});
-
-api.on('end', function(data) {
-	console.log('No more data!'.red);
-	//api.disconnect();
+	// console.log(data);
 });
 
 api.on('event', function(event) {
-	console.log(event.name.yellow);
+	// Do something.
+});
+
+api.on('end', function(data) {
+	api.logger.log('No more data!'.red);
+	api.disconnect();
 });
 
 api.on('disconnect', function(event) {
@@ -33,7 +30,7 @@ api.connect()
 	//.then(function() { return api.discover(); })
 	//.then(function(servers) { console.log(servers); })
 
-	//.then(function(state) { return api.getCurrentFrame(qtmrt.COMPONENT_ANALOG); })
+	//.then(function(state) { return api.getCurrentFrame('Analog'); })
 	//.then(function(frame) { console.log(frame); })
 	//.then(function() { return api.getParameters('All'); })
 	//.then(function(parameters) {
@@ -81,7 +78,6 @@ api.connect()
 	//.then(function() { return api.stopStreaming(); })
 	//.then(function() { return api.streamFrames() })
 	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 1 }) })
-	//.then(function() { return api.stopStreaming() })
 	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 1 }) })
 	//.then(function() { return api.streamFrames({ components: ['All'], frequency: 'AllFrames' }) })
 	//.then(function() { return api.streamFrames({ components: ['2D'], frequency: '2' }) })
@@ -103,6 +99,7 @@ api.connect()
 	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['ForceSingle'] }); })
 	//.then(function() { return api.streamFrames({ frequency: 1/100, components: ['Image'] }); })
 	//.then(function() { return api.streamFrames({ frequency: 1/200, components: ['GazeVector'] }); })
+	//.then(function() { return api.stopStreaming() })
 	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {
