@@ -239,14 +239,19 @@
 
 		stopStreaming() {
 			if (!this._isStreaming) {
-				this.logger.log('Cannot stop streaming, not currently streaming', 'red');
+				this.logger.log('Cannot stop streaming, not currently streaming', 'grey');
+				this.emit('end');
+
 				return;
 			}
 
 			this._isStreaming = false;
-			this.emit('end');
 
-			return this.send(Command.stopStreaming());
+			return this.send(Command.stopStreaming())
+				.then(() => {
+					this.emit('end');
+				})
+			;
 		}
 
 		takeControl(pass) {
