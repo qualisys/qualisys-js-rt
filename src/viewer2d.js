@@ -24,7 +24,6 @@ Viewer2d.prototype = (function() {
 		});
 
 		this.api.debug(false);
-
 		listenForInput.call(this);
 
 		this.api.getParameters('General')
@@ -33,7 +32,6 @@ Viewer2d.prototype = (function() {
 				return self.api.streamFrames({ components: ['2D'], frequency: options.frequency });
 			})
 			.then(function() {
-
 				self.api.on('frame', function(data) {
 					var statusLine = 'CAMERA SELECT'
 					  , comp       = data.components['2d']
@@ -56,10 +54,11 @@ Viewer2d.prototype = (function() {
 
 				self.api.on('end', function(data) {
 					this.api.debug(debug);
+
 					if (this.exit)
 						process.exit();
 
-					  process.stdin.removeAllListeners('data');
+					process.stdin.removeAllListeners('data');
 					process.stdin.on('data', function(char) {
 						// Ctrl+C.
 						if (char === 0x03)
@@ -72,7 +71,8 @@ Viewer2d.prototype = (function() {
 			})
 			.catch(function(err) {
 				deferred.reject(err);
-			});
+			})
+		;
 
 		return deferred.promise;
 	};
