@@ -103,7 +103,14 @@ api.connect()
 	//.then(function() { return api.disconnect(); })
 
 	.catch(function(err) {
-		console.log(err);
+		if (err.typeName && err.typeName === 'Error' && err.isResponse) {
+			if (!api.options.debug) {
+				console.log(err.data);
+			}
+		}
+		else {
+			console.log(err);
+		}
 	})
 ;
 

@@ -120,7 +120,7 @@
 				}
 			}
 			else if (packet.type === qtmrt.ERROR) {
-				this.promiseQueue.pop().reject(packet.data.toString());
+				this.promiseQueue.pop().reject(packet);
 			}
 			else if (command && _.str.startsWith(command.data, 'GetCurrentFrame')) {
 				if (packet.type === qtmrt.NO_MORE_DATA) {
