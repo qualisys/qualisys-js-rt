@@ -33,5 +33,19 @@ api.connect()
 There is not much documentation yet so the best way to get started is by
 examining demo.js, which contains example code for common tasks. 
 
+<img src="https://github.com/qualisys/qualisys-rt/blob/dev/docs/connecting.png" title="Example output" width="600" height="191">
+
+## Viewer 2D
+You can view 2D data in your terminal by using the Viewer2D class.
+```javascript
+api.connect(22223, 'localhost')
+	.then(function() { return api.qtmVersion(); })
+	.then(function() {
+		var viewer = new Viewer2d(api);
+		return viewer.render(1, { color: 'red' });
+	})
+```
+<img src="https://github.com/qualisys/qualisys-rt/blob/dev/docs/viewer2d.png" title="Example output" width="600" height="448">
+
 For a reference of what's possible with the real-time protocol, refer to the
 [QTM Real-time Server Protocol Documentation](http://qualisys.github.io/rt-protocol/).
