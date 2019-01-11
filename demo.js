@@ -2,7 +2,7 @@
 
 var colors   = require('colors')
   , qtmrt    = require('./index')
-  , api      = new qtmrt.Api({ debug: true, byteOrder: qtmrt.LITTLE_ENDIAN })
+  , api      = new qtmrt.Api({ debug: true })
   , Viewer2d = require('./src/viewer2d')
 ;
 
