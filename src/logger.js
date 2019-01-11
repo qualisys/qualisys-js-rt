@@ -2,13 +2,15 @@
 
 (function() {
 	var _         = require('lodash')
-	  , colors    = require('colors')
 	  , moment    = require('moment')
 	  , sprintf   = require('sprintf')
 	  , qtmrt     = require('./qtmrt')
 	  , Packet    = require('./packet')
 	  , Component = require('./component')
 	;
+
+	// Add color support to String.prototype.
+	require('colors');
 
 	class Logger {
 		timestamp() {

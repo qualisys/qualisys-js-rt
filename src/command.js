@@ -5,7 +5,6 @@
 	  , jsonxml     = require('jsontoxml')
 	  , qtmrt       = require('./qtmrt')
 	  , Packet      = require('./packet')
-	  , Component   = require('./component')
 	  , writeUInt32 = require('./buffer-io').writeUInt32
 	  , byteOrder   = qtmrt.LITTLE_ENDIAN
 	;
@@ -69,7 +68,7 @@
 
 		static getCurrentFrame() {
 			var predicate  = function(component) { return _.includes(_.union(['All'], Object.keys(qtmrt.COMPONENTS)), component); }
-			  , components = arguments.length === 0 ? ['All'] : _.filter(arguments, predicate);
+			  , components = arguments.length === 0 ? ['All'] : _.filter(arguments, predicate)
 			;
 
 			if (_.isEmpty(components))

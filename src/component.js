@@ -11,7 +11,7 @@
 			if (!arguments.length)
 				throw new TypeError('No buffer specified');
 
-			super(buf, byteOrder)
+			super(buf, byteOrder);
 
 			this.size = this.munchUInt32();
 			this.type = this.munchUInt32();

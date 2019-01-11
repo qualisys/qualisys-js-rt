@@ -4,7 +4,6 @@
 	var dgram        = require('dgram')
 	  , Q            = require('q')
 	  , _            = require('lodash')
-	  , events       = require('events')
 	  , qtmrt        = require('./qtmrt')
 	  , writeUInt32  = require('./buffer-io').writeUInt32
 	  , Mangler      = require('./mangler')
@@ -232,7 +231,7 @@
 
 			if (!_.isUndefined(options.udpPort) && (_.isUndefined(options.udpAddress)
 					||  options.updAddress === 'localhost' ||  options.udpAddress === '127.0.0.1'))
-				setupUdp.call(this, options.udpPort);
+				this.setupUdp.call(this, options.udpPort);
 
 			return this.send(Command.streamFrames.apply(Command, [options]));
 		}

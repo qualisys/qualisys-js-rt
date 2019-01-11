@@ -6,11 +6,11 @@
 	;
 
 	const FLOAT_SIZE    = 4
-		, UINT8_SIZE    = 1
-		, UINT16_SIZE   = 2
-		, UINT32_SIZE   = 4
-		, UINT64_SIZE   = 8
-		, LITTLE_ENDIAN = 'LE'
+	    , UINT8_SIZE    = 1
+	    , UINT16_SIZE   = 2
+	    , UINT32_SIZE   = 4
+	    , UINT64_SIZE   = 8
+	    , LITTLE_ENDIAN = 'LE'
 	;
 
 	var readUInt8 = function(buffer, offset, bytesRead) {
@@ -38,7 +38,7 @@
 
 	var readUInt64 = function(buffer, offset, bytesRead, byteOrder) {
 		if (!_.isUndefined(bytesRead) && bytesRead !== null)
-			bytesRead.count += UINT32_SIZE;
+			bytesRead.count += UINT64_SIZE;
 
 		return (arguments.length < 4 || byteOrder === LITTLE_ENDIAN)
 			? new Big(buffer.readUInt32LE(offset) << 8).plus(buffer.readUInt32LE(offset + 4))

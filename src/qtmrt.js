@@ -53,7 +53,7 @@ class QtmRt {
 	static get LITTLE_ENDIAN() { return 'LE'; }
 	static get BIG_ENDIAN() { return 'BE'; }
 
-	static get HEADER_SIZE() { return 2 * this.UINT32_SIZE }
+	static get HEADER_SIZE() { return 2 * this.UINT32_SIZE; }
 
 	static get COMPONENTS() {
 		return {

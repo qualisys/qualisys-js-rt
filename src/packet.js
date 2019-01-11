@@ -48,7 +48,7 @@
 			}
 
 			return packet;
-		};
+		}
 
 		static typeToString(typeId) {
 			var typeNames = {};
