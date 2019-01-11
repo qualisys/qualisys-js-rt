@@ -13,8 +13,6 @@
 	  , EventEmitter = require('events')
 	;
 
-	_.str = require('underscore.string');
-
 	class Api extends EventEmitter {
 		constructor(options) {
 			super();
@@ -104,10 +102,10 @@
 			}
 			else if (packet.type === qtmrt.COMMAND_RESPONSE) {
 				if (command) {
-					if (_.str.startsWith(command.data, 'ByteOrder')) {
+					if (command.data && command.data.startsWith('ByteOrder')) {
 						this.promiseQueue.pop().resolve(/little endian/.test(packet.data) ? 'little endian' : 'big endian');
 					}
-					else if (_.str.startsWith(command.data, 'QTMVersion')) {
+					else if (command.data && command.data.startsWith('QTMVersion')) {
 						var human   = 'QTM ' + packet.data.replace('QTM Version is ', '').slice(0, -1)
 						  , version = human.match(/QTM (\d+)\.(\d+)(?: (?:Beta)|(?:Alpha))? \(build (\d+)\)/)
 						;
@@ -121,7 +119,7 @@
 			else if (packet.type === qtmrt.ERROR) {
 				this.promiseQueue.pop().reject(packet);
 			}
-			else if (command && _.str.startsWith(command.data, 'GetCurrentFrame')) {
+			else if (command && command.data.startsWith('GetCurrentFrame')) {
 				if (packet.type === qtmrt.NO_MORE_DATA) {
 					this.promiseQueue.pop().reject('No more data');
 				}
@@ -308,7 +306,7 @@
 				new Error('Not connected to QTM. Connect and try again.');
 
 			// Don't expect a reply on the StreamFrames command.
-			var promise = (_.str.startsWith(commandPacket.data, 'StreamFrames'))
+			var promise = (commandPacket.data.startsWith('StreamFrames'))
 				? Q.resolve()
 				: this.promiseResponse();
 
