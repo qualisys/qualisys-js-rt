@@ -49,6 +49,8 @@ class QtmRt {
 	static get COMPONENT_IMAGE()                  { return 14; }
 	static get COMPONENT_FORCE_SINGLE()           { return 15; }
 	static get COMPONENT_GAZE_VECTOR()            { return 16; }
+	static get COMPONENT_TIMECODE()               { return 17; }
+	static get COMPONENT_SKELETON()               { return 18; }
 
 	static get LITTLE_ENDIAN() { return 'LE'; }
 	static get BIG_ENDIAN() { return 'BE'; }
@@ -73,6 +75,7 @@ class QtmRt {
 			'Force'         : this.COMPONENT_FORCE,
 			'ForceSingle'   : this.COMPONENT_FORCE_SINGLE,
 			'GazeVector'    : this.COMPONENT_GAZE_VECTOR,
+			'Skeleton'      : this.COMPONENT_SKELETON,
 		};
 	}
 

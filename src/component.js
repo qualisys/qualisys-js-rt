@@ -66,6 +66,9 @@
 
 				case qtmrt.COMPONENT_GAZE_VECTOR:
 					return new ComponentGazeVector(buf, byteOrder);
+
+				case qtmrt.COMPONENT_SKELETON:
+					return new ComponentSkeleton(buf, byteOrder);
 			}
 		}
 
@@ -105,6 +108,8 @@
 			typeNames[qtmrt.COMPONENT_FORCE]                  = 'Force';
 			typeNames[qtmrt.COMPONENT_FORCE_SINGLE]           = 'Force (single sample)';
 			typeNames[qtmrt.COMPONENT_GAZE_VECTOR]            = 'Gaze vector';
+			typeNames[qtmrt.COMPONENT_TIMECODE]               = 'Timecode';
+			typeNames[qtmrt.COMPONENT_SKELETON]               = 'Skeleton';
 
 			return typeNames[typeId];
 		}
@@ -520,6 +525,47 @@
 		toJson() {
 			return {
 				gazeVectors: this.gazeVectors
+			};
+		}
+	}
+
+	class ComponentSkeleton extends Component {
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
+
+			this.skeletonCount = this.munchUInt32();
+			this.skeletons     = [];
+
+			this.parseSkeletons();
+		}
+
+		parseSkeletons() {
+			for (var i = 0; i < this.skeletonCount; i++) {
+				var skeleton = {
+					segmentCount: this.munchUInt32(),
+					segments: [],
+				};
+
+				for (var j = 0; j < skeleton.segmentCount; j++) {
+					skeleton.segments.push({
+						id: this.munchUInt32(),
+						positionX: this.munchFloat(),
+						positionY: this.munchFloat(),
+						positionZ: this.munchFloat(),
+						rotationX: this.munchFloat(),
+						rotationY: this.munchFloat(),
+						rotationZ: this.munchFloat(),
+						rotationW: this.munchFloat(),
+					});
+				}
+
+				this.skeletons.push(skeleton);
+			}
+		}
+
+		toJson() {
+			return {
+				skeletons: this.skeletons
 			};
 		}
 	}
