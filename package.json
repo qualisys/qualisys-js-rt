@@ -43,5 +43,8 @@
     "udp",
     "qualisys"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "resolutions": {
+    "natives": "1.1.3"
+  }
 }
