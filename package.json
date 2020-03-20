@@ -11,15 +11,14 @@
     "colors": "^0.6.2",
     "isnumeric": "^0.1.5",
     "jsontoxml": "0.0.11",
-    "lodash": "^4.17.11",
-    "moment": "^2.23.0",
-    "q": "^1.5.1",
+    "lodash": "^4.17.15",
+    "moment": "^2.24.0",
     "sprintf": "^0.1.5",
-    "xml2js": "^0.4.9"
+    "xml2js": "^0.4.22"
   },
   "devDependencies": {
-    "gulp": "^4.0.0",
-    "gulp-eslint": "^3.0.1"
+    "gulp": "^4.0.2",
+    "gulp-eslint": "^6.0.0"
   },
   "repository": {
     "type": "git",

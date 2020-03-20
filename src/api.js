@@ -2,7 +2,6 @@
 
 (function() {
 	var dgram        = require('dgram')
-	  , Q            = require('q')
 	  , _            = require('lodash')
 	  , qtmrt        = require('./qtmrt')
 	  , writeUInt32  = require('./buffer-io').writeUInt32
@@ -20,7 +19,6 @@
 			this.net               = require('net');
 			this.client            = null;
 			this.response          = null;
-			this.deferredResponse  = null;
 			this.promiseQueue      = [];
 			this.issuedCommands    = [];
 			this.logger            = new Logger();
@@ -165,39 +163,38 @@
 			this.host = host;
 			this.port = port;
 
-			var deferredCommand  = Q.defer();
+			return new Promise((resolve, reject) => {
+				if (this.options.debug)
+					this.logger.log('Connecting to ' + host + ':' + port + ' (byte order: '
+						+ this.options.byteOrder + ')', 'white', 'bold');
 
-			if (this.options.debug)
-				this.logger.log('Connecting to ' + host + ':' + port + ' (byte order: '
-					+ this.options.byteOrder + ')', 'white', 'bold');
+				this.client = this.net.connect(port, host, function() { });
+				this.issuedCommands.unshift('Connect');
+				this.bootstrap();
 
-			this.client = this.net.connect(port, host, function() { });
-			this.issuedCommands.unshift('Connect');
-			this.bootstrap();
+				this.promiseResponse()
+					.then((result) => {
+						if (result === 'QTM RT Interface connected\0') {
+							this._isConnected = true;
 
-			this.promiseResponse()
-				.then((result) => {
-					if (result === 'QTM RT Interface connected\0') {
-						this._isConnected = true;
-
-						this.send(Command.version(major, minor))
-							.then(function(data) {
-								deferredCommand.resolve();
-							})
-							.catch(function(err) {
-								deferredCommand.reject(new Error(err));
-							})
-						;
-					}
-					else {
-						deferredCommand.reject(new Error(result));
-					}
-				})
-				.catch(function(err) {
-					console.log(err);
-				});
-
-			return deferredCommand.promise;
+							this.send(Command.version(major, minor))
+								.then(function(data) {
+									resolve();
+								})
+								.catch(function(err) {
+									reject(new Error(err));
+								})
+							;
+						}
+						else {
+							reject(new Error(result));
+						}
+					})
+					.catch(function(err) {
+						console.log(err);
+					})
+				;
+			});
 		}
 
 		qtmVersion() { return this.send(Command.qtmVersion()); }
@@ -307,7 +304,7 @@
 
 			// Don't expect a reply on the StreamFrames command.
 			var promise = (commandPacket.data.startsWith('StreamFrames'))
-				? Q.resolve()
+				? new Promise((resolve, reject) => { resolve(); })
 				: this.promiseResponse();
 
 			commandPacket.isResponse = false;
@@ -324,11 +321,11 @@
 		}
 
 		promiseResponse() {
-			var deferredResponse = Q.defer();
+			const promise = new Promise((resolve, reject) => {
+				this.promiseQueue.unshift({ resolve: resolve, reject: reject });
+			})
 
-			this.promiseQueue.unshift(deferredResponse);
-
-			return deferredResponse.promise;
+			return promise;
 		}
 
 		disconnect() {
@@ -347,63 +344,61 @@
 			var server = dgram.createSocket('udp4')
 			  , receivePort = port + 1
 			  , discoveredServers = []
-			  , deferred = Q.defer()
 			;
 
-			server.on('error', function(err) {
-				console.log('Server error:\n' + err.stack);
-				server.close();
-			});
-
-			server.on('message', (msg, rinfo) => {
-				// Set type to discover type.
-				writeUInt32(msg, 7, 4);
-
-				var discoverPacket = Packet.create(msg, this.options.byteOrder, rinfo.address, rinfo.port);
-
-				if (this.options.debug)
-					this.logger.logPacket(discoverPacket);
-
-				discoveredServers.push({
-					serverInfo: discoverPacket.serverInfo,
-					serverBasePort: discoverPacket.serverBasePort,
-					srcAddress: discoverPacket.srcAddress,
-					srcPort: discoverPacket.srcPort,
-				});
-			});
-
-			server.bind(receivePort);
-
-			// Create discover packet.
-			var buf = Buffer.alloc(10);
-			buf.writeUInt32LE(10, 0);
-			buf.writeUInt32LE(7, 4);
-			buf.writeUInt16BE(receivePort, 8);
-
-			var client = dgram.createSocket('udp4')
-				// , address = 'ff02::1'
-			  , address = '255.255.255.255'
-			;
-
-			client.bind();
-			client.on('listening', () => {
-				client.setBroadcast(true);
-				client.send(buf, 0, buf.length, port, address, function(err, bytes) {
-					client.close();
-				});
-
-				if (this.options.debug)
-					this.logger.logPacket(Packet.create(buf, this.options.byteOrder));
-
-				setTimeout(() => {
+			return new Promise((resolve, reject) => {
+				server.on('error', function(err) {
+					reject('Server error:\n' + err.stack)
 					server.close();
-					server.unref();
-					deferred.resolve(discoveredServers);
-				}, this.options.discoverTimeout);
+				});
 
+				server.on('message', (msg, rinfo) => {
+					// Set type to discover type.
+					writeUInt32(msg, 7, 4);
+
+					var discoverPacket = Packet.create(msg, this.options.byteOrder, rinfo.address, rinfo.port);
+
+					if (this.options.debug)
+						this.logger.logPacket(discoverPacket);
+
+					discoveredServers.push({
+						serverInfo: discoverPacket.serverInfo,
+						serverBasePort: discoverPacket.serverBasePort,
+						srcAddress: discoverPacket.srcAddress,
+						srcPort: discoverPacket.srcPort,
+					});
+				});
+
+				server.bind(receivePort);
+
+				// Create discover packet.
+				var buf = Buffer.alloc(10);
+				buf.writeUInt32LE(10, 0);
+				buf.writeUInt32LE(7, 4);
+				buf.writeUInt16BE(receivePort, 8);
+
+				var client = dgram.createSocket('udp4')
+					// , address = 'ff02::1'
+				  , address = '255.255.255.255'
+				;
+
+				client.bind();
+				client.on('listening', () => {
+					client.setBroadcast(true);
+					client.send(buf, 0, buf.length, port, address, function(err, bytes) {
+						client.close();
+					});
+
+					if (this.options.debug)
+						this.logger.logPacket(Packet.create(buf, this.options.byteOrder));
+
+					setTimeout(() => {
+						server.close();
+						server.unref();
+						resolve(discoveredServers);
+					}, this.options.discoverTimeout);
+				});
 			});
-
-			return deferred.promise;
 		}
 
 		frequency(freq) {

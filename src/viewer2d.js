@@ -1,5 +1,4 @@
-var Q         = require('Q')
-  , _         = require('lodash')
+var _         = require('lodash')
   , isNumeric = require('isnumeric')
 ;
 
@@ -13,10 +12,7 @@ var Viewer2d = function(api, options) {
 
 Viewer2d.prototype = (function() {
 	var render = function(camera, options) {
-		var self     = this
-		  , deferred = Q.defer()
-		  , debug    = this.api.options.debug
-		;
+		const debug = this.api.options.debug;
 
 		this.camera  = camera;
 		this.options = _.defaults(options, {
@@ -26,55 +22,55 @@ Viewer2d.prototype = (function() {
 		this.api.debug(false);
 		listenForInput.call(this);
 
-		this.api.getParameters('General')
-			.then(function(params) {
-				self.parameters = params.general.camera;
-				return self.api.streamFrames({ components: ['2D'], frequency: options.frequency });
-			})
-			.then(function() {
-				self.api.on('frame', function(data) {
-					var statusLine = 'CAMERA SELECT'
-					  , comp       = data.components['2d']
-					;
+		return new Promise((resolve, reject) => {
+			this.api.getParameters('General')
+				.then((params) => {
+					this.parameters = params.general.camera;
+					return this.api.streamFrames({ components: ['2D'], frequency: this.options.frequency });
+				})
+				.then(() => {
+					this.api.on('frame', (data) => {
+						var statusLine = 'CAMERA SELECT'
+						  , comp       = data.components['2d']
+						;
 
-					if (!_.isUndefined(self.width))
-						clear.call(self);
+						if (!_.isUndefined(this.width))
+							clear.call(this);
 
-					setupView.call(self, self.camera);
-					drawMarkers.call(self, self.camera, data.components['2d'].cameras);
+						setupView.call(this, this.camera);
+						drawMarkers.call(this, this.camera, data.components['2d'].cameras);
 
-					self.cameraCount = comp.cameraCount;
+						this.cameraCount = comp.cameraCount;
 
-					for (var i = 1; i <= comp.cameraCount; i++)
-						statusLine += self.camera === i ? (' [' + i + ']').green : '  ' + i + ' ';
+						for (var i = 1; i <= comp.cameraCount; i++)
+							statusLine += this.camera === i ? (' [' + i + ']').green : '  ' + i + ' ';
 
-					statusLine += '  (N)ext  (P)rev       (Q)uit';
-					process.stdout.write(statusLine + ' ');
-				});
+						statusLine += '  (N)ext  (P)rev       (Q)uit';
+						process.stdout.write(statusLine + ' ');
+					});
 
-				self.api.on('end', function(data) {
-					this.api.debug(debug);
+					this.api.on('end', function(data) {
+						this.api.debug(debug);
 
-					if (this.exit)
-						process.exit();
-
-					process.stdin.removeAllListeners('data');
-					process.stdin.on('data', function(char) {
-						// Ctrl+C.
-						if (char === 0x03)
+						if (this.exit)
 							process.exit();
+
+						process.stdin.removeAllListeners('data');
+						process.stdin.on('data', function(char) {
+							// Ctrl+C.
+							if (char === 0x03)
+								process.exit();
+						}.bind(this));
+
+						resolve();
 					}.bind(this));
 
-					deferred.resolve();
-				}.bind(self));
-
-			})
-			.catch(function(err) {
-				deferred.reject(err);
-			})
-		;
-
-		return deferred.promise;
+				})
+				.catch((err) => {
+					reject(err);
+				})
+			;
+		});
 	};
 
 	var setupView = function(camera) {
