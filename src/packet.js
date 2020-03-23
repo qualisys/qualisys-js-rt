@@ -76,8 +76,8 @@
 
 	class XmlPacket extends Packet {
 		toJson() {
-			var camelCased   = toCamelCase(this.data)
-			  , jsonData     = null
+			var camelCased = toCamelCase(this.data)
+			  , jsonData   = null
 			;
 
 			var parseOptions = {
@@ -110,6 +110,15 @@
 					if (jsonData.the3d.label) {
 						jsonData.the3d.labels = jsonData.the3d.label;
 						delete jsonData.the3d.label;
+					}
+				}
+
+				if (jsonData.skeletons) {
+					jsonData.skeletons = jsonData.skeletons.skeleton;
+
+					for (let i in jsonData.skeletons) {
+						jsonData.skeletons[i].segments = jsonData.skeletons[i].segment;
+						delete jsonData.skeletons[i].segment;
 					}
 				}
 
