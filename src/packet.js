@@ -1,14 +1,15 @@
 'use strict';
 
 (function() {
-	var _            = require('lodash')
-	  , parseString  = require('xml2js').parseString
-	  , parseNumbers = require('xml2js').processors.parseNumbers
-	  , qtmrt        = require('./qtmrt')
-	  , toCamelCase  = require('./helpers').toCamelCase
-	  , readUInt32   = require('./buffer-io').readUInt32
-	  , Muncher      = require('./muncher')
-	  , Component    = require('./component')
+	var _             = require('lodash')
+	  , parseString   = require('xml2js').parseString
+	  , parseNumbers  = require('xml2js').processors.parseNumbers
+	  , parseBooleans = require('xml2js').processors.parseBooleans
+	  , qtmrt         = require('./qtmrt')
+	  , toCamelCase   = require('./helpers').toCamelCase
+	  , readUInt32    = require('./buffer-io').readUInt32
+	  , Muncher       = require('./muncher')
+	  , Component     = require('./component')
 	;
 
 	class Packet extends Muncher {
@@ -84,14 +85,13 @@
 				async: false,
 				mergeAttrs: true,
 				explicitArray: false,
+				attrValueProcessors: [
+					parseNumbers,
+					parseBooleans
+				],
 				valueProcessors: [
 					parseNumbers,
-					function(value) {
-						if (value === 'true') return true;
-						if (value === 'false') return false;
-
-						return value;
-					}
+					parseBooleans
 				],
 			};
 
