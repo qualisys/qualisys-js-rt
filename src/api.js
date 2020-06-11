@@ -150,7 +150,7 @@
 
 			if (arguments.length < 3) {
 				major = 1;
-				minor = 19;
+				minor = 21;
 			}
 			else {
 				if (!_.isNumber(major))

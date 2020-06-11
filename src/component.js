@@ -67,6 +67,9 @@
 				case qtmrt.COMPONENT_GAZE_VECTOR:
 					return new ComponentGazeVector(buf, byteOrder);
 
+				case qtmrt.COMPONENT_EYE_TRACKER:
+					return new ComponentEyeTracker(buf, byteOrder);
+
 				case qtmrt.COMPONENT_SKELETON:
 					return new ComponentSkeleton(buf, byteOrder);
 			}
@@ -566,6 +569,41 @@
 		toJson() {
 			return {
 				skeletons: this.skeletons
+			};
+		}
+	}
+
+	class ComponentEyeTracker extends Component {
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
+
+			this.eyeTrackerCount = this.munchUInt32();
+			this.eyeTrackers     = [];
+
+			this.parseEyeTrackers();
+		}
+
+		parseEyeTrackers() {
+			for (var i = 0; i < this.eyeTrackerCount; i++) {
+				var eyeTracker = {
+					sampleCount: this.munchUInt32(),
+					samples: [],
+				};
+
+				for (var j = 0; j < eyeTracker.sampleCount; j++) {
+					eyeTracker.samples.push({
+						leftPupil: this.munchFloat(),
+						rightPupil: this.munchFloat(),
+					});
+				}
+
+				this.eyeTrackers.push(eyeTracker);
+			}
+		}
+
+		toJson() {
+			return {
+				eyeTrackers: this.eyeTrackers
 			};
 		}
 	}
