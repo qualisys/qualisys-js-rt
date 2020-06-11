@@ -31,6 +31,7 @@ class QtmRt {
 	static get CAMERA_SETTINGS_CHANGED()          { return 11; }
 	static get QTM_SHUTTING_DOWN()                { return 12; }
 	static get CAPTURE_SAVED()                    { return 13; }
+	static get TRIGGER()                          { return 16; }
 
 	static get COMPONENT_ALL()                    { return 0; }
 	static get COMPONENT_3D()                     { return 1; }
@@ -100,6 +101,7 @@ class QtmRt {
 		eventNames[this.CAMERA_SETTINGS_CHANGED] = 'Camera Settings Changed';
 		eventNames[this.QTM_SHUTTING_DOWN]       = 'QTM Shutting Down';
 		eventNames[this.CAPTURE_SAVED]           = 'Capture Saved';
+		eventNames[this.TRIGGER]                 = 'Trigger';
 
 		return eventNames[eventId];
 	}
