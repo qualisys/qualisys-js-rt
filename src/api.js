@@ -138,8 +138,8 @@
 			});
 		}
 
-		debug(val) {
-			this.options.debug = val ? true : false;
+		debug(enableDebug) {
+			this.options.debug = enableDebug ? true : false;
 		}
 
 		disconnect() {
@@ -237,14 +237,14 @@
 		}
 
 
-		loadProject(projectPath) {
+		loadProject(path) {
 			if (arguments.length < 1)
 				throw new TypeError('No project path specified');
 
-			if (!_.isString(projectPath))
+			if (!_.isString(path))
 				throw new TypeError('Project path must be a string');
 
-			return this.send(Command.loadProject(projectPath));
+			return this.send(Command.loadProject(path));
 		}
 
 		promiseResponse() {
@@ -406,11 +406,11 @@
 			return this.send(Command.streamFrames.apply(Command, [options]));
 		}
 
-		takeControl(pass) {
-			if (!_.isUndefined(pass) && !_.isString(pass))
+		takeControl(password) {
+			if (!_.isUndefined(pass) && !_.isString(password))
 				throw new TypeError('Password must be a string');
 
-			return this.send(Command.takeControl(pass));
+			return this.send(Command.takeControl(password));
 		}
 	}
 

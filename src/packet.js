@@ -130,6 +130,9 @@
 					}
 				}
 
+				if (jsonData.eyeTracker) {
+
+				}
 			});
 
 			return jsonData;
