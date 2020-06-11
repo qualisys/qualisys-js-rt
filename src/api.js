@@ -206,6 +206,7 @@
 		releaseControl() { return this.send(Command.releaseControl()); }
 		newMeasurement() { return this.send(Command.newMeasurement()); }
 		closeMeasurement() { return this.send(Command.closeMeasurement()); }
+		reprocess() { return this.send(Command.reprocess()); }
 		startCapture() { return this.send(Command.startCapture()); }
 		stopCapture() { return this.send(Command.stopCapture()); }
 		trigger() { return this.send(Command.trig()); }

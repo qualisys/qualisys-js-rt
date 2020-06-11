@@ -33,6 +33,7 @@
 		static stopCapture()            { return this.createPacket('Stop'); }
 		static getCaptureC3d()          { return this.createPacket('GetCaptureC3D'); }
 		static getCaptureQtm()          { return this.createPacket('GetCaptureQtm'); }
+		static reprocess()              { return this.createPacket('Reprocess'); }
 		static trigger()                { return this.createPacket('Trig'); }
 		static stopStreaming()          { return this.createPacket('StreamFrames Stop'); }
 		static setQtmEvent(label)       { return this.createPacket('SetQTMEvent ' + label); }
