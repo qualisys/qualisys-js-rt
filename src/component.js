@@ -67,11 +67,14 @@
 				case qtmrt.COMPONENT_GAZE_VECTOR:
 					return new ComponentGazeVector(buf, byteOrder);
 
-				case qtmrt.COMPONENT_EYE_TRACKER:
-					return new ComponentEyeTracker(buf, byteOrder);
+				case qtmrt.COMPONENT_TIMECODE:
+					return new ComponentTimecode(buf, byteOrder);
 
 				case qtmrt.COMPONENT_SKELETON:
 					return new ComponentSkeleton(buf, byteOrder);
+
+				case qtmrt.COMPONENT_EYE_TRACKER:
+					return new ComponentEyeTracker(buf, byteOrder);
 			}
 		}
 
@@ -524,10 +527,33 @@
 				this.gazeVectors.push(gazeVector);
 			}
 		}
+	}
+
+	class ComponentTimecode extends Component {
+		constructor(buf, byteOrder) {
+			super(buf, byteOrder);
+
+			this.timecodeCount = this.munchUInt32();
+			this.timecodes     = [];
+
+			this.parseTimecodes();
+		}
+
+		parseTimecodes() {
+			for (var i = 0; i < this.timecodeCount; i++) {
+				var timecode   = {
+					type: this.munchUInt32(),
+					low: this.munchUInt32(),
+					high: this.munchUInt32(),
+				};
+
+				this.timecodes.push(timecode);
+			}
+		}
 
 		toJson() {
 			return {
-				gazeVectors: this.gazeVectors
+				timecodes: this.timecodes
 			};
 		}
 	}

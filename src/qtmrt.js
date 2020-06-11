@@ -76,6 +76,7 @@ class QtmRt {
 			'Force'         : this.COMPONENT_FORCE,
 			'ForceSingle'   : this.COMPONENT_FORCE_SINGLE,
 			'GazeVector'    : this.COMPONENT_GAZE_VECTOR,
+			'Timecode'      : this.COMPONENT_TIMECODE,
 			'Skeleton'      : this.COMPONENT_SKELETON,
 			'EyeTracker'    : this.COMPONENT_EYE_TRACKER,
 		};
