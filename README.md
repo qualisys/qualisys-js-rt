@@ -6,6 +6,8 @@ Manager (QTM).
 It is used to stream data from a computer running QTM. The real-time api can
 also be used to start and stop measurements, setting events and more.
 
+<img src="https://github.com/qualisys/qualisys-rt/blob/dev/docs/connecting.png" title="Example output" width="600" height="191">
+
 # Installation
 1. npm install qualisys-rt
 
@@ -33,8 +35,6 @@ api.connect()
 # Getting started
 There is not much documentation yet so the best way to get started is by
 examining demo.js, which contains example code for common tasks. 
-
-<img src="https://github.com/qualisys/qualisys-rt/blob/dev/docs/connecting.png" title="Example output" width="600" height="191">
 
 ## Api methods
 This api supports most commands in the QTM real-time protocol. The supported
