@@ -37,7 +37,7 @@
 		static stopStreaming()          { return this.createPacket('StreamFrames Stop'); }
 		static setQtmEvent(label)       { return this.createPacket('SetQTMEvent ' + label); }
 		static takeControl(pass)        { return this.createPacket('TakeControl ' + (_.isUndefined(pass) ? '' : pass)); }
-		static load(filename)           { return this.createPacket('Load ' + filename); }
+		static load(filename, connect)  { return this.createPacket('Load ' + filename + (_.isUndefined(connect) ? '' : connect)); }
 		static loadProject(projectPath) { return this.createPacket('LoadProject ' + projectPath); }
 		static version(major, minor)    { return this.createPacket('Version ' + major + '.' + minor); }
 

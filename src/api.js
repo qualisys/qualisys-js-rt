@@ -255,14 +255,14 @@
 			return this.send(Command.takeControl(pass));
 		}
 
-		load(filename) {
+		load(filename, connect) {
 			if (arguments.length < 1)
 				throw new TypeError('No filename specified');
 
 			if (!_.isString(filename))
 				throw new TypeError('Filename must be a string');
 
-			return this.send(Command.load(filename));
+			return this.send(Command.load(filename, connect));
 		}
 
 		save(filename, overwrite) {
