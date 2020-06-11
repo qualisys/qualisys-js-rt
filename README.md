@@ -1,7 +1,6 @@
 # Real-time api for QTM
-This is a javascript implementation of the [real-time protocol]
-(https://docs.qualisys.com/qtm-rt-protocol/) provided by Qualisys Track
-Manager (QTM).
+This is a javascript implementation of the [real-time protocol](https://docs.qualisys.com/qtm-rt-protocol/)
+provided by Qualisys Track Manager (QTM).
 
 It is used to stream data from a computer running QTM. The real-time api can
 also be used to start and stop measurements, setting events and more.
