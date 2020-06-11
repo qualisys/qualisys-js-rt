@@ -24,6 +24,7 @@
 		}
 
 		static byteOrder()              { return this.createPacket('ByteOrder'); }
+		static calibrate(refine)        { return this.createPacket('Calibrate' + (_.isUndefined(refine) ? '' : refine)); }
 		static closeMeasurement()       { return this.createPacket('Close'); }
 		static getCaptureC3d()          { return this.createPacket('GetCaptureC3D'); }
 		static getCaptureQtm()          { return this.createPacket('GetCaptureQtm'); }
@@ -55,7 +56,7 @@
 
 		static getParameters() {
 			var predicate = (component) => {
-					return _.includes(['All', 'General', '3D', '6D', 'Analog', 'Force', 'Image', 'GazeVector', 'EyeTracker', 'Timecode', 'Skeleton', 'Skeleton:global'], component);
+					return _.includes(['All', 'General', 'Calibration', '3D', '6D', 'Analog', 'Force', 'Image', 'GazeVector', 'EyeTracker', 'Timecode', 'Skeleton', 'Skeleton:global'], component);
 				}
 			   , components = _.filter(arguments, predicate)
 			;

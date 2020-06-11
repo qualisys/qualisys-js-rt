@@ -45,6 +45,7 @@
 		get isStreaming() { return this._isStreaming; }
 
 		byteOrder() { return this.send(Command.byteOrder()); }
+		calibrate(refine) { return this.send(Command.calibrate(refine)); }
 		closeMeasurement() { return this.send(Command.closeMeasurement()); }
 		getCaptureC3d() { return this.send(Command.getCaptureC3d()); }
 		getCaptureQtm() { return this.send(Command.getCaptureQtm()); }
