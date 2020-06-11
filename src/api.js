@@ -44,6 +44,22 @@
 		get isConnected() { return this._isConnected; }
 		get isStreaming() { return this._isStreaming; }
 
+		byteOrder() { return this.send(Command.byteOrder()); }
+		closeMeasurement() { return this.send(Command.closeMeasurement()); }
+		getCaptureC3d() { return this.send(Command.getCaptureC3d()); }
+		getCaptureQtm() { return this.send(Command.getCaptureQtm()); }
+		getCurrentFrame() { return this.send(Command.getCurrentFrame.apply(Command, arguments)); }
+		getParameters() { return this.send(Command.getParameters.apply(Command, arguments)); }
+		getState() { return this.send(Command.getState()); }
+		newMeasurement() { return this.send(Command.newMeasurement()); }
+		qtmVersion() { return this.send(Command.qtmVersion()); }
+		releaseControl() { return this.send(Command.releaseControl()); }
+		reprocess() { return this.send(Command.reprocess()); }
+		setParameters() { return this.send(Command.setParameters.apply(Command, arguments)); }
+		startCapture() { return this.send(Command.startCapture()); }
+		stopCapture() { return this.send(Command.stopCapture()); }
+		trigger() { return this.send(Command.trig()); }
+
 		bootstrap() {
 			// Disable Nagle's algorithm.
 			this.client.setNoDelay(true);
@@ -59,83 +75,6 @@
 				this.logger.log('Disconnected', 'white', 'bold');
 				this.emit('disconnect');
 			}.bind(this));
-		}
-
-		setupUdp(port) {
-			var s = dgram.createSocket('udp4');
-
-			s.on('message', function(chunk) {
-				this.mangler.read(chunk, this.options.byteOrder, { fun: this.receivePacket, thisArg: this });
-			}.bind(this));
-
-			s.bind(port, this.host, function() { });
-		}
-
-		log(msg, color, style) {
-			this.logger.logPacket(msg, color, style);
-		}
-
-		receivePacket(data) {
-			var packet  = Packet.create(data, this.options.byteOrder)
-			  , command = this.issuedCommands.pop()
-			;
-
-			if (packet.type === qtmrt.COMMAND)
-				packet.type = qtmrt.COMMAND_RESPONSE;
-
-			if (this.options.debug)
-				this.logger.logPacket(packet);
-
-			if (packet.type === qtmrt.EVENT) {
-				if (command && command.data === 'GetState')
-					this.promiseQueue.pop().resolve({ id: packet.eventId, name: packet.eventName });
-
-				this.emit('event', packet.toJson());
-			}
-			else if (packet.type === qtmrt.XML) {
-				this.promiseQueue.pop().resolve(packet.toJson());
-			}
-			else if (packet.type === qtmrt.C3D_FILE) {
-				// Implement.
-			}
-			else if (packet.type === qtmrt.COMMAND_RESPONSE) {
-				if (command) {
-					if (command.data && command.data.startsWith('ByteOrder')) {
-						this.promiseQueue.pop().resolve(/little endian/.test(packet.data) ? 'little endian' : 'big endian');
-					}
-					else if (command.data && command.data.startsWith('QTMVersion')) {
-						var human   = 'QTM ' + packet.data.replace('QTM Version is ', '').slice(0, -1)
-						  , version = human.match(/QTM (\d+)\.(\d+)(?: (?:Beta)|(?:Alpha))? \(build (\d+)\)/)
-						;
-						this.promiseQueue.pop().resolve({ major: version[1], minor: version[2], build: version[3], human: human });
-					}
-					else {
-						this.promiseQueue.pop().resolve(packet.data);
-					}
-				}
-			}
-			else if (packet.type === qtmrt.ERROR) {
-				this.promiseQueue.pop().reject(packet);
-			}
-			else if (command && command.data.startsWith('GetCurrentFrame')) {
-				if (packet.type === qtmrt.NO_MORE_DATA) {
-					this.promiseQueue.pop().reject('No more data');
-				}
-				else {
-					this.promiseQueue.pop().resolve(packet.toJson());
-				}
-			}
-			else if (packet.type !== qtmrt.DATA) {
-				if (packet.type === qtmrt.NO_MORE_DATA) {
-					this.emit('end');
-				}
-				else {
-					this.promiseQueue.pop().resolve(packet);
-				}
-			}
-			else if (packet.type === qtmrt.DATA) {
-				this.emit('frame', packet.toJson());
-			}
 		}
 
 		connect(port, host, major, minor) {
@@ -197,136 +136,8 @@
 			});
 		}
 
-		qtmVersion() { return this.send(Command.qtmVersion()); }
-		byteOrder() { return this.send(Command.byteOrder()); }
-		getState() { return this.send(Command.getState()); }
-		getParameters() { return this.send(Command.getParameters.apply(Command, arguments)); }
-		setParameters() { return this.send(Command.setParameters.apply(Command, arguments)); }
-		getCurrentFrame() { return this.send(Command.getCurrentFrame.apply(Command, arguments)); }
-		releaseControl() { return this.send(Command.releaseControl()); }
-		newMeasurement() { return this.send(Command.newMeasurement()); }
-		closeMeasurement() { return this.send(Command.closeMeasurement()); }
-		reprocess() { return this.send(Command.reprocess()); }
-		startCapture() { return this.send(Command.startCapture()); }
-		stopCapture() { return this.send(Command.stopCapture()); }
-		trigger() { return this.send(Command.trig()); }
-
-		// XXX: Not tested with C3D file reply.
-		getCaptureC3D() { return this.send(Command.getCaptureC3D()); }
-		// XXX: Not tested with QTM file reply.
-		getCaptureQtm() { return this.send(Command.getCaptureQtm()); }
-
-		streamFrames(options) {
-			if (this._isStreaming)
-				return Q.reject('Could not start streaming, already streaming');
-
-			this._isStreaming = true;
-
-			if (_.isUndefined(options.frequency))
-				options.frequency = this.options.frequency;
-
-			if (!_.isUndefined(options.udpPort) && (_.isUndefined(options.udpAddress)
-					||  options.updAddress === 'localhost' ||  options.udpAddress === '127.0.0.1'))
-				this.setupUdp.call(this, options.udpPort);
-
-			return this.send(Command.streamFrames.apply(Command, [options]));
-		}
-
-		stopStreaming() {
-			if (!this._isStreaming) {
-				this.logger.log('Cannot stop streaming, not currently streaming', 'grey');
-				this.emit('end');
-
-				return;
-			}
-
-			this._isStreaming = false;
-
-			return this.send(Command.stopStreaming())
-				.then(() => {
-					this.emit('end');
-				})
-			;
-		}
-
-		takeControl(pass) {
-			if (!_.isUndefined(pass) && !_.isString(pass))
-				throw new TypeError('Password must be a string');
-
-			return this.send(Command.takeControl(pass));
-		}
-
-		load(filename, connect) {
-			if (arguments.length < 1)
-				throw new TypeError('No filename specified');
-
-			if (!_.isString(filename))
-				throw new TypeError('Filename must be a string');
-
-			return this.send(Command.load(filename, connect));
-		}
-
-		save(filename, overwrite) {
-			if (arguments.length < 1)
-				throw new TypeError('No filename specified');
-
-			if (!_.isString(filename))
-				throw new TypeError('Filename must be a string');
-
-			if (arguments.length > 1)
-				overwrite = 'overwrite';
-
-			return this.send(Command.save(filename, overwrite));
-		}
-
-		loadProject(projectPath) {
-			if (arguments.length < 1)
-				throw new TypeError('No project path specified');
-
-			if (!_.isString(projectPath))
-				throw new TypeError('Project path must be a string');
-
-			return this.send(Command.loadProject(projectPath));
-		}
-
-		setQtmEvent(label) {
-			if (arguments.length < 1)
-				throw new TypeError('No label specified');
-
-			if (!_.isString(label))
-				throw new TypeError('Label must be a string');
-
-			return this.send(Command.setQtmEvent(label));
-		}
-
-		send(commandPacket) {
-			if (this.client === null)
-				new Error('Not connected to QTM. Connect and try again.');
-
-			// Don't expect a reply on the StreamFrames command.
-			var promise = (commandPacket.data.startsWith('StreamFrames'))
-				? new Promise((resolve, reject) => { resolve(); })
-				: this.promiseResponse();
-
-			commandPacket.isResponse = false;
-			this.issuedCommands.unshift(commandPacket);
-
-			if (!this.client.destroyed && this.client.writable) {
-				this.client.write(commandPacket.buffer, 'utf8', data => {
-					if (this.options.debug)
-						this.logger.logPacket(commandPacket);
-				});
-			}
-
-			return promise;
-		}
-
-		promiseResponse() {
-			const promise = new Promise((resolve, reject) => {
-				this.promiseQueue.unshift({ resolve: resolve, reject: reject });
-			})
-
-			return promise;
+		debug(val) {
+			this.options.debug = val ? true : false;
 		}
 
 		disconnect() {
@@ -409,8 +220,195 @@
 			this.options.frequency = freq;
 		}
 
-		debug(val) {
-			this.options.debug = val ? true : false;
+		log(msg, color, style) {
+			this.logger.logPacket(msg, color, style);
+		}
+
+		load(filename, connect) {
+			if (arguments.length < 1)
+				throw new TypeError('No filename specified');
+
+			if (!_.isString(filename))
+				throw new TypeError('Filename must be a string');
+
+			return this.send(Command.load(filename, connect));
+		}
+
+
+		loadProject(projectPath) {
+			if (arguments.length < 1)
+				throw new TypeError('No project path specified');
+
+			if (!_.isString(projectPath))
+				throw new TypeError('Project path must be a string');
+
+			return this.send(Command.loadProject(projectPath));
+		}
+
+		promiseResponse() {
+			const promise = new Promise((resolve, reject) => {
+				this.promiseQueue.unshift({ resolve: resolve, reject: reject });
+			})
+
+			return promise;
+		}
+
+		receivePacket(data) {
+			var packet  = Packet.create(data, this.options.byteOrder)
+			  , command = this.issuedCommands.pop()
+			;
+
+			if (packet.type === qtmrt.COMMAND)
+				packet.type = qtmrt.COMMAND_RESPONSE;
+
+			if (this.options.debug)
+				this.logger.logPacket(packet);
+
+			if (packet.type === qtmrt.EVENT) {
+				if (command && command.data === 'GetState')
+					this.promiseQueue.pop().resolve({ id: packet.eventId, name: packet.eventName });
+
+				this.emit('event', packet.toJson());
+			}
+			else if (packet.type === qtmrt.XML) {
+				this.promiseQueue.pop().resolve(packet.toJson());
+			}
+			else if (packet.type === qtmrt.C3D_FILE) {
+				// Implement.
+			}
+			else if (packet.type === qtmrt.COMMAND_RESPONSE) {
+				if (command) {
+					if (command.data && command.data.startsWith('ByteOrder')) {
+						this.promiseQueue.pop().resolve(/little endian/.test(packet.data) ? 'little endian' : 'big endian');
+					}
+					else if (command.data && command.data.startsWith('QTMVersion')) {
+						var human   = 'QTM ' + packet.data.replace('QTM Version is ', '').slice(0, -1)
+						  , version = human.match(/QTM (\d+)\.(\d+)(?: (?:Beta)|(?:Alpha))? \(build (\d+)\)/)
+						;
+						this.promiseQueue.pop().resolve({ major: version[1], minor: version[2], build: version[3], human: human });
+					}
+					else {
+						this.promiseQueue.pop().resolve(packet.data);
+					}
+				}
+			}
+			else if (packet.type === qtmrt.ERROR) {
+				this.promiseQueue.pop().reject(packet);
+			}
+			else if (command && command.data.startsWith('GetCurrentFrame')) {
+				if (packet.type === qtmrt.NO_MORE_DATA) {
+					this.promiseQueue.pop().reject('No more data');
+				}
+				else {
+					this.promiseQueue.pop().resolve(packet.toJson());
+				}
+			}
+			else if (packet.type !== qtmrt.DATA) {
+				if (packet.type === qtmrt.NO_MORE_DATA) {
+					this.emit('end');
+				}
+				else {
+					this.promiseQueue.pop().resolve(packet);
+				}
+			}
+			else if (packet.type === qtmrt.DATA) {
+				this.emit('frame', packet.toJson());
+			}
+		}
+
+		save(filename, overwrite) {
+			if (arguments.length < 1)
+				throw new TypeError('No filename specified');
+
+			if (!_.isString(filename))
+				throw new TypeError('Filename must be a string');
+
+			if (arguments.length > 1)
+				overwrite = 'overwrite';
+
+			return this.send(Command.save(filename, overwrite));
+		}
+
+		send(commandPacket) {
+			if (this.client === null)
+				new Error('Not connected to QTM. Connect and try again.');
+
+			// Don't expect a reply on the StreamFrames command.
+			var promise = (commandPacket.data.startsWith('StreamFrames'))
+				? new Promise((resolve, reject) => { resolve(); })
+				: this.promiseResponse();
+
+			commandPacket.isResponse = false;
+			this.issuedCommands.unshift(commandPacket);
+
+			if (!this.client.destroyed && this.client.writable) {
+				this.client.write(commandPacket.buffer, 'utf8', data => {
+					if (this.options.debug)
+						this.logger.logPacket(commandPacket);
+				});
+			}
+
+			return promise;
+		}
+
+		setQtmEvent(label) {
+			if (arguments.length < 1)
+				throw new TypeError('No label specified');
+
+			if (!_.isString(label))
+				throw new TypeError('Label must be a string');
+
+			return this.send(Command.setQtmEvent(label));
+		}
+
+		setupUdp(port) {
+			var s = dgram.createSocket('udp4');
+
+			s.on('message', function(chunk) {
+				this.mangler.read(chunk, this.options.byteOrder, { fun: this.receivePacket, thisArg: this });
+			}.bind(this));
+
+			s.bind(port, this.host, function() { });
+		}
+
+		stopStreaming() {
+			if (!this._isStreaming) {
+				this.logger.log('Cannot stop streaming, not currently streaming', 'grey');
+				this.emit('end');
+
+				return;
+			}
+
+			this._isStreaming = false;
+
+			return this.send(Command.stopStreaming())
+				.then(() => {
+					this.emit('end');
+				})
+			;
+		}
+
+		streamFrames(options) {
+			if (this._isStreaming)
+				return Q.reject('Could not start streaming, already streaming');
+
+			this._isStreaming = true;
+
+			if (_.isUndefined(options.frequency))
+				options.frequency = this.options.frequency;
+
+			if (!_.isUndefined(options.udpPort) && (_.isUndefined(options.udpAddress)
+					||  options.updAddress === 'localhost' ||  options.udpAddress === '127.0.0.1'))
+				this.setupUdp.call(this, options.udpPort);
+
+			return this.send(Command.streamFrames.apply(Command, [options]));
+		}
+
+		takeControl(pass) {
+			if (!_.isUndefined(pass) && !_.isString(pass))
+				throw new TypeError('Password must be a string');
+
+			return this.send(Command.takeControl(pass));
 		}
 	}
 
