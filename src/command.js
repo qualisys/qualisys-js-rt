@@ -67,15 +67,12 @@
 		}
 
 		static getCurrentFrame() {
-			var predicate  = function(component) { return _.includes(_.union(['All'], Object.keys(qtmrt.COMPONENTS)), component); }
-			  , components = arguments.length === 0 ? ['All'] : _.filter(arguments, predicate)
+			var predicate  = function(component) { return _.includes(Object.keys(qtmrt.COMPONENTS), component); }
+			  , components = arguments.length === 0 ? [] : _.filter(arguments, predicate)
 			;
 
 			if (_.isEmpty(components))
 				throw new TypeError('No valid components specified');
-
-			if (_.includes(components, 'All'))
-				components = ['All'];
 
 			return this.createPacket('GetCurrentFrame ' + components.join(' '));
 		}
@@ -86,12 +83,12 @@
 
 			options = _.defaults(options, {
 				frequency: 100,
-				components: ['All'],
+				components: [],
 			});
 
 			var udp        = _.isUndefined(options.udpPort) ? '' : ' UDP:' + (_.isUndefined(options.udpAddress) ? '' : options.udpAddress + ':') + options.udpPort
 			  , frequency  = ''
-			  , predicate  = function(component) { return _.includes(_.union(['All'], Object.keys(qtmrt.COMPONENTS)), component); }
+			  , predicate  = function(component) { return _.includes(Object.keys(qtmrt.COMPONENTS), component); }
 			  , components = _.filter(options.components, predicate)
 			;
 
@@ -104,9 +101,6 @@
 
 			if (_.isEmpty(components))
 				throw new TypeError('No valid components specified');
-
-			if (_.includes(components, 'All'))
-				components = ['All'];
 
 			var cmdStr = 'StreamFrames ' + frequency + udp + ' ' + components.join(' ');
 			return this.createPacket(cmdStr);
