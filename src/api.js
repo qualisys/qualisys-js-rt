@@ -52,6 +52,7 @@
 		getCurrentFrame() { return this.send(Command.getCurrentFrame.apply(Command, arguments)); }
 		getParameters() { return this.send(Command.getParameters.apply(Command, arguments)); }
 		getState() { return this.send(Command.getState()); }
+		led(camera, mode, color) { return this.send(Command.led(camera, mode, color)); }
 		newMeasurement() { return this.send(Command.newMeasurement()); }
 		qtmVersion() { return this.send(Command.qtmVersion()); }
 		releaseControl() { return this.send(Command.releaseControl()); }

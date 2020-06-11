@@ -3,6 +3,7 @@
 (function() {
 	var _           = require('lodash')
 	  , jsonxml     = require('jsontoxml')
+	  , sprintf     = require('sprintf')
 	  , qtmrt       = require('./qtmrt')
 	  , Packet      = require('./packet')
 	  , writeUInt32 = require('./buffer-io').writeUInt32
@@ -29,6 +30,7 @@
 		static getCaptureC3d()          { return this.createPacket('GetCaptureC3D'); }
 		static getCaptureQtm()          { return this.createPacket('GetCaptureQtm'); }
 		static getState()               { return this.createPacket('GetState'); }
+		static led(camera, mode, color) { return this.createPacket(sprintf('Led %s %s %s', camera, mode, color)); }
 		static load(filename, connect)  { return this.createPacket('Load ' + filename + (_.isUndefined(connect) ? '' : connect)); }
 		static loadProject(projectPath) { return this.createPacket('LoadProject ' + projectPath); }
 		static newMeasurement()         { return this.createPacket('New'); }
