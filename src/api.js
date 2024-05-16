@@ -407,7 +407,7 @@
 		}
 
 		takeControl(password) {
-			if (!_.isUndefined(pass) && !_.isString(password))
+			if (!_.isUndefined(password) && !_.isString(password))
 				throw new TypeError('Password must be a string');
 
 			return this.send(Command.takeControl(password));
